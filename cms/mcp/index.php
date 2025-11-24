@@ -55,7 +55,8 @@ if ($input === null && json_last_error() !== JSON_ERROR_NONE) {
 }
 
 // Initialize managers
-$pageManager = new PageManager($config['root_dir']);
+$reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$pageManager = new PageManager($config['root_dir'], $reservedFolders);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 

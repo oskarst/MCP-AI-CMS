@@ -6,7 +6,8 @@
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/PageManager.php';
 
-$pageManager = new PageManager($config['root_dir']);
+$reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$pageManager = new PageManager($config['root_dir'], $reservedFolders);
 $pages = $pageManager->listPages();
 
 $pageTitle = 'Dashboard';

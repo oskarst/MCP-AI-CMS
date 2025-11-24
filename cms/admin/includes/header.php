@@ -30,6 +30,10 @@
                 <a href="/cms/admin/" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'dashboard' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Dashboard</span>
                 </a>
+
+                <div class="mt-4 px-6 py-2 text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                    Content
+                </div>
                 <a href="/cms/admin/pages.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'pages' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Pages</span>
                 </a>
@@ -38,6 +42,13 @@
                 </a>
                 <a href="/cms/admin/sync-blocks.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'sync' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Sync Blocks</span>
+                </a>
+
+                <div class="mt-4 px-6 py-2 text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                    Settings
+                </div>
+                <a href="/cms/admin/settings.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'settings' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
+                    <span class="font-medium">General</span>
                 </a>
                 <a href="/cms/admin/mcp-config.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'mcp' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">MCP Config</span>

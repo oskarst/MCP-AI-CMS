@@ -8,7 +8,8 @@
 require_once __DIR__ . '/../core/PageManager.php';
 
 $config = require __DIR__ . '/../config/config.php';
-$pageManager = new PageManager($config['root_dir']);
+$reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$pageManager = new PageManager($config['root_dir'], $reservedFolders);
 
 // Get page ID from query parameter
 $pageId = $_GET['page_id'] ?? '';

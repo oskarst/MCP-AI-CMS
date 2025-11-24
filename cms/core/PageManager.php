@@ -9,13 +9,16 @@
 class PageManager
 {
     private string $rootDir;
+    private array $reservedFolders;
 
     /**
      * @param string $rootDir Absolute path to the web root
+     * @param array $reservedFolders List of reserved folder names
      */
-    public function __construct(string $rootDir)
+    public function __construct(string $rootDir, array $reservedFolders = ['cms'])
     {
         $this->rootDir = rtrim($rootDir, '/');
+        $this->reservedFolders = $reservedFolders;
     }
 
     /**
@@ -96,6 +99,13 @@ class PageManager
             throw new Exception("Target page '{$newPageId}' already exists");
         }
 
+        // Check against reserved folder names
+        $pageIdParts = explode('/', trim($newPageId, '/'));
+        $firstPart = $pageIdParts[0] ?? '';
+        if (in_array($firstPart, $this->reservedFolders)) {
+            throw new Exception("Cannot use reserved folder name '{$firstPart}' as page ID");
+        }
+
         $newPageId = trim($newPageId, '/');
         $targetDir = $newPageId === '' ? $this->rootDir : $this->rootDir . '/' . $newPageId;
 
@@ -150,11 +160,6 @@ class PageManager
      */
     private function scanDirectory(string $dir, string $relPath, array &$pages): void
     {
-        // Skip CMS directory
-        if (basename($dir) === 'cms') {
-            return;
-        }
-
         $items = @scandir($dir);
         if ($items === false) {
             return;
@@ -162,6 +167,11 @@ class PageManager
 
         foreach ($items as $item) {
             if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            // Skip reserved folders
+            if (in_array($item, $this->reservedFolders)) {
                 continue;
             }
 
