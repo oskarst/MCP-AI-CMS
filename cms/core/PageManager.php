@@ -125,6 +125,50 @@ class PageManager
     }
 
     /**
+     * Create a new page from HTML content.
+     *
+     * @param string $pageId New page ID
+     * @param string $htmlContent HTML content for the page
+     * @return void
+     * @throws Exception if page already exists or creation fails
+     */
+    public function createPageFromHtml(string $pageId, string $htmlContent): void
+    {
+        if ($this->pageExists($pageId)) {
+            throw new Exception("Page '{$pageId}' already exists");
+        }
+
+        // Check against reserved folder names
+        $pageIdParts = explode('/', trim($pageId, '/'));
+        $firstPart = $pageIdParts[0] ?? '';
+        if (in_array($firstPart, $this->reservedFolders)) {
+            throw new Exception("Cannot use reserved folder name '{$firstPart}' as page ID");
+        }
+
+        $pageId = trim($pageId, '/');
+        $targetDir = $pageId === '' ? $this->rootDir : $this->rootDir . '/' . $pageId;
+
+        // Create target directory if needed
+        if (!is_dir($targetDir)) {
+            if (!mkdir($targetDir, 0755, true)) {
+                throw new Exception("Failed to create directory: {$targetDir}");
+            }
+        }
+
+        $targetPath = $targetDir . '/index.php';
+
+        // Ensure HTML starts with <?php tag if it doesn't already
+        if (strpos(trim($htmlContent), '<?php') !== 0) {
+            $htmlContent = "<?php\n// Page created via CMS\n\n?>" . $htmlContent;
+        }
+
+        // Write the HTML content to the file
+        if (file_put_contents($targetPath, $htmlContent) === false) {
+            throw new Exception("Failed to create page file");
+        }
+    }
+
+    /**
      * Delete a page.
      *
      * @param string $pageId Page ID to delete

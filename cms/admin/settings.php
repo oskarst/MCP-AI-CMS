@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $siteName = $_POST['site_name'] ?? 'My Site';
         $maxBackups = (int)($_POST['max_backups'] ?? 10);
-        $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,img,assets,uploads';
+        $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,assets,uploads';
 
         // Load current config
         $configPath = __DIR__ . '/../config/config.php';
@@ -63,7 +63,7 @@ PHP;
 // Get current settings
 $reservedFoldersString = is_array($config['reserved_folders'] ?? null)
     ? implode(',', $config['reserved_folders'])
-    : 'cms,blog,img,assets,uploads';
+    : 'cms,blog,assets,uploads';
 
 $pageTitle = 'Settings';
 $activePage = 'settings';
@@ -147,7 +147,7 @@ require __DIR__ . '/includes/header.php';
                     required
                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                 >
-                <p class="mt-1 text-sm text-gray-500">Comma-separated list of folder names that cannot be used as page IDs (e.g., cms,blog,img,assets,uploads)</p>
+                <p class="mt-1 text-sm text-gray-500">Comma-separated list of folder names that cannot be used as page IDs (e.g., cms,blog,assets,uploads)</p>
 
                 <div class="mt-3 bg-yellow-50 border-l-4 border-yellow-500 p-4">
                     <p class="text-sm text-yellow-700">
