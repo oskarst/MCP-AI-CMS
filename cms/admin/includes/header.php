@@ -39,6 +39,9 @@
                 <a href="/cms/admin/sync-blocks.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'sync' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Sync Blocks</span>
                 </a>
+                <a href="/cms/admin/files.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'files' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
+                    <span class="font-medium">File Manager</span>
+                </a>
                 <a href="/cms/admin/settings.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'settings' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Settings</span>
                 </a>
