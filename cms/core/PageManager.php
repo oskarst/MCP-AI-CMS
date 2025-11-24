@@ -34,7 +34,7 @@ class PageManager
         $rootIndexPath = $this->rootDir . '/index.php';
         if (file_exists($rootIndexPath)) {
             $pages[] = [
-                'id' => '',
+                'id' => 'index',
                 'path' => $rootIndexPath,
             ];
         }
@@ -60,7 +60,7 @@ class PageManager
     {
         $pageId = trim($pageId, '/');
 
-        if ($pageId === '') {
+        if ($pageId === '' || $pageId === 'index') {
             $path = $this->rootDir . '/index.php';
         } else {
             $path = $this->rootDir . '/' . $pageId . '/index.php';

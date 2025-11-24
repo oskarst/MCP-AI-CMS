@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $siteName = $_POST['site_name'] ?? 'My Site';
         $maxBackups = (int)($_POST['max_backups'] ?? 10);
-        $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,assets,uploads';
+        $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,assets,uploads,index';
 
         // Load current config
         $configPath = __DIR__ . '/../config/config.php';
@@ -63,7 +63,7 @@ PHP;
 // Get current settings
 $reservedFoldersString = is_array($config['reserved_folders'] ?? null)
     ? implode(',', $config['reserved_folders'])
-    : 'cms,blog,assets,uploads';
+    : 'cms,blog,assets,uploads,index';
 
 $pageTitle = 'Settings';
 $activePage = 'settings';
