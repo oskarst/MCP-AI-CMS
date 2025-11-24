@@ -75,6 +75,7 @@ require __DIR__ . '/includes/header.php';
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <a href="/cms/admin/edit.php?page_id=<?php echo urlencode($page['id']); ?>" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
                                 <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview</a>
+                                <a href="/cms/admin/preview-blocks.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-purple-600 hover:text-purple-800 mr-3">Preview Blocks</a>
                                 <?php if ($page['id'] !== ''): ?>
                                     <form method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this page?');">
                                         <?php echo CSRF::inputField(); ?>

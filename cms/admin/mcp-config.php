@@ -48,7 +48,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
 
     $configJson = [
         'servers' => [
-            'flatcms' => [
+            'mcpcms' => [
                 'type' => 'http',
                 'base_url' => $baseUrl,
                 'headers' => [
