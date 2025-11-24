@@ -60,6 +60,16 @@ $pageManager = new PageManager($config['root_dir'], $reservedFolders);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 
+// Helper function to normalize homepage page_id
+function normalizePageId($pageId) {
+    // Only accept "/" as alias for homepage (empty string)
+    if ($pageId === '/') {
+        return '';
+    }
+
+    return $pageId;
+}
+
 // Route to appropriate tool handler
 try {
     switch ($tool) {
@@ -69,7 +79,7 @@ try {
             break;
 
         case 'list_blocks':
-            $pageId = $input['page_id'] ?? '';
+            $pageId = normalizePageId($input['page_id'] ?? '');
             $pagePath = $pageManager->getPagePath($pageId);
 
             if (!$pagePath) {
@@ -83,7 +93,7 @@ try {
             break;
 
         case 'update_block':
-            $pageId = $input['page_id'] ?? null;
+            $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
             $blockName = $input['name'] ?? '';
             $content = $input['content'] ?? '';
             $custom = $input['custom'] ?? null;
@@ -125,9 +135,9 @@ try {
             break;
 
         case 'delete_page':
-            $pageId = $input['page_id'] ?? '';
+            $pageId = normalizePageId($input['page_id'] ?? '');
 
-            if (!$pageId) {
+            if ($pageId === null) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
                 exit;
@@ -144,9 +154,10 @@ try {
             break;
 
         case 'list_backups':
-            $pageId = $input['page_id'] ?? '';
+            $pageId = normalizePageId($input['page_id'] ?? '');
 
-            if ($pageId === '') {
+            // Empty string is valid for homepage
+            if (!isset($input['page_id'])) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
                 exit;
@@ -157,10 +168,10 @@ try {
             break;
 
         case 'restore_backup':
-            $pageId = $input['page_id'] ?? '';
+            $pageId = normalizePageId($input['page_id'] ?? '');
             $timestamp = $input['timestamp'] ?? '';
 
-            if (!$pageId || !$timestamp) {
+            if (!isset($input['page_id']) || !$timestamp) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
                 exit;
@@ -175,6 +186,60 @@ try {
 
             $backupManager->restoreBackup($pageId, $timestamp, $pagePath);
             echo json_encode(['success' => true]);
+            break;
+
+        case 'search_blocks':
+            $searchText = $input['search_text'] ?? '';
+
+            if (!$searchText) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing search_text parameter']);
+                exit;
+            }
+
+            // Search through all pages
+            $pages = $pageManager->listPages();
+            $matches = [];
+
+            foreach ($pages as $page) {
+                $blocks = $blockParser->parseBlocks($page['path']);
+
+                foreach ($blocks as $block) {
+                    // Case-insensitive search
+                    if (stripos($block['content'], $searchText) !== false) {
+                        $matches[] = [
+                            'page_id' => $page['id'],
+                            'page_path' => $page['path'],
+                            'block_name' => $block['name'],
+                            'block_role' => $block['role'],
+                            'block_custom' => $block['custom'],
+                            'content_preview' => substr($block['content'], 0, 200) // First 200 chars
+                        ];
+                    }
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'matches' => $matches,
+                'count' => count($matches),
+                'disambiguation_required' => count($matches) > 1,
+                'disambiguation_message' => count($matches) > 1
+                    ? 'Multiple blocks contain the same text. Ask the user which page/section is correct.'
+                    : null
+            ]);
+            break;
+
+        case 'get_usage_tips':
+            echo json_encode([
+                'success' => true,
+                'tips' => [
+                    'Always use search_blocks before update_block',
+                    'Save large responses to files: curl ... > file.json',
+                    'Homepage page_id: use "" or "/"',
+                    'Ask user when multiple matches found'
+                ]
+            ]);
             break;
 
         default:

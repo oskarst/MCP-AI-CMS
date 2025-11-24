@@ -72,7 +72,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'properties' => [
                                 'page_id' => [
                                     'type' => 'string',
-                                    'description' => 'Page ID (e.g., "", "about", "about/team")',
+                                    'description' => 'Page ID (e.g., "about", "about/team"). For homepage use: "" or "/"',
                                 ],
                             ],
                             'required' => ['page_id'],
@@ -86,7 +86,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'properties' => [
                                 'page_id' => [
                                     'type' => 'string',
-                                    'description' => 'Page ID',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
                                 ],
                                 'name' => [
                                     'type' => 'string',
@@ -166,6 +166,32 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                                 ],
                             ],
                             'required' => ['page_id', 'timestamp'],
+                        ],
+                    ],
+                    [
+                        'name' => 'search_blocks',
+                        'description' => 'Search for blocks containing the given text. Returns block_name and preview. Use this FIRST before update_block to find the correct location. Common pitfall: Don\'t assume text location - always search first.',
+                        'usage_example' => 'To change text: 1) search_blocks to find it, 2) ask user if multiple matches, 3) update_block',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'search_text' => [
+                                    'type' => 'string',
+                                    'description' => 'Text to search for in block content',
+                                ],
+                            ],
+                            'required' => ['search_text'],
+                        ],
+                        'disambiguation_required' => true,
+                        'disambiguation_message' => 'Multiple blocks contain the same text. Ask the user which page/section is correct.',
+                    ],
+                    [
+                        'name' => 'get_usage_tips',
+                        'description' => 'Get helpful tips for using the CMS MCP tools effectively',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => (object)[],
+                            'required' => [],
                         ],
                     ],
                 ],
@@ -265,11 +291,13 @@ require __DIR__ . '/includes/header.php';
     <ul class="list-disc list-inside space-y-2 text-gray-700">
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_pages</code> - List all pages in the CMS</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_blocks</code> - List editable blocks within a page</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_blocks</code> - Search for blocks containing specific text (with disambiguation support)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">restore_backup</code> - Restore a page from backup</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_usage_tips</code> - Get helpful tips for using CMS tools effectively</li>
     </ul>
 </div>
 
