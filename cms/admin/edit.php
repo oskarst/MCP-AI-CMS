@@ -1,0 +1,123 @@
+<?php
+/**
+ * Admin Block Editor
+ */
+
+require_once __DIR__ . '/includes/auth-guard.php';
+require_once __DIR__ . '/../core/PageManager.php';
+require_once __DIR__ . '/../core/BlockParser.php';
+require_once __DIR__ . '/../core/BackupManager.php';
+require_once __DIR__ . '/../core/CSRF.php';
+
+$pageManager = new PageManager($config['root_dir']);
+$blockParser = new BlockParser();
+$backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
+
+$pageId = $_GET['page_id'] ?? '';
+$pagePath = $pageManager->getPagePath($pageId);
+
+if (!$pagePath) {
+    header('Location: /cms/admin/pages.php');
+    exit;
+}
+
+// Handle block update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_block') {
+    CSRF::verifyOrDie();
+
+    $blockName = $_POST['block_name'] ?? '';
+    $blockContent = $_POST['block_content'] ?? '';
+    $blockCustom = isset($_POST['block_custom']) ? true : false;
+
+    try {
+        // Create backup before updating
+        $backupManager->createBackup($pageId, $pagePath);
+
+        // Update the block
+        $blockParser->updateBlock($pagePath, $blockName, $blockContent, $blockCustom);
+
+        $successMessage = "Block updated successfully.";
+    } catch (Exception $e) {
+        $errorMessage = $e->getMessage();
+    }
+}
+
+// Parse blocks from the page
+try {
+    $blocks = $blockParser->parseBlocks($pagePath);
+} catch (Exception $e) {
+    $errorMessage = "Failed to parse blocks: " . $e->getMessage();
+    $blocks = [];
+}
+
+$pageTitle = 'Edit Page: ' . ($pageId ?: '/');
+$activePage = 'pages';
+
+require __DIR__ . '/includes/header.php';
+?>
+
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Edit Page: <code class="text-blue-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code></h1>
+    <p class="text-gray-600">
+        <a href="/cms/admin/pages.php" class="text-blue-600 hover:text-blue-800">&larr; Back to Pages</a>
+        <span class="mx-2">|</span>
+        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>" target="_blank" class="text-green-600 hover:text-green-800">Preview Page</a>
+    </p>
+</div>
+
+<?php if (isset($successMessage)): ?>
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+        <p class="text-green-700"><?php echo htmlspecialchars($successMessage); ?></p>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($errorMessage)): ?>
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <p class="text-red-700"><?php echo htmlspecialchars($errorMessage); ?></p>
+    </div>
+<?php endif; ?>
+
+<?php if (empty($blocks)): ?>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-600">No blocks found in this page.</p>
+    </div>
+<?php else: ?>
+    <?php foreach ($blocks as $block): ?>
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-3">Block: <?php echo htmlspecialchars($block['name']); ?></h2>
+
+            <div class="mb-4 text-sm text-gray-600">
+                <?php if ($block['role']): ?>
+                    <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
+                        Role: <?php echo htmlspecialchars($block['role']); ?>
+                    </span>
+                <?php endif; ?>
+                <span class="inline-block <?php echo $block['custom'] ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'; ?> px-2 py-1 rounded">
+                    <?php echo $block['custom'] ? 'Custom' : 'Global'; ?>
+                </span>
+            </div>
+
+            <form method="post">
+                <?php echo CSRF::inputField(); ?>
+                <input type="hidden" name="action" value="update_block">
+                <input type="hidden" name="block_name" value="<?php echo htmlspecialchars($block['name']); ?>">
+
+                <label class="flex items-center mb-4">
+                    <input type="checkbox" name="block_custom" <?php echo $block['custom'] ? 'checked' : ''; ?> class="mr-2 h-4 w-4 text-blue-600 rounded">
+                    <span class="text-sm text-gray-700">Mark as custom (per-page override)</span>
+                </label>
+
+                <label class="block mb-4">
+                    <span class="text-sm font-medium text-gray-700 mb-2 block">Block Content:</span>
+                    <textarea name="block_content" rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"><?php echo htmlspecialchars($block['content']); ?></textarea>
+                </label>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Save Block</button>
+                </div>
+            </form>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
+
+<?php require __DIR__ . '/includes/footer.php'; ?>

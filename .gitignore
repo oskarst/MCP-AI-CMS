@@ -1,0 +1,50 @@
+# CMS Configuration Files
+cms/config/config.php
+cms/config/users.json
+cms/config/collections.json
+
+# Installation flag
+cms/.installed
+
+# Backups
+cms/backups/*
+!cms/backups/.gitkeep
+
+# Drafts
+cms/drafts/*
+!cms/drafts/.gitkeep
+
+# Logs
+cms/logs/*
+!cms/logs/.gitkeep
+
+# Modules (if added later)
+cms/modules/*
+!cms/modules/.gitkeep
+
+# Preview directory
+cms/preview/
+cms/preview/*
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor Files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
