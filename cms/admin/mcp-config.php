@@ -194,6 +194,56 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => [],
                         ],
                     ],
+                    [
+                        'name' => 'create_page',
+                        'description' => 'Create a new page with optional HTML content',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'New page ID (e.g., "about", "services/web")',
+                                ],
+                                'content' => [
+                                    'type' => 'string',
+                                    'description' => 'Optional HTML content for the page. If empty, creates a blank page.',
+                                ],
+                            ],
+                            'required' => ['page_id'],
+                        ],
+                    ],
+                    [
+                        'name' => 'read_page',
+                        'description' => 'Read the full HTML content of a page',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                            ],
+                            'required' => ['page_id'],
+                        ],
+                    ],
+                    [
+                        'name' => 'read_block',
+                        'description' => 'Read a specific block\'s content from a page',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'name' => [
+                                    'type' => 'string',
+                                    'description' => 'Block name',
+                                ],
+                            ],
+                            'required' => ['page_id', 'name'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -292,6 +342,9 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_pages</code> - List all pages in the CMS</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_blocks</code> - List editable blocks within a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_blocks</code> - Search for blocks containing specific text (with disambiguation support)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_page</code> - Read the full HTML content of a page</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_block</code> - Read a specific block's content from a page</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_page</code> - Create a new page with optional HTML content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>

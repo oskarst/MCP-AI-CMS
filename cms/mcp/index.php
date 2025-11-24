@@ -242,6 +242,88 @@ try {
             ]);
             break;
 
+        case 'create_page':
+            $pageId = $input['page_id'] ?? '';
+            $content = $input['content'] ?? '';
+
+            if (!$pageId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
+                exit;
+            }
+
+            // Create the page
+            $pageManager->createPage($pageId, $content);
+            echo json_encode(['success' => true, 'page_id' => $pageId]);
+            break;
+
+        case 'read_page':
+            $pageId = normalizePageId($input['page_id'] ?? '');
+
+            if (!isset($input['page_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
+                exit;
+            }
+
+            $pagePath = $pageManager->getPagePath($pageId);
+            if (!$pagePath) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Page not found']);
+                exit;
+            }
+
+            // Read the full page content
+            $content = file_get_contents($pagePath);
+            echo json_encode([
+                'success' => true,
+                'page_id' => $pageId,
+                'path' => $pagePath,
+                'content' => $content
+            ]);
+            break;
+
+        case 'read_block':
+            $pageId = normalizePageId($input['page_id'] ?? '');
+            $blockName = $input['name'] ?? '';
+
+            if (!isset($input['page_id']) || !$blockName) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
+                exit;
+            }
+
+            $pagePath = $pageManager->getPagePath($pageId);
+            if (!$pagePath) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Page not found']);
+                exit;
+            }
+
+            // Parse blocks and find the requested one
+            $blocks = $blockParser->parseBlocks($pagePath);
+            $foundBlock = null;
+
+            foreach ($blocks as $block) {
+                if ($block['name'] === $blockName) {
+                    $foundBlock = $block;
+                    break;
+                }
+            }
+
+            if (!$foundBlock) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Block not found']);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'page_id' => $pageId,
+                'block' => $foundBlock
+            ]);
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Unknown tool: ' . $tool]);
