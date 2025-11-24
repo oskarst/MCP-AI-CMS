@@ -43,6 +43,7 @@ Thumbs.db
 .idea/
 *.sublime-project
 *.sublime-workspace
+.claude/
 
 # Temporary Files
 *.tmp
