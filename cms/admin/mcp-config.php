@@ -356,6 +356,52 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['page_id', 'name', 'search', 'replace'],
                         ],
                     ],
+                    [
+                        'name' => 'insert_block',
+                        'description' => 'Insert a new CMS block into a page at a specific position (before or after another block, or at the end of the page) without sending or modifying the entire page content. Use this tool when the user wants to add a new section (e.g., promo, banner, note) to an existing page. Steps: 1. Determine the correct page_id using list_pages (e.g., \'en/about\' or \'lv/home\'). 2. Determine the correct insertion position by inspecting the existing blocks with list_blocks: Insert before a named block, Insert after a named block, Or insert at the end of the page. 3. Call insert_block with: page_id, position (before_block/after_block/at_end), name (unique block name), optional role (e.g. \'meta\' or \'navigation\'), custom flag, and the HTML content of the new block. 4. Do NOT try to send or reconstruct the entire page. This tool only inserts a new block and leaves all other blocks unchanged.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'position' => [
+                                    'type' => 'object',
+                                    'description' => 'Position where to insert the block',
+                                    'properties' => [
+                                        'type' => [
+                                            'type' => 'string',
+                                            'description' => 'Position type',
+                                            'enum' => ['before_block', 'after_block', 'at_end'],
+                                        ],
+                                        'block_name' => [
+                                            'type' => 'string',
+                                            'description' => 'Reference block name (required for before_block/after_block)',
+                                        ],
+                                    ],
+                                    'required' => ['type'],
+                                ],
+                                'name' => [
+                                    'type' => 'string',
+                                    'description' => 'New block name (must be unique on the page)',
+                                ],
+                                'role' => [
+                                    'type' => 'string',
+                                    'description' => 'Optional block role (e.g., "meta", "navigation")',
+                                ],
+                                'custom' => [
+                                    'type' => 'boolean',
+                                    'description' => 'Whether this is a custom block (default: false)',
+                                ],
+                                'content' => [
+                                    'type' => 'string',
+                                    'description' => 'HTML content for the new block',
+                                ],
+                            ],
+                            'required' => ['page_id', 'position', 'name', 'content'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -459,6 +505,7 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_page</code> - Create a new page with optional HTML content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">find_and_replace_block_content</code> - Find and replace text in a block without sending full content</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">insert_block</code> - Insert a new block at a specific position (before/after block or at end)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
