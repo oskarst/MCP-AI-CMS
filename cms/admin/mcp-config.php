@@ -57,7 +57,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                 'tools' => [
                     [
                         'name' => 'list_pages',
-                        'description' => 'List all pages in the flat-file CMS',
+                        'description' => 'List all available page_ids in the CMS. PRIMARY DISCOVERY TOOL: Use this FIRST to identify the correct page_id when the user references a page in natural language (e.g., "about page", "homepage", "contact"). If the page reference is ambiguous, ask the user to clarify which page they mean.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => (object)[],
@@ -66,7 +67,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'list_blocks',
-                        'description' => 'List all editable blocks within a page. Returns only metadata (name, role, custom) without content. Use this to discover which blocks exist on a page.',
+                        'description' => 'List all CMS blocks on a page (returns metadata only: name, role, custom). PREPARATION TOOL: Use this BEFORE editing to understand page structure and identify which blocks exist. Always prefer working with CMS blocks over raw page regions. This tool does not return block content, only structure.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -80,7 +82,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'update_block',
-                        'description' => 'Update a single block\'s content on a page',
+                        'description' => 'Update a single CMS block\'s content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks or list_blocks. This replaces the entire block content. For small text changes within a block, prefer find_and_replace_block_content instead. Always work with CMS blocks when possible rather than raw page regions.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -106,7 +109,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'duplicate_page',
-                        'description' => 'Duplicate an existing page to create a new one',
+                        'description' => 'Duplicate an existing page to create a new one. DESTRUCTIVE: Creates a new page by copying all content and blocks from an existing page. The new page will have its own independent copy of all blocks.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -124,7 +128,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'delete_page',
-                        'description' => 'Delete a page',
+                        'description' => 'Delete a page permanently. DESTRUCTIVE: This action cannot be undone. A backup is created before deletion. Use with caution.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -138,7 +143,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'list_backups',
-                        'description' => 'List all backups for a page',
+                        'description' => 'List all available backups for a page with timestamps. READ-ONLY: Use this to discover available restore points before using restore_backup.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -152,7 +158,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'restore_backup',
-                        'description' => 'Restore a page from a backup',
+                        'description' => 'Restore a page from a previous backup. DESTRUCTIVE: Replaces current page content with backed-up version. Creates a new backup of current state before restoring. Use list_backups first to identify the correct backup timestamp.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -170,8 +177,9 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'search_blocks',
-                        'description' => 'Search for blocks containing the given text across all pages. Use this tool to find the right block when you need to locate specific content. Returns block_name, page_id, role, custom flag, and content preview. Use this FIRST before update_block or find_and_replace_block_content to identify the correct block location. Common pitfall: Don\'t assume text location - always search first. Search modes: case_insensitive (default) ignores case, case_sensitive matches exact case, html_insensitive ignores HTML tags (e.g., "Developers Alliance" matches "Developers <b>Alliance</b>"). Strategy: If text is not found with default case_insensitive mode, try again with html_insensitive mode as HTML tags may be breaking up the text.',
-                        'usage_example' => 'To change text: 1) search_blocks to find it, 2) if no results, try with html_insensitive mode, 3) ask user if multiple matches, 4) update_block or find_and_replace_block_content',
+                        'description' => '**PRIMARY SEARCH TOOL** - Search for text inside CMS blocks across all pages. MANDATORY WORKFLOW: (1) Use this FIRST when looking for any user-specified text. (2) If multiple blocks match → DO NOT guess, ASK THE USER to clarify which page/section. (3) If no results in case_insensitive mode → retry with html_insensitive mode (ignores HTML tags like <b>, <span>). (4) ONLY if still no results → warn user "This content is not in a CMS-managed block" and fallback to search_in_page. Returns: block_name, page_id, role, custom flag, content preview. Never skip this step before editing block content.',
+                        'readOnlyHint' => true,
+                        'usage_example' => 'CORRECT WORKFLOW: 1) search_blocks (case_insensitive), 2) if empty → retry with html_insensitive, 3) if multiple matches → ask user, 4) if still empty → warn and use search_in_page, 5) then use find_and_replace_block_content or update_block',
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -192,7 +200,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'get_usage_tips',
-                        'description' => 'Get helpful tips for using the CMS MCP tools effectively',
+                        'description' => 'Get helpful tips and best practices for using the CMS MCP tools effectively. READ-ONLY: Returns guidance on tool usage patterns and workflows.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => (object)[],
@@ -201,7 +210,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'create_page',
-                        'description' => 'Create a new page with optional HTML content',
+                        'description' => 'Create a new page with optional HTML content. DESTRUCTIVE: Creates a new page file in the CMS. If content is not provided, creates a blank page. The new page will be accessible at the specified page_id URL.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -219,7 +229,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'read_page',
-                        'description' => 'Read the full HTML content of a page',
+                        'description' => 'Read the full HTML content of a page file. READ-ONLY: Returns entire page HTML. Use this sparingly as it may consume significant context. Prefer list_blocks + read_block for structured access, or get_page_region for targeted reading.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -233,7 +244,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'read_block',
-                        'description' => 'Read a specific block\'s content from a page',
+                        'description' => 'Read a specific CMS block\'s content from a page. READ-ONLY: Returns only the requested block content. Use this after identifying the block via search_blocks or list_blocks. Preferred over read_page for inspecting block content before editing.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -251,7 +263,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'list_posts',
-                        'description' => 'List all posts in a collection (blog, news, etc.)',
+                        'description' => 'List all blog posts in a collection (blog, news, etc.) showing both drafts and published posts. READ-ONLY: Returns post metadata including slug, status (draft/published), and collection. Use this to discover available posts before editing.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -265,7 +278,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'create_post',
-                        'description' => 'Create a new draft blog post',
+                        'description' => 'Create a new blog post as a draft. DESTRUCTIVE: Creates a new post file in the drafts folder. If content is not provided, uses default template with standard blocks (meta, navigation, content, footer). The post must be published separately using publish_post.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -287,7 +301,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'publish_post',
-                        'description' => 'Publish a draft post (move from drafts to public folder)',
+                        'description' => 'Publish a draft blog post (move from drafts folder to public folder). DESTRUCTIVE: Makes the post publicly accessible. The post must exist as a draft first. This action moves the post file from /cms/drafts/ to the public collection folder.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -305,7 +320,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'unpublish_post',
-                        'description' => 'Unpublish a post (move from public folder back to drafts)',
+                        'description' => 'Unpublish a blog post (move from public folder back to drafts). DESTRUCTIVE: Removes the post from public access and moves it back to the drafts folder. The post must be published first. Useful for taking down content temporarily or making major revisions.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -323,7 +339,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'find_and_replace_block_content',
-                        'description' => 'Find and replace a specific piece of text inside a block of a page without sending the full block content to the model. Use this tool when the user wants to update a small part of a long block (e.g., replace a name, fix a typo, update a phone number). Do NOT attempt to fetch or send the entire block content. Instead: 1. Determine the correct page_id and block name using list_pages, list_blocks or search_blocks. 2. Call find_and_replace_block_content with: page_id, block name, exact string to search, replacement string. 3. Prefer mode=\'first\' unless the user explicitly requests replacing all occurrences. 4. If no occurrence is found, do not modify the file and return replacements = 0.',
+                        'description' => 'Find and replace text inside a CMS block without sending full block content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks. PREFERRED for small textual edits inside CMS blocks (e.g., fix typo, update name, change phone number). Server handles the replacement - DO NOT fetch/send full block content. Always prefer this over update_block for small text changes. Workflow: 1) search_blocks to find block, 2) call this tool with exact search/replace strings. If no match found, returns replacements=0 without modifying file.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -358,7 +375,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'insert_block',
-                        'description' => 'Insert a new CMS block into a page at a specific position (before or after another block, or at the end of the page) without sending or modifying the entire page content. Use this tool when the user wants to add a new section (e.g., promo, banner, note) to an existing page. Steps: 1. Determine the correct page_id using list_pages (e.g., \'en/about\' or \'lv/home\'). 2. Determine the correct insertion position by inspecting the existing blocks with list_blocks: Insert before a named block, Insert after a named block, Or insert at the end of the page. 3. Call insert_block with: page_id, position (before_block/after_block/at_end), name (unique block name), optional role (e.g. \'meta\' or \'navigation\'), custom flag, and the HTML content of the new block. 4. Do NOT try to send or reconstruct the entire page. This tool only inserts a new block and leaves all other blocks unchanged.',
+                        'description' => 'Insert a new CMS block into a page at a specific position. DESTRUCTIVE: Use this to add new content sections to a page. Always prefer this over region-based insertion when adding structured content. Workflow: 1) list_pages to identify page, 2) list_blocks to determine position, 3) insert_block with position (before_block/after_block/at_end), unique block name, role, and HTML content. DO NOT send or reconstruct entire page - only provide the new block content. This creates proper CMS block markers and leaves all other blocks unchanged.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -404,7 +422,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'search_in_page',
-                        'description' => 'Search for occurrences of a text string inside a single page and return line ranges with short snippets. Use this tool to locate where something is in the file (e.g., a paragraph, a footer, a script) before requesting a specific region with get_page_region or editing it with block-based tools. This tool does NOT return the whole page, only small snippets and line info.',
+                        'description' => '**RAW FILE SEARCH - FALLBACK ONLY** - Search within the raw page file by line. READ-ONLY: Use this ONLY if search_blocks (normal + html_insensitive modes) finds nothing. MANDATORY: Before using this tool, WARN THE USER: "This content is not inside a CMS-managed block; I can still edit it, but it will be outside the CMS block system." Never use this as a first step - always try search_blocks first. Returns line ranges with short snippets only, not the whole page.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -430,7 +449,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'get_page_region',
-                        'description' => 'Retrieve a small region of a page by line range so you can inspect and edit part of a large file without loading the entire page. Use this tool after search_in_page or when you know the approximate line range you want to modify. The response includes only the requested region (not the whole file) plus the actual line numbers used.',
+                        'description' => 'Retrieve a small region of a page by line range. READ-ONLY: Use ONLY after warning user about non-block editing and confirming it is desired. This is for editing layout/code outside CMS blocks. Use after search_in_page to get the specific lines to edit. NEVER return full file. NEVER use region tools to inspect or modify CMS:BLOCK or CMS:WRAP markers - those are managed by block tools.',
+                        'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -456,7 +476,8 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'update_page_region',
-                        'description' => 'Replace a specific region of a page with edited content, using optimistic locking to avoid overwriting concurrent changes. Use this tool after get_page_region: send back the original region you received plus the updated region you want to apply. The server will only apply the change if the original region still matches the file; otherwise it will fail with an error so you can re-fetch and re-apply.',
+                        'description' => 'Apply a patch to a page region using optimistic locking. DESTRUCTIVE: Use ONLY after get_page_region. FORBIDDEN: MUST NOT modify or remove CMS:BLOCK or CMS:WRAP markers - those are sacred CMS infrastructure. Keep edits minimal to layout/HTML/CSS/JS only. Optimistic locking means the update ONLY succeeds if old_region still matches current file content. If region changed, the tool fails and you must re-fetch with get_page_region.',
+                        'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
