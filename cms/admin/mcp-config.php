@@ -244,6 +244,78 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['page_id', 'name'],
                         ],
                     ],
+                    [
+                        'name' => 'list_posts',
+                        'description' => 'List all posts in a collection (blog, news, etc.)',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                            ],
+                            'required' => [],
+                        ],
+                    ],
+                    [
+                        'name' => 'create_post',
+                        'description' => 'Create a new draft blog post',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug (e.g., "my-first-post")',
+                                ],
+                                'content' => [
+                                    'type' => 'string',
+                                    'description' => 'Optional HTML content for the post. If empty, creates default template.',
+                                ],
+                            ],
+                            'required' => ['slug'],
+                        ],
+                    ],
+                    [
+                        'name' => 'publish_post',
+                        'description' => 'Publish a draft post (move from drafts to public folder)',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug',
+                                ],
+                            ],
+                            'required' => ['slug'],
+                        ],
+                    ],
+                    [
+                        'name' => 'unpublish_post',
+                        'description' => 'Unpublish a post (move from public folder back to drafts)',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug',
+                                ],
+                            ],
+                            'required' => ['slug'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -350,6 +422,10 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">restore_backup</code> - Restore a page from backup</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_posts</code> - List all posts in a collection (blog, news)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_post</code> - Create a new draft blog post</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_post</code> - Publish a draft post</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">unpublish_post</code> - Unpublish a post back to drafts</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_usage_tips</code> - Get helpful tips for using CMS tools effectively</li>
     </ul>
 </div>

@@ -60,7 +60,11 @@ class CSRF
      */
     public static function inputField(): string
     {
-        $token = self::generateToken();
+        // Get existing token or generate new one if none exists
+        $token = self::getToken();
+        if (!$token) {
+            $token = self::generateToken();
+        }
         return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
     }
 

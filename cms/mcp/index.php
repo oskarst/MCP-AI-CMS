@@ -13,6 +13,7 @@ $config = require __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/BackupManager.php';
+require_once __DIR__ . '/../core/BlogManager.php';
 
 // Set JSON response header
 header('Content-Type: application/json');
@@ -59,6 +60,7 @@ $reservedFolders = $config['reserved_folders'] ?? ['cms'];
 $pageManager = new PageManager($config['root_dir'], $reservedFolders);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
 
 // Helper function to normalize homepage page_id
 function normalizePageId($pageId) {
@@ -322,6 +324,97 @@ try {
                 'page_id' => $pageId,
                 'block' => $foundBlock
             ]);
+            break;
+
+        case 'list_posts':
+            $collectionId = $input['collection_id'] ?? 'blog';
+
+            try {
+                $posts = $blogManager->listPosts($collectionId);
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'posts' => $posts,
+                    'count' => count($posts)
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'create_post':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+            $content = $input['content'] ?? '';
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            try {
+                $postPath = $blogManager->createPost($collectionId, $slug, $content);
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'path' => $postPath,
+                    'status' => 'draft'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'publish_post':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            try {
+                $blogManager->publishPost($collectionId, $slug);
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'status' => 'published'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'unpublish_post':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            try {
+                $blogManager->unpublishPost($collectionId, $slug);
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'status' => 'draft'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
             break;
 
         default:
