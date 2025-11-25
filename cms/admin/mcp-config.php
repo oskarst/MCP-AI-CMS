@@ -402,6 +402,88 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['page_id', 'position', 'name', 'content'],
                         ],
                     ],
+                    [
+                        'name' => 'search_in_page',
+                        'description' => 'Search for occurrences of a text string inside a single page and return line ranges with short snippets. Use this tool to locate where something is in the file (e.g., a paragraph, a footer, a script) before requesting a specific region with get_page_region or editing it with block-based tools. This tool does NOT return the whole page, only small snippets and line info.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'search' => [
+                                    'type' => 'string',
+                                    'description' => 'Text to search for in the page',
+                                ],
+                                'limit' => [
+                                    'type' => 'integer',
+                                    'description' => 'Max number of matches to return (default: 20)',
+                                ],
+                                'case_sensitive' => [
+                                    'type' => 'boolean',
+                                    'description' => 'Case sensitive search (default: false)',
+                                ],
+                            ],
+                            'required' => ['page_id', 'search'],
+                        ],
+                    ],
+                    [
+                        'name' => 'get_page_region',
+                        'description' => 'Retrieve a small region of a page by line range so you can inspect and edit part of a large file without loading the entire page. Use this tool after search_in_page or when you know the approximate line range you want to modify. The response includes only the requested region (not the whole file) plus the actual line numbers used.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'start_line' => [
+                                    'type' => 'integer',
+                                    'description' => '1-based line number (inclusive)',
+                                ],
+                                'end_line' => [
+                                    'type' => 'integer',
+                                    'description' => '1-based line number (inclusive)',
+                                ],
+                                'max_chars' => [
+                                    'type' => 'integer',
+                                    'description' => 'Soft cap on region length in characters (default: 4000)',
+                                ],
+                            ],
+                            'required' => ['page_id', 'start_line', 'end_line'],
+                        ],
+                    ],
+                    [
+                        'name' => 'update_page_region',
+                        'description' => 'Replace a specific region of a page with edited content, using optimistic locking to avoid overwriting concurrent changes. Use this tool after get_page_region: send back the original region you received plus the updated region you want to apply. The server will only apply the change if the original region still matches the file; otherwise it will fail with an error so you can re-fetch and re-apply.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'start_line' => [
+                                    'type' => 'integer',
+                                    'description' => '1-based line number where old_region originally started',
+                                ],
+                                'end_line' => [
+                                    'type' => 'integer',
+                                    'description' => '1-based line number where old_region originally ended',
+                                ],
+                                'old_region' => [
+                                    'type' => 'string',
+                                    'description' => 'EXACT content that was returned from get_page_region',
+                                ],
+                                'new_region' => [
+                                    'type' => 'string',
+                                    'description' => 'The edited content that should replace old_region',
+                                ],
+                            ],
+                            'required' => ['page_id', 'start_line', 'end_line', 'old_region', 'new_region'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -506,6 +588,9 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">find_and_replace_block_content</code> - Find and replace text in a block without sending full content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">insert_block</code> - Insert a new block at a specific position (before/after block or at end)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_in_page</code> - Search within a page and return line ranges with snippets</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_page_region</code> - Get a specific region of a page by line range</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_page_region</code> - Update a page region using optimistic locking</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
