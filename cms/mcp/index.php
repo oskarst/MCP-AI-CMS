@@ -72,6 +72,116 @@ function normalizePageId($pageId) {
     return $pageId;
 }
 
+// Handler for find_and_replace_block_content tool
+function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager) {
+    // Validate required parameters
+    $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
+    $blockName = $input['name'] ?? '';
+    $search = $input['search'] ?? '';
+    $replace = $input['replace'] ?? '';
+
+    if ($pageId === null || !$blockName || $search === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, name, search']);
+        exit;
+    }
+
+    // Optional parameters with defaults
+    $mode = $input['mode'] ?? 'first';
+    $caseSensitive = $input['case_sensitive'] ?? true;
+
+    // Validate mode
+    if (!in_array($mode, ['first', 'all'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid mode. Must be "first" or "all"']);
+        exit;
+    }
+
+    // Get page path
+    $pagePath = $pageManager->getPagePath($pageId);
+    if (!$pagePath) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    // Parse blocks
+    $blocks = $blockParser->parseBlocks($pagePath);
+
+    // Find the target block
+    $targetBlock = null;
+    $blockIndex = -1;
+    foreach ($blocks as $index => $block) {
+        if ($block['name'] === $blockName) {
+            $targetBlock = $block;
+            $blockIndex = $index;
+            break;
+        }
+    }
+
+    if (!$targetBlock) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Block not found']);
+        exit;
+    }
+
+    // Perform find and replace
+    $originalContent = $targetBlock['content'];
+    $newContent = $originalContent;
+    $replacements = 0;
+
+    if ($mode === 'first') {
+        // Replace only first occurrence
+        if ($caseSensitive) {
+            $pos = strpos($newContent, $search);
+            if ($pos !== false) {
+                $newContent = substr_replace($newContent, $replace, $pos, strlen($search));
+                $replacements = 1;
+            }
+        } else {
+            $pos = stripos($newContent, $search);
+            if ($pos !== false) {
+                // Get the actual match to preserve other case variations
+                $actualMatch = substr($newContent, $pos, strlen($search));
+                $newContent = substr_replace($newContent, $replace, $pos, strlen($actualMatch));
+                $replacements = 1;
+            }
+        }
+    } else {
+        // Replace all occurrences
+        if ($caseSensitive) {
+            $newContent = str_replace($search, $replace, $originalContent, $count);
+            $replacements = $count;
+        } else {
+            $newContent = str_ireplace($search, $replace, $originalContent, $count);
+            $replacements = $count;
+        }
+    }
+
+    // If no replacements, return without modifying file
+    if ($replacements === 0) {
+        echo json_encode([
+            'success' => true,
+            'replacements' => 0,
+            'message' => 'No occurrences of the search text were found in this block.'
+        ]);
+        exit;
+    }
+
+    // Create backup before modifying
+    $backupManager->createBackup($pageId, $pagePath);
+
+    // Update the block
+    $blockParser->updateBlock($pagePath, $blockName, $newContent, $targetBlock['custom'] ? true : null);
+
+    // Return success with replacement count
+    echo json_encode([
+        'success' => true,
+        'replacements' => $replacements
+    ]);
+    exit;
+}
+
 // Route to appropriate tool handler
 try {
     switch ($tool) {
@@ -91,7 +201,17 @@ try {
             }
 
             $blocks = $blockParser->parseBlocks($pagePath);
-            echo json_encode(['success' => true, 'blocks' => $blocks]);
+
+            // Return only metadata (name, role, custom) without content
+            $blockMetadata = array_map(function($block) {
+                return [
+                    'name' => $block['name'],
+                    'role' => $block['role'],
+                    'custom' => $block['custom']
+                ];
+            }, $blocks);
+
+            echo json_encode(['success' => true, 'blocks' => $blockMetadata]);
             break;
 
         case 'update_block':
@@ -192,10 +312,19 @@ try {
 
         case 'search_blocks':
             $searchText = $input['search_text'] ?? '';
+            $searchMode = $input['search_mode'] ?? 'case_insensitive';
 
             if (!$searchText) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => 'Missing search_text parameter']);
+                exit;
+            }
+
+            // Validate search mode
+            $validModes = ['case_insensitive', 'case_sensitive', 'html_insensitive'];
+            if (!in_array($searchMode, $validModes)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Invalid search_mode. Must be: case_insensitive, case_sensitive, or html_insensitive']);
                 exit;
             }
 
@@ -207,8 +336,30 @@ try {
                 $blocks = $blockParser->parseBlocks($page['path']);
 
                 foreach ($blocks as $block) {
-                    // Case-insensitive search
-                    if (stripos($block['content'], $searchText) !== false) {
+                    $found = false;
+
+                    // Apply search based on mode
+                    switch ($searchMode) {
+                        case 'case_sensitive':
+                            // Case-sensitive search
+                            $found = (strpos($block['content'], $searchText) !== false);
+                            break;
+
+                        case 'html_insensitive':
+                            // Strip HTML tags from content and search text, then do case-insensitive search
+                            $cleanContent = strip_tags($block['content']);
+                            $cleanSearch = strip_tags($searchText);
+                            $found = (stripos($cleanContent, $cleanSearch) !== false);
+                            break;
+
+                        case 'case_insensitive':
+                        default:
+                            // Case-insensitive search (default)
+                            $found = (stripos($block['content'], $searchText) !== false);
+                            break;
+                    }
+
+                    if ($found) {
                         $matches[] = [
                             'page_id' => $page['id'],
                             'page_path' => $page['path'],
@@ -415,6 +566,10 @@ try {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             }
+            break;
+
+        case 'find_and_replace_block_content':
+            handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager);
             break;
 
         default:

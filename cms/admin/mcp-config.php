@@ -66,7 +66,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'list_blocks',
-                        'description' => 'List all editable blocks within a page',
+                        'description' => 'List all editable blocks within a page. Returns only metadata (name, role, custom) without content. Use this to discover which blocks exist on a page.',
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
@@ -170,14 +170,19 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'search_blocks',
-                        'description' => 'Search for blocks containing the given text. Returns block_name and preview. Use this FIRST before update_block to find the correct location. Common pitfall: Don\'t assume text location - always search first.',
-                        'usage_example' => 'To change text: 1) search_blocks to find it, 2) ask user if multiple matches, 3) update_block',
+                        'description' => 'Search for blocks containing the given text across all pages. Use this tool to find the right block when you need to locate specific content. Returns block_name, page_id, role, custom flag, and content preview. Use this FIRST before update_block or find_and_replace_block_content to identify the correct block location. Common pitfall: Don\'t assume text location - always search first. Search modes: case_insensitive (default) ignores case, case_sensitive matches exact case, html_insensitive ignores HTML tags (e.g., "Developers Alliance" matches "Developers <b>Alliance</b>"). Strategy: If text is not found with default case_insensitive mode, try again with html_insensitive mode as HTML tags may be breaking up the text.',
+                        'usage_example' => 'To change text: 1) search_blocks to find it, 2) if no results, try with html_insensitive mode, 3) ask user if multiple matches, 4) update_block or find_and_replace_block_content',
                         'input_schema' => [
                             'type' => 'object',
                             'properties' => [
                                 'search_text' => [
                                     'type' => 'string',
                                     'description' => 'Text to search for in block content',
+                                ],
+                                'search_mode' => [
+                                    'type' => 'string',
+                                    'description' => 'Search mode: "case_insensitive" (default), "case_sensitive", or "html_insensitive" (ignores HTML tags)',
+                                    'enum' => ['case_insensitive', 'case_sensitive', 'html_insensitive'],
                                 ],
                             ],
                             'required' => ['search_text'],
@@ -316,6 +321,41 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['slug'],
                         ],
                     ],
+                    [
+                        'name' => 'find_and_replace_block_content',
+                        'description' => 'Find and replace a specific piece of text inside a block of a page without sending the full block content to the model. Use this tool when the user wants to update a small part of a long block (e.g., replace a name, fix a typo, update a phone number). Do NOT attempt to fetch or send the entire block content. Instead: 1. Determine the correct page_id and block name using list_pages, list_blocks or search_blocks. 2. Call find_and_replace_block_content with: page_id, block name, exact string to search, replacement string. 3. Prefer mode=\'first\' unless the user explicitly requests replacing all occurrences. 4. If no occurrence is found, do not modify the file and return replacements = 0.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                                'name' => [
+                                    'type' => 'string',
+                                    'description' => 'Block name',
+                                ],
+                                'search' => [
+                                    'type' => 'string',
+                                    'description' => 'Exact text to search for in the block',
+                                ],
+                                'replace' => [
+                                    'type' => 'string',
+                                    'description' => 'Replacement text',
+                                ],
+                                'mode' => [
+                                    'type' => 'string',
+                                    'description' => 'Replace mode: "first" (default) or "all"',
+                                    'enum' => ['first', 'all'],
+                                ],
+                                'case_sensitive' => [
+                                    'type' => 'boolean',
+                                    'description' => 'Case sensitive search (default: true)',
+                                ],
+                            ],
+                            'required' => ['page_id', 'name', 'search', 'replace'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -412,12 +452,13 @@ require __DIR__ . '/includes/header.php';
 
     <ul class="list-disc list-inside space-y-2 text-gray-700">
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_pages</code> - List all pages in the CMS</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_blocks</code> - List editable blocks within a page</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_blocks</code> - Search for blocks containing specific text (with disambiguation support)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_blocks</code> - List editable blocks within a page (returns only metadata: name, role, custom)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_blocks</code> - Search for blocks containing specific text with 3 modes: case_insensitive (default), case_sensitive, html_insensitive</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_page</code> - Read the full HTML content of a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_block</code> - Read a specific block's content from a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_page</code> - Create a new page with optional HTML content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">find_and_replace_block_content</code> - Find and replace text in a block without sending full content</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
