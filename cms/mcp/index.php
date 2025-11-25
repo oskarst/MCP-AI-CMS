@@ -72,6 +72,413 @@ function normalizePageId($pageId) {
     return $pageId;
 }
 
+// Handler for insert_block tool
+function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
+    // Validate required parameters
+    $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
+    $position = $input['position'] ?? null;
+    $name = $input['name'] ?? '';
+    $content = $input['content'] ?? '';
+
+    if ($pageId === null || !$position || !$name || $content === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, position, name, content']);
+        exit;
+    }
+
+    // Validate position structure
+    if (!is_array($position) || !isset($position['type'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid position parameter']);
+        exit;
+    }
+
+    $positionType = $position['type'];
+    $referenceBlockName = $position['block_name'] ?? null;
+
+    // Validate position type
+    $validTypes = ['before_block', 'after_block', 'at_end'];
+    if (!in_array($positionType, $validTypes)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid position.type; expected before_block, after_block, or at_end']);
+        exit;
+    }
+
+    // Validate reference block name for before_block/after_block
+    if (in_array($positionType, ['before_block', 'after_block']) && !$referenceBlockName) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'position.block_name is required for before_block/after_block']);
+        exit;
+    }
+
+    // Optional parameters
+    $role = $input['role'] ?? null;
+    $custom = $input['custom'] ?? false;
+
+    // Get page path
+    $pagePath = $pageManager->getPagePath($pageId);
+    if (!$pagePath) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    // Read file content
+    $fileContent = file_get_contents($pagePath);
+    if ($fileContent === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
+        exit;
+    }
+
+    // Parse existing blocks
+    $blocks = $blockParser->parseBlocks($pagePath);
+
+    // Check for duplicate block name
+    foreach ($blocks as $block) {
+        if ($block['name'] === $name) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => "Block with name '{$name}' already exists on this page"]);
+            exit;
+        }
+    }
+
+    // Determine insertion position
+    $insertPos = null;
+
+    switch ($positionType) {
+        case 'before_block':
+            // Find the reference block and insert before it
+            $found = false;
+            foreach ($blocks as $block) {
+                if ($block['name'] === $referenceBlockName) {
+                    $insertPos = $block['start_pos'];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"]);
+                exit;
+            }
+            break;
+
+        case 'after_block':
+            // Find the reference block and insert after it
+            $found = false;
+            foreach ($blocks as $block) {
+                if ($block['name'] === $referenceBlockName) {
+                    $insertPos = $block['end_pos'];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"]);
+                exit;
+            }
+            break;
+
+        case 'at_end':
+            // Insert before </body> tag if found, otherwise at end of file
+            $bodyClosePos = stripos($fileContent, '</body>');
+            if ($bodyClosePos !== false) {
+                $insertPos = $bodyClosePos;
+            } else {
+                $insertPos = strlen($fileContent);
+            }
+            break;
+    }
+
+    // Build the new block markup
+    $attributes = ['name' => $name];
+    if ($role) {
+        $attributes['role'] = $role;
+    }
+    if ($custom) {
+        $attributes['custom'] = '1';
+    }
+
+    $attrString = '';
+    foreach ($attributes as $key => $value) {
+        $attrString .= "{$key}={$value} ";
+    }
+    $attrString = rtrim($attrString);
+
+    // Use PHP comment style (consistent with BlockParser)
+    $newBlockMarkup = "\n<?php /* CMS:BLOCK {$attrString} start */ ?>\n";
+    $newBlockMarkup .= $content;
+    $newBlockMarkup .= "\n<?php /* CMS:BLOCK name={$name} end */ ?>\n";
+
+    // Create backup before modifying
+    $backupManager->createBackup($pageId, $pagePath);
+
+    // Insert the new block
+    $newFileContent = substr($fileContent, 0, $insertPos) . $newBlockMarkup . substr($fileContent, $insertPos);
+
+    // Write back to file
+    if (file_put_contents($pagePath, $newFileContent) === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to write to page file']);
+        exit;
+    }
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+// Handler for search_in_page tool
+function handleSearchInPage($input, $pageManager) {
+    // Validate required parameters
+    $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
+    $search = $input['search'] ?? '';
+
+    if ($pageId === null || $search === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, search']);
+        exit;
+    }
+
+    // Optional parameters
+    $limit = $input['limit'] ?? 20;
+    $caseSensitive = $input['case_sensitive'] ?? false;
+
+    // Get page path
+    $pagePath = $pageManager->getPagePath($pageId);
+    if (!$pagePath || !is_readable($pagePath)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    // Read file content
+    $content = file_get_contents($pagePath);
+    if ($content === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
+        exit;
+    }
+
+    // Split into lines
+    $lines = preg_split("/\r\n|\n|\r/", $content);
+    $matches = [];
+    $matchCount = 0;
+
+    // Search through lines
+    for ($i = 0; $i < count($lines) && $matchCount < $limit; $i++) {
+        $line = $lines[$i];
+        $found = false;
+
+        if ($caseSensitive) {
+            $found = (strpos($line, $search) !== false);
+        } else {
+            $found = (stripos($line, $search) !== false);
+        }
+
+        if ($found) {
+            // Determine snippet window (current line + up to 5 lines after)
+            $startLine = $i + 1; // 1-based
+            $endLine = min($i + 6, count($lines)); // up to 5 lines after
+
+            // Build snippet
+            $snippetLines = array_slice($lines, $i, $endLine - $startLine + 1);
+            $snippet = implode("\n", $snippetLines);
+
+            // Trim snippet to ~250 chars
+            if (strlen($snippet) > 250) {
+                $snippet = substr($snippet, 0, 250) . '...';
+            }
+
+            $matches[] = [
+                'start_line' => $startLine,
+                'end_line' => $endLine,
+                'snippet' => $snippet
+            ];
+
+            $matchCount++;
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'matches' => $matches
+    ]);
+    exit;
+}
+
+// Handler for get_page_region tool
+function handleGetPageRegion($input, $pageManager) {
+    // Validate required parameters
+    $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
+    $startLine = $input['start_line'] ?? null;
+    $endLine = $input['end_line'] ?? null;
+
+    if ($pageId === null || $startLine === null || $endLine === null) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line']);
+        exit;
+    }
+
+    // Validate line numbers
+    if (!is_int($startLine) || !is_int($endLine) || $startLine < 1 || $endLine < $startLine) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
+        exit;
+    }
+
+    // Optional parameters
+    $maxChars = $input['max_chars'] ?? 4000;
+
+    // Get page path
+    $pagePath = $pageManager->getPagePath($pageId);
+    if (!$pagePath || !is_readable($pagePath)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    // Read file content
+    $content = file_get_contents($pagePath);
+    if ($content === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
+        exit;
+    }
+
+    // Split into lines
+    $lines = preg_split("/\r\n|\n|\r/", $content);
+    $totalLines = count($lines);
+
+    // Validate start line
+    if ($startLine > $totalLines) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
+        exit;
+    }
+
+    // Clamp end line
+    $actualEndLine = min($endLine, $totalLines);
+
+    // Extract region, respecting max_chars
+    $regionLines = [];
+    $charCount = 0;
+    $startIdx = $startLine - 1; // Convert to 0-based
+
+    for ($i = $startIdx; $i < $actualEndLine; $i++) {
+        $lineContent = $lines[$i];
+        $lineLength = strlen($lineContent) + 1; // +1 for newline
+
+        if ($charCount + $lineLength > $maxChars && $charCount > 0) {
+            // Stop if we exceed max_chars
+            $actualEndLine = $i; // Adjust actual end line
+            break;
+        }
+
+        $regionLines[] = $lineContent;
+        $charCount += $lineLength;
+    }
+
+    $region = implode("\n", $regionLines);
+
+    echo json_encode([
+        'success' => true,
+        'region' => $region,
+        'start_line' => $startLine,
+        'end_line' => $actualEndLine
+    ]);
+    exit;
+}
+
+// Handler for update_page_region tool
+function handleUpdatePageRegion($input, $pageManager, $backupManager) {
+    // Validate required parameters
+    $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
+    $startLine = $input['start_line'] ?? null;
+    $endLine = $input['end_line'] ?? null;
+    $oldRegion = $input['old_region'] ?? '';
+    $newRegion = $input['new_region'] ?? '';
+
+    if ($pageId === null || $startLine === null || $endLine === null || $oldRegion === '' || $newRegion === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line, old_region, new_region']);
+        exit;
+    }
+
+    // Validate line numbers
+    if (!is_int($startLine) || !is_int($endLine) || $startLine < 1 || $endLine < $startLine) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
+        exit;
+    }
+
+    // Get page path
+    $pagePath = $pageManager->getPagePath($pageId);
+    if (!$pagePath || !is_readable($pagePath) || !is_writable($pagePath)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    // Read file content
+    $content = file_get_contents($pagePath);
+    if ($content === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
+        exit;
+    }
+
+    // Split into lines
+    $lines = preg_split("/\r\n|\n|\r/", $content);
+    $totalLines = count($lines);
+
+    // Validate line range
+    if ($startLine > $totalLines || $endLine > $totalLines) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
+        exit;
+    }
+
+    // Extract current region
+    $startIdx = $startLine - 1; // Convert to 0-based
+    $count = $endLine - $startLine + 1;
+    $currentRegionLines = array_slice($lines, $startIdx, $count);
+    $currentRegion = implode("\n", $currentRegionLines);
+
+    // Check if old_region matches current region (optimistic locking)
+    if ($currentRegion !== $oldRegion) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Region has changed since retrieval'
+        ]);
+        exit;
+    }
+
+    // Create backup before modifying
+    $backupManager->createBackup($pageId, $pagePath);
+
+    // Split new region into lines
+    $newRegionLines = preg_split("/\r\n|\n|\r/", $newRegion);
+
+    // Replace the region
+    array_splice($lines, $startIdx, $count, $newRegionLines);
+
+    // Join back into file content
+    $newContent = implode("\n", $lines);
+
+    // Write back to file
+    if (file_put_contents($pagePath, $newContent) === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to write to page file']);
+        exit;
+    }
+
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 // Handler for find_and_replace_block_content tool
 function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager) {
     // Validate required parameters
@@ -570,6 +977,22 @@ try {
 
         case 'find_and_replace_block_content':
             handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager);
+            break;
+
+        case 'insert_block':
+            handleInsertBlock($input, $pageManager, $blockParser, $backupManager);
+            break;
+
+        case 'search_in_page':
+            handleSearchInPage($input, $pageManager);
+            break;
+
+        case 'get_page_region':
+            handleGetPageRegion($input, $pageManager);
+            break;
+
+        case 'update_page_region':
+            handleUpdatePageRegion($input, $pageManager, $backupManager);
             break;
 
         default:
