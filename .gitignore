@@ -14,6 +14,9 @@ cms/backups/*
 cms/drafts/*
 !cms/drafts/.gitkeep
 
+# Assets
+assets/
+
 # Logs
 cms/logs/*
 !cms/logs/.gitkeep
