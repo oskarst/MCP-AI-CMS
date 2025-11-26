@@ -80,6 +80,22 @@ $parentPath = ($parentPath === '.' || $parentPath === '/') ? '' : $parentPath;
 require __DIR__ . '/includes/header.php';
 ?>
 
+<!-- CodeMirror CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-2">Edit File</h1>
     <p class="text-gray-600">
@@ -149,5 +165,66 @@ require __DIR__ . '/includes/header.php';
         <strong>Note:</strong> A backup is automatically created before saving. Backups are stored in <code class="bg-yellow-100 px-1 rounded">.backups</code> folder.
     </p>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.querySelector('textarea[name="content"]');
+    const form = textarea.closest('form');
+    const fileExt = '<?php echo strtolower($fileExt); ?>';
+
+    // Determine CodeMirror mode based on file extension
+    let mode = 'text/plain';
+
+    const modeMap = {
+        'php': 'application/x-httpd-php',
+        'html': 'htmlmixed',
+        'htm': 'htmlmixed',
+        'xml': 'xml',
+        'js': 'javascript',
+        'json': { name: 'javascript', json: true },
+        'css': 'css',
+        'scss': 'text/x-scss',
+        'sass': 'text/x-sass',
+        'less': 'text/x-less',
+        'md': 'markdown',
+        'markdown': 'markdown',
+        'py': 'python',
+        'sh': 'shell',
+        'bash': 'shell',
+        'sql': 'sql',
+        'yml': 'yaml',
+        'yaml': 'yaml',
+        'java': 'text/x-java',
+        'c': 'text/x-csrc',
+        'cpp': 'text/x-c++src',
+        'h': 'text/x-csrc',
+        'go': 'text/x-go',
+        'rb': 'text/x-ruby',
+        'txt': 'text/plain'
+    };
+
+    if (modeMap[fileExt]) {
+        mode = modeMap[fileExt];
+    }
+
+    // Initialize CodeMirror
+    const editor = CodeMirror.fromTextArea(textarea, {
+        mode: mode,
+        theme: 'material-darker',
+        lineNumbers: true,
+        lineWrapping: true,
+        indentUnit: 4,
+        indentWithTabs: false,
+        matchBrackets: true,
+        autoCloseTags: true,
+        viewportMargin: Infinity
+    });
+
+    // Save CodeMirror content to textarea before form submit
+    form.addEventListener('submit', function() {
+        editor.save();
+    });
+});
+</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
