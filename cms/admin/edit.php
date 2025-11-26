@@ -8,12 +8,14 @@ require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
+require_once __DIR__ . '/../core/PageSettings.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
-$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager, $sitemapGenerator);
+$pageSettings = new PageSettings($config['cms_dir'] . '/settings');
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager, $sitemapGenerator, $pageSettings);
 $blockParser = new BlockParser();
 
 $pageId = $_GET['page_id'] ?? '';
@@ -62,6 +64,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pageManager->publishDraft($pageId);
                 $successMessage = "Draft published successfully.";
                 break;
+
+            case 'save_settings':
+                $customCSS = $_POST['custom_css'] ?? '';
+
+                $settings = [
+                    'custom_css' => $customCSS
+                ];
+
+                $pageManager->savePageSettings($pageId, $settings);
+                $successMessage = "Page settings saved successfully.";
+                break;
         }
     } catch (Exception $e) {
         $errorMessage = $e->getMessage();
@@ -69,6 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $hasDraft = $pageManager->hasDraft($pageId);
+
+// Load page settings
+try {
+    $currentSettings = $pageManager->getPageSettings($pageId);
+} catch (Exception $e) {
+    $currentSettings = [
+        'custom_css' => '',
+        'custom_styles' => '',
+        'custom_stylesheets' => [],
+        'created_at' => null,
+        'updated_at' => null
+    ];
+    error_log("Failed to load page settings: " . $e->getMessage());
+}
 
 // Parse blocks from the page (use draft if exists, otherwise live)
 try {
@@ -140,6 +167,60 @@ require __DIR__ . '/includes/header.php';
         <p class="text-red-700"><?php echo htmlspecialchars($errorMessage); ?></p>
     </div>
 <?php endif; ?>
+
+<!-- Page Settings Accordion -->
+<div class="bg-white rounded-lg shadow-md mb-6" x-data="{ settingsOpen: false }">
+    <button
+        type="button"
+        @click="settingsOpen = !settingsOpen"
+        class="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition">
+        <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <span>⚙️</span>
+            <span>Page Settings</span>
+        </h2>
+        <svg
+            class="w-5 h-5 text-gray-500 transition-transform"
+            :class="settingsOpen ? 'rotate-180' : ''"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+    </button>
+
+    <div x-show="settingsOpen" x-cloak class="border-t border-gray-200">
+        <form method="post" class="p-6">
+            <?php echo CSRF::inputField(); ?>
+            <input type="hidden" name="action" value="save_settings">
+
+            <div class="mb-4">
+                <label class="block mb-2">
+                    <span class="text-sm font-medium text-gray-700">Custom CSS & Stylesheets</span>
+                    <span class="text-xs text-gray-500 block mt-1">
+                        Paste stylesheet URLs, &lt;link&gt; tags, or &lt;style&gt; tags. All will be loaded in preview mode.
+                    </span>
+                </label>
+                <textarea
+                    name="custom_css"
+                    rows="15"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    placeholder="Examples:&#10;&#10;https://cdn.example.com/styles.css&#10;/assets/custom.css&#10;&#10;<link rel=&quot;stylesheet&quot; href=&quot;https://example.com/theme.css&quot;>&#10;&#10;<style>&#10;  .my-class { color: red; }&#10;</style>"
+                ><?php echo htmlspecialchars($currentSettings['custom_css'] ?? ''); ?></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Save Settings
+                </button>
+                <?php if ($pageManager->hasPageSettings($pageId)): ?>
+                    <span class="text-xs text-gray-500 self-center">
+                        Last updated: <?php echo htmlspecialchars($currentSettings['updated_at'] ?? 'Never'); ?>
+                    </span>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
+</div>
 
 <?php if (empty($blocks)): ?>
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -215,16 +296,15 @@ require __DIR__ . '/includes/header.php';
                 <?php if (!($block['system'] ?? false)): ?>
                 <div x-show="view === 'preview'" x-cloak class="mb-4">
                     <div class="border border-gray-300 rounded-md p-4 bg-gray-50 mb-2">
-                        <p class="text-xs text-gray-500 mb-2">Preview with frontend styling:</p>
+                        <p class="text-xs text-gray-500 mb-2">Preview with custom styling (isolated from admin CSS):</p>
                         <div class="preview-wrapper bg-white border border-gray-200 rounded p-4" style="max-height: 500px; overflow-y: auto;">
-                            <div
+                            <iframe
                                 x-ref="preview"
-                                @input="syncFromPreview()"
-                                contenteditable="true"
-                                class="preview-content min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            ></div>
+                                class="w-full border-0 min-h-[200px]"
+                                style="height: 400px;"
+                            ></iframe>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Edit content directly in the preview. HTML tags are preserved.</p>
+                        <p class="text-xs text-gray-500 mt-2">Preview is completely isolated from admin styles. Edit in Code View, then switch back to see changes.</p>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -237,81 +317,13 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
 <?php endif; ?>
 
-<style>
-/* Preview-specific CSS overrides */
-.preview-content * {
-    /* Override fixed/absolute positioning to prevent layout issues */
-    position: static !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    z-index: auto !important;
-}
-
-/* Allow relative positioning for some elements */
-.preview-content *[style*="position: relative"] {
-    position: relative !important;
-}
-
-/* Reset some common fixed elements */
-.preview-content nav,
-.preview-content header,
-.preview-content footer {
-    position: static !important;
-    width: auto !important;
-}
-</style>
 
 <script>
-// Load page CSS dynamically
-let pageCSSLoaded = false;
-
-function loadPageCSS(pageUrl) {
-    if (pageCSSLoaded) return Promise.resolve();
-
-    return fetch(pageUrl)
-        .then(response => response.text())
-        .then(html => {
-            // Parse HTML to extract stylesheets
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // Find all link tags with stylesheets
-            const stylesheets = doc.querySelectorAll('link[rel="stylesheet"]');
-            const promises = [];
-
-            stylesheets.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href) {
-                    // Create new link element in admin page
-                    const newLink = document.createElement('link');
-                    newLink.rel = 'stylesheet';
-                    newLink.href = href;
-                    document.head.appendChild(newLink);
-
-                    promises.push(new Promise(resolve => {
-                        newLink.onload = resolve;
-                        newLink.onerror = resolve; // Continue even if some CSS fails
-                    }));
-                }
-            });
-
-            // Also extract inline styles
-            const styles = doc.querySelectorAll('style');
-            styles.forEach(style => {
-                const newStyle = document.createElement('style');
-                newStyle.textContent = style.textContent;
-                document.head.appendChild(newStyle);
-            });
-
-            pageCSSLoaded = true;
-            return Promise.all(promises);
-        })
-        .catch(error => {
-            console.error('Failed to load page CSS:', error);
-        });
-}
+// Page settings for CSS injection
+const pageSettings = {
+    customStyles: <?php echo json_encode($currentSettings['custom_styles'] ?? ''); ?>,
+    customStylesheets: <?php echo json_encode($currentSettings['custom_stylesheets'] ?? []); ?>
+};
 
 // Block editor controller for Alpine.js
 function blockEditor(index) {
@@ -340,7 +352,6 @@ function blockEditor(index) {
                         indentUnit: 4,
                         indentWithTabs: false,
                         matchBrackets: true,
-                        autoCloseTags: true,
                         viewportMargin: Infinity
                     });
 
@@ -369,17 +380,37 @@ function blockEditor(index) {
         },
 
         updatePreview() {
-            // Load page CSS first (only once)
+            // Inject custom CSS from page settings (only once)
             if (!this.cssLoaded) {
-                const pageId = '<?php echo addslashes($pageId); ?>';
-                const pageUrl = pageId ? '/' + pageId + '/' : '/';
+                this.injectCustomCSS();
+                this.cssLoaded = true;
+            }
+            this.renderPreview();
+        },
 
-                loadPageCSS(pageUrl).then(() => {
-                    this.cssLoaded = true;
-                    this.renderPreview();
+        injectCustomCSS() {
+            const iframe = this.$refs.preview;
+            if (!iframe) return;
+
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+            // Inject custom styles into iframe
+            if (pageSettings.customStyles) {
+                const styleEl = iframeDoc.createElement('style');
+                styleEl.textContent = pageSettings.customStyles;
+                iframeDoc.head.appendChild(styleEl);
+            }
+
+            // Inject custom stylesheets into iframe
+            if (pageSettings.customStylesheets && pageSettings.customStylesheets.length > 0) {
+                pageSettings.customStylesheets.forEach(url => {
+                    if (!url || url.trim() === '') return;
+
+                    const linkEl = iframeDoc.createElement('link');
+                    linkEl.rel = 'stylesheet';
+                    linkEl.href = url.trim();
+                    iframeDoc.head.appendChild(linkEl);
                 });
-            } else {
-                this.renderPreview();
             }
         },
 
@@ -387,32 +418,34 @@ function blockEditor(index) {
             // Get content from CodeMirror or textarea
             const content = this.editor ? this.editor.getValue() : this.$refs.textarea.value;
 
-            // Set preview content
-            if (this.$refs.preview) {
-                this.$refs.preview.innerHTML = content;
-            }
-        },
+            // Write to iframe document
+            const iframe = this.$refs.preview;
+            if (!iframe) return;
 
-        syncFromPreview() {
-            // Get content from preview (preserves HTML)
-            const content = this.$refs.preview.innerHTML;
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-            // Update CodeMirror
-            if (this.editor) {
-                this.editor.setValue(content);
-            }
+            // Create a basic HTML structure in iframe
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif;">
+                    ${content}
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
 
-            // Update textarea
-            this.$refs.textarea.value = content;
+            // Inject custom CSS after document is written
+            this.injectCustomCSS();
         },
 
         // Make sure CodeMirror is visible when switching to code view
         switchToCode() {
-            // Sync any changes from preview before switching
-            if (this.$refs.preview && this.$refs.preview.innerHTML) {
-                this.syncFromPreview();
-            }
-
             this.view = 'code';
             this.$nextTick(() => {
                 if (this.editor) {

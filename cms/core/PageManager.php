@@ -13,6 +13,7 @@ class PageManager
     private string $draftsDir;
     private $backupManager;
     private $sitemapGenerator;
+    private $pageSettings;
 
     /**
      * @param string $rootDir Absolute path to the web root
@@ -20,14 +21,16 @@ class PageManager
      * @param string|null $draftsDir Absolute path to drafts directory (optional)
      * @param object|null $backupManager Optional BackupManager instance for creating backups
      * @param object|null $sitemapGenerator Optional SitemapGenerator instance for updating sitemap
+     * @param object|null $pageSettings Optional PageSettings instance for managing page settings
      */
-    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null, $backupManager = null, $sitemapGenerator = null)
+    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null, $backupManager = null, $sitemapGenerator = null, $pageSettings = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->reservedFolders = $reservedFolders;
         $this->draftsDir = $draftsDir ? rtrim($draftsDir, '/') . '/pages' : '';
         $this->backupManager = $backupManager;
         $this->sitemapGenerator = $sitemapGenerator;
+        $this->pageSettings = $pageSettings;
     }
 
     /**
@@ -147,6 +150,16 @@ class PageManager
         if (!copy($sourcePath, $targetPath)) {
             throw new Exception("Failed to copy page");
         }
+
+        // Copy page settings if they exist
+        if ($this->pageSettings) {
+            try {
+                $this->pageSettings->copySettings($sourcePageId, $newPageId);
+            } catch (Exception $e) {
+                // Settings copy failed, but don't stop duplication
+                error_log("Failed to copy page settings: " . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -191,6 +204,46 @@ class PageManager
         if (file_put_contents($targetPath, $htmlContent) === false) {
             throw new Exception("Failed to create page file");
         }
+
+        // Auto-extract CSS from HTML and save to page settings
+        if ($this->pageSettings) {
+            try {
+                $extractedCSS = $this->extractCSSFromHTML($htmlContent);
+                if (!empty($extractedCSS)) {
+                    $this->pageSettings->saveSettings($pageId, [
+                        'custom_css' => $extractedCSS
+                    ]);
+                }
+            } catch (Exception $e) {
+                // CSS extraction failed, but don't stop page creation
+                error_log("Failed to extract CSS during page creation: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Extract CSS links and style tags from HTML content
+     *
+     * @param string $html HTML content
+     * @return string Extracted CSS (links and style tags)
+     */
+    private function extractCSSFromHTML(string $html): string
+    {
+        $extracted = [];
+
+        // Extract <link rel="stylesheet"> tags
+        preg_match_all('/<link[^>]*rel=["\']stylesheet["\'][^>]*>/i', $html, $linkMatches);
+        if (!empty($linkMatches[0])) {
+            $extracted = array_merge($extracted, $linkMatches[0]);
+        }
+
+        // Extract <style> tags with content
+        preg_match_all('/<style[^>]*>.*?<\/style>/is', $html, $styleMatches);
+        if (!empty($styleMatches[0])) {
+            $extracted = array_merge($extracted, $styleMatches[0]);
+        }
+
+        return implode("\n\n", $extracted);
     }
 
     /**
@@ -210,6 +263,16 @@ class PageManager
         // Delete the index.php file
         if (!unlink($pagePath)) {
             throw new Exception("Failed to delete page file");
+        }
+
+        // Delete page settings if they exist
+        if ($this->pageSettings) {
+            try {
+                $this->pageSettings->deleteSettings($pageId);
+            } catch (Exception $e) {
+                // Settings deletion failed, but don't stop page deletion
+                error_log("Failed to delete page settings: " . $e->getMessage());
+            }
         }
 
         // Try to remove the directory if empty (but don't fail if not empty)
@@ -421,5 +484,57 @@ class PageManager
         if (!unlink($draftPath)) {
             throw new Exception('Failed to discard draft');
         }
+    }
+
+    /**
+     * Get settings for a page.
+     *
+     * @param string $pageId Page ID
+     * @return array Page settings
+     */
+    public function getPageSettings(string $pageId): array
+    {
+        if (!$this->pageSettings) {
+            return [
+                'custom_styles' => '',
+                'custom_stylesheets' => [],
+                'created_at' => null,
+                'updated_at' => null
+            ];
+        }
+
+        return $this->pageSettings->getSettings($pageId);
+    }
+
+    /**
+     * Save settings for a page.
+     *
+     * @param string $pageId Page ID
+     * @param array $settings Settings to save
+     * @return void
+     * @throws Exception if settings manager not configured or save fails
+     */
+    public function savePageSettings(string $pageId, array $settings): void
+    {
+        if (!$this->pageSettings) {
+            throw new Exception('Page settings manager not configured');
+        }
+
+        $this->pageSettings->saveSettings($pageId, $settings);
+    }
+
+    /**
+     * Check if a page has settings.
+     *
+     * @param string $pageId Page ID
+     * @return bool True if page has settings
+     */
+    public function hasPageSettings(string $pageId): bool
+    {
+        if (!$this->pageSettings) {
+            return false;
+        }
+
+        return $this->pageSettings->hasSettings($pageId);
     }
 }

@@ -6,10 +6,12 @@
  */
 
 require_once __DIR__ . '/../core/PageManager.php';
+require_once __DIR__ . '/../core/PageSettings.php';
 
 $config = require __DIR__ . '/../config/config.php';
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null);
+$pageSettings = new PageSettings($config['cms_dir'] . '/settings');
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, null, null, $pageSettings);
 
 // Get page ID and draft parameter
 $pageId = $_GET['page_id'] ?? '';

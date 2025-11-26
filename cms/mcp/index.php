@@ -12,6 +12,7 @@
 $config = require __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/PageManager.php';
+require_once __DIR__ . '/../core/PageSettings.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/BlogManager.php';
 require_once __DIR__ . '/../core/UploadManager.php';
@@ -108,7 +109,8 @@ if ($input === null && json_last_error() !== JSON_ERROR_NONE) {
 
 // Initialize managers
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null);
+$pageSettings = new PageSettings($config['cms_dir'] . '/settings');
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, null, null, $pageSettings);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);

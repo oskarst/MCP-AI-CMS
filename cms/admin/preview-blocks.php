@@ -7,10 +7,12 @@
 
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/BlockParser.php';
+require_once __DIR__ . '/../core/PageSettings.php';
 
 $config = require __DIR__ . '/../config/config.php';
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders);
+$pageSettings = new PageSettings($config['cms_dir'] . '/settings');
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, null, null, null, $pageSettings);
 $blockParser = new BlockParser();
 
 // Get page ID from query parameter

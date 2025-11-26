@@ -7,12 +7,14 @@ require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
+require_once __DIR__ . '/../core/PageSettings.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
-$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager, $sitemapGenerator);
+$pageSettings = new PageSettings($config['cms_dir'] . '/settings');
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager, $sitemapGenerator, $pageSettings);
 
 // Handle page actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -311,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function() {
             indentUnit: 4,
             indentWithTabs: false,
             matchBrackets: true,
-            autoCloseTags: true,
             viewportMargin: Infinity
         });
 
