@@ -15,6 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $maxBackups = (int)($_POST['max_backups'] ?? 10);
         $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,assets,uploads,index';
 
+        // MCP Security settings
+        $mcpRateLimitEnabled = isset($_POST['mcp_rate_limit_enabled']) ? 'true' : 'false';
+        $mcpRateLimitRequests = (int)($_POST['mcp_rate_limit_requests'] ?? 60);
+        $mcpRateLimitWindow = (int)($_POST['mcp_rate_limit_window'] ?? 60);
+        $mcpIpWhitelist = trim($_POST['mcp_ip_whitelist'] ?? '');
+
         // Load current config
         $configPath = __DIR__ . '/../config/config.php';
         $currentConfig = require $configPath;
@@ -44,6 +50,12 @@ return [
     // Optional settings
     'site_name'  => '{$siteName}',
     'language'   => 'en',
+
+    // MCP Security Settings
+    'mcp_rate_limit_enabled' => {$mcpRateLimitEnabled},
+    'mcp_rate_limit_requests' => {$mcpRateLimitRequests},  // Max requests per window
+    'mcp_rate_limit_window' => {$mcpRateLimitWindow},    // Time window in seconds
+    'mcp_ip_whitelist' => '{$mcpIpWhitelist}',         // Comma-separated IPs (empty = allow all)
 ];
 PHP;
 
@@ -153,6 +165,85 @@ require __DIR__ . '/includes/header.php';
                     <p class="text-sm text-yellow-700">
                         <strong>Important:</strong> These folders are protected from being created as pages to prevent conflicts with system directories and media folders.
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-gray-200">
+
+        <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">MCP API Security</h3>
+
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input
+                            type="checkbox"
+                            id="mcp_rate_limit_enabled"
+                            name="mcp_rate_limit_enabled"
+                            <?php echo ($config['mcp_rate_limit_enabled'] ?? true) ? 'checked' : ''; ?>
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        >
+                    </div>
+                    <div class="ml-3">
+                        <label for="mcp_rate_limit_enabled" class="font-medium text-gray-700">
+                            Enable Rate Limiting
+                        </label>
+                        <p class="text-sm text-gray-500">Limit the number of API requests to prevent abuse</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Max Requests:
+                        </label>
+                        <input
+                            type="number"
+                            name="mcp_rate_limit_requests"
+                            value="<?php echo htmlspecialchars($config['mcp_rate_limit_requests'] ?? 60); ?>"
+                            min="1"
+                            max="1000"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Maximum requests allowed per time window</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Time Window (seconds):
+                        </label>
+                        <input
+                            type="number"
+                            name="mcp_rate_limit_window"
+                            value="<?php echo htmlspecialchars($config['mcp_rate_limit_window'] ?? 60); ?>"
+                            min="1"
+                            max="3600"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Time window for rate limiting (e.g., 60 = per minute)</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        IP Whitelist:
+                    </label>
+                    <textarea
+                        name="mcp_ip_whitelist"
+                        rows="3"
+                        placeholder="127.0.0.1, 192.168.1.100"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    ><?php echo htmlspecialchars($config['mcp_ip_whitelist'] ?? ''); ?></textarea>
+                    <p class="mt-1 text-sm text-gray-500">Comma-separated list of allowed IP addresses (leave empty to allow all IPs)</p>
+
+                    <div class="mt-3 bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <p class="text-sm text-blue-700">
+                            <strong>Note:</strong> If specified, only requests from these IP addresses will be accepted by the MCP API. Leave empty to accept requests from any IP.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

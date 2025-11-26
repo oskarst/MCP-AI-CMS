@@ -24,6 +24,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// IP Whitelisting check
+if (!empty($config['mcp_ip_whitelist'])) {
+    $allowedIps = array_map('trim', explode(',', $config['mcp_ip_whitelist']));
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    if (!in_array($clientIp, $allowedIps)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Access denied - IP not whitelisted']);
+        exit;
+    }
+}
+
+// Rate limiting check
+if ($config['mcp_rate_limit_enabled'] ?? false) {
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateLimitFile = __DIR__ . '/../logs/rate_limit_' . md5($clientIp) . '.json';
+    $now = time();
+    $window = $config['mcp_rate_limit_window'] ?? 60;
+    $maxRequests = $config['mcp_rate_limit_requests'] ?? 60;
+
+    // Load existing request log
+    $requests = [];
+    if (file_exists($rateLimitFile)) {
+        $data = json_decode(file_get_contents($rateLimitFile), true);
+        $requests = $data['requests'] ?? [];
+    }
+
+    // Remove old requests outside the time window
+    $requests = array_filter($requests, function($timestamp) use ($now, $window) {
+        return ($now - $timestamp) < $window;
+    });
+
+    // Check if limit exceeded
+    if (count($requests) >= $maxRequests) {
+        http_response_code(429);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Rate limit exceeded',
+            'retry_after' => $window - ($now - min($requests))
+        ]);
+        exit;
+    }
+
+    // Add current request
+    $requests[] = $now;
+
+    // Save updated request log
+    file_put_contents($rateLimitFile, json_encode(['requests' => $requests]));
+}
+
 // Verify authentication
 $token = $_SERVER['HTTP_X_CMS_MCP_TOKEN'] ?? '';
 if (!$token || $token !== $config['mcp_token']) {

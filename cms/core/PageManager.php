@@ -60,13 +60,29 @@ class PageManager
     {
         $pageId = trim($pageId, '/');
 
+        // Validate against path traversal attacks
+        if (strpos($pageId, '..') !== false) {
+            return null;
+        }
+
         if ($pageId === '' || $pageId === 'index') {
             $path = $this->rootDir . '/index.php';
         } else {
             $path = $this->rootDir . '/' . $pageId . '/index.php';
         }
 
-        return file_exists($path) ? $path : null;
+        // Ensure the resolved path is within the root directory
+        if (file_exists($path)) {
+            $realPath = realpath($path);
+            $realRoot = realpath($this->rootDir);
+
+            // Check if the resolved path is within the root directory
+            if ($realPath && $realRoot && strpos($realPath, $realRoot) === 0) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     /**
