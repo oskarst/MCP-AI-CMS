@@ -606,6 +606,52 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['page_id'],
                         ],
                     ],
+                    [
+                        'name' => 'upload_file',
+                        'description' => 'Upload a file to the uploads directory. Returns the URL that can be used in content. Accepts base64-encoded file data. Automatically handles filename conflicts by appending a number. Supports optional subdirectory organization.',
+                        'destructiveHint' => true,
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'data' => [
+                                    'type' => 'string',
+                                    'description' => 'Base64-encoded file data',
+                                ],
+                                'filename' => [
+                                    'type' => 'string',
+                                    'description' => 'Original filename with extension (e.g., "document.pdf", "video.mp4")',
+                                ],
+                                'subdir' => [
+                                    'type' => 'string',
+                                    'description' => 'Optional subdirectory within uploads folder (e.g., "documents", "media/videos")',
+                                ],
+                            ],
+                            'required' => ['data', 'filename'],
+                        ],
+                    ],
+                    [
+                        'name' => 'upload_image',
+                        'description' => 'Upload and automatically optimize an image. Accepts base64-encoded image data. Automatically resizes images to configured dimensions (maintains aspect ratio), generates both WebP and PNG formats, creates both full-size and thumbnail versions. Returns URLs for all generated files. Perfect for adding images to content blocks.',
+                        'destructiveHint' => true,
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'data' => [
+                                    'type' => 'string',
+                                    'description' => 'Base64-encoded image data (JPEG, PNG, GIF, WebP)',
+                                ],
+                                'filename' => [
+                                    'type' => 'string',
+                                    'description' => 'Original filename (extension will be replaced)',
+                                ],
+                                'subdir' => [
+                                    'type' => 'string',
+                                    'description' => 'Optional subdirectory within uploads folder (e.g., "blog", "products")',
+                                ],
+                            ],
+                            'required' => ['data', 'filename'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -726,6 +772,8 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_post_block</code> - Edit post block (saves as draft)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_post</code> - Publish a draft post</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">unpublish_post</code> - Unpublish a post back to drafts</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">upload_file</code> - Upload a file and get its URL</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">upload_image</code> - Upload and optimize an image (auto-resize, WebP/PNG, thumbnails)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_usage_tips</code> - Get helpful tips for using CMS tools effectively</li>
     </ul>
 </div>

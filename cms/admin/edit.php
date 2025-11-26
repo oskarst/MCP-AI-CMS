@@ -94,6 +94,16 @@ $activePage = 'pages';
 require __DIR__ . '/includes/header.php';
 ?>
 
+<!-- CodeMirror CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-2">
         Edit Page: <code class="text-blue-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code>
@@ -173,5 +183,29 @@ require __DIR__ . '/includes/header.php';
         </div>
     <?php endforeach; ?>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CodeMirror for all block content textareas
+    document.querySelectorAll('textarea[name="block_content"]').forEach(function(textarea) {
+        var editor = CodeMirror.fromTextArea(textarea, {
+            mode: 'application/x-httpd-php',
+            theme: 'material-darker',
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            indentWithTabs: false,
+            matchBrackets: true,
+            autoCloseTags: true,
+            viewportMargin: Infinity
+        });
+
+        // Update textarea when form submits
+        textarea.closest('form').addEventListener('submit', function() {
+            editor.save();
+        });
+    });
+});
+</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

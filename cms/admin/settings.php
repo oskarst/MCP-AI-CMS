@@ -15,6 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $maxBackups = (int)($_POST['max_backups'] ?? 10);
         $reservedFolders = $_POST['reserved_folders'] ?? 'cms,blog,assets,uploads,index';
 
+        // Upload settings
+        $uploadsDir = $_POST['uploads_dir'] ?? 'assets/content/';
+        $imageThumbnailWidth = (int)($_POST['image_thumbnail_width'] ?? 300);
+        $imageThumbnailHeight = (int)($_POST['image_thumbnail_height'] ?? 300);
+        $imageFullWidth = (int)($_POST['image_full_width'] ?? 1920);
+        $imageFullHeight = (int)($_POST['image_full_height'] ?? 1080);
+
         // MCP Security settings
         $mcpRateLimitEnabled = isset($_POST['mcp_rate_limit_enabled']) ? 'true' : 'false';
         $mcpRateLimitRequests = (int)($_POST['mcp_rate_limit_requests'] ?? 60);
@@ -50,6 +57,13 @@ return [
     // Optional settings
     'site_name'  => '{$siteName}',
     'language'   => 'en',
+
+    // Upload settings
+    'uploads_dir' => '{$uploadsDir}',
+    'image_thumbnail_width' => {$imageThumbnailWidth},
+    'image_thumbnail_height' => {$imageThumbnailHeight},
+    'image_full_width' => {$imageFullWidth},
+    'image_full_height' => {$imageFullHeight},
 
     // MCP Security Settings
     'mcp_rate_limit_enabled' => {$mcpRateLimitEnabled},
@@ -118,6 +132,102 @@ require __DIR__ . '/includes/header.php';
                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                 <p class="mt-1 text-sm text-gray-500">Display name for your website</p>
+            </div>
+        </div>
+
+        <hr class="border-gray-200">
+
+        <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Settings</h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Uploads Directory:
+                    </label>
+                    <input
+                        type="text"
+                        name="uploads_dir"
+                        value="<?php echo htmlspecialchars($config['uploads_dir'] ?? 'assets/content/'); ?>"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    >
+                    <p class="mt-1 text-sm text-gray-500">Directory path for uploaded files and images (relative to site root, must end with /)</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Thumbnail Width (px):
+                        </label>
+                        <input
+                            type="number"
+                            name="image_thumbnail_width"
+                            value="<?php echo htmlspecialchars($config['image_thumbnail_width'] ?? 300); ?>"
+                            min="50"
+                            max="1000"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Maximum width for thumbnail images</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Thumbnail Height (px):
+                        </label>
+                        <input
+                            type="number"
+                            name="image_thumbnail_height"
+                            value="<?php echo htmlspecialchars($config['image_thumbnail_height'] ?? 300); ?>"
+                            min="50"
+                            max="1000"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Maximum height for thumbnail images</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Full Image Width (px):
+                        </label>
+                        <input
+                            type="number"
+                            name="image_full_width"
+                            value="<?php echo htmlspecialchars($config['image_full_width'] ?? 1920); ?>"
+                            min="100"
+                            max="5000"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Maximum width for full-size images</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Full Image Height (px):
+                        </label>
+                        <input
+                            type="number"
+                            name="image_full_height"
+                            value="<?php echo htmlspecialchars($config['image_full_height'] ?? 1080); ?>"
+                            min="100"
+                            max="5000"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Maximum height for full-size images</p>
+                    </div>
+                </div>
+
+                <div class="mt-3 bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <p class="text-sm text-blue-700">
+                        <strong>Note:</strong> Images will be automatically resized to fit within these dimensions while maintaining aspect ratio. Both WebP and PNG formats will be generated.
+                    </p>
+                </div>
             </div>
         </div>
 

@@ -51,6 +51,9 @@
                         <a href="/cms/admin/sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'sync' ? 'bg-gray-500' : ''; ?>">
                             Sync Page Blocks
                         </a>
+                        <a href="/cms/admin/blog.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog' ? 'bg-gray-500' : ''; ?>">
+                            Blog Posts
+                        </a>
                         <a href="/cms/admin/blog-sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog-sync' ? 'bg-gray-500' : ''; ?>">
                             Sync Post Blocks
                         </a>
@@ -60,11 +63,6 @@
                 <!-- File Manager -->
                 <a href="/cms/admin/files.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'files' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">File Manager</span>
-                </a>
-
-                <!-- Blog -->
-                <a href="/cms/admin/blog.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
-                    <span class="font-medium">Blog</span>
                 </a>
 
                 <!-- Settings Menu (Collapsible) -->

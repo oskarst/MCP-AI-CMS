@@ -14,6 +14,7 @@ require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/BlogManager.php';
+require_once __DIR__ . '/../core/UploadManager.php';
 
 // Set JSON response header
 header('Content-Type: application/json');
@@ -111,6 +112,14 @@ $pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['d
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
+$uploadManager = new UploadManager(
+    $config['root_dir'],
+    $config['uploads_dir'] ?? 'assets/content/',
+    $config['image_thumbnail_width'] ?? 300,
+    $config['image_thumbnail_height'] ?? 300,
+    $config['image_full_width'] ?? 1920,
+    $config['image_full_height'] ?? 1080
+);
 
 // Helper function to normalize homepage page_id
 function normalizePageId($pageId) {
@@ -1298,6 +1307,48 @@ try {
 
         case 'update_page_region':
             handleUpdatePageRegion($input, $pageManager, $backupManager);
+            break;
+
+        case 'upload_file':
+            $base64Data = $input['data'] ?? '';
+            $filename = $input['filename'] ?? '';
+            $subdir = $input['subdir'] ?? null;
+
+            if (!$base64Data || !$filename) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing required parameters: data, filename']);
+                exit;
+            }
+
+            $result = $uploadManager->uploadFile($base64Data, $filename, $subdir);
+
+            if ($result['success']) {
+                echo json_encode($result);
+            } else {
+                http_response_code(400);
+                echo json_encode($result);
+            }
+            break;
+
+        case 'upload_image':
+            $base64Data = $input['data'] ?? '';
+            $filename = $input['filename'] ?? '';
+            $subdir = $input['subdir'] ?? null;
+
+            if (!$base64Data || !$filename) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing required parameters: data, filename']);
+                exit;
+            }
+
+            $result = $uploadManager->uploadImage($base64Data, $filename, $subdir);
+
+            if ($result['success']) {
+                echo json_encode($result);
+            } else {
+                http_response_code(400);
+                echo json_encode($result);
+            }
             break;
 
         default:
