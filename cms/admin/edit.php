@@ -146,9 +146,29 @@ require __DIR__ . '/includes/header.php';
         <p class="text-gray-600">No blocks found in this page.</p>
     </div>
 <?php else: ?>
-    <?php foreach ($blocks as $block): ?>
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-3">Block: <?php echo htmlspecialchars($block['name']); ?></h2>
+    <?php foreach ($blocks as $index => $block): ?>
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6" x-data="blockEditor(<?php echo $index; ?>)">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-2xl font-semibold text-gray-900">Block: <?php echo htmlspecialchars($block['name']); ?></h2>
+
+                <!-- View Toggle -->
+                <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                    <button
+                        type="button"
+                        @click="switchToCode()"
+                        :class="view === 'code' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                        class="px-4 py-2 text-sm font-medium transition">
+                        Code View
+                    </button>
+                    <button
+                        type="button"
+                        @click="view = 'preview'; updatePreview()"
+                        :class="view === 'preview' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                        class="px-4 py-2 text-sm font-medium border-l border-gray-300 transition">
+                        Preview View
+                    </button>
+                </div>
+            </div>
 
             <div class="mb-4 text-sm text-gray-600">
                 <?php if ($block['role']): ?>
@@ -161,7 +181,7 @@ require __DIR__ . '/includes/header.php';
                 </span>
             </div>
 
-            <form method="post">
+            <form method="post" x-ref="form">
                 <?php echo CSRF::inputField(); ?>
                 <input type="hidden" name="action" value="update_block">
                 <input type="hidden" name="block_name" value="<?php echo htmlspecialchars($block['name']); ?>">
@@ -171,13 +191,39 @@ require __DIR__ . '/includes/header.php';
                     <span class="text-sm text-gray-700">Mark as custom (per-page override)</span>
                 </label>
 
-                <label class="block mb-4">
-                    <span class="text-sm font-medium text-gray-700 mb-2 block">Block Content:</span>
-                    <textarea name="block_content" rows="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"><?php echo htmlspecialchars($block['content']); ?></textarea>
-                </label>
+                <!-- Code View -->
+                <div x-show="view === 'code'" x-cloak>
+                    <label class="block mb-4">
+                        <span class="text-sm font-medium text-gray-700 mb-2 block">Block Content:</span>
+                        <textarea
+                            x-ref="textarea"
+                            name="block_content"
+                            rows="10"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                        ><?php echo htmlspecialchars($block['content']); ?></textarea>
+                    </label>
+                </div>
+
+                <!-- Preview View -->
+                <div x-show="view === 'preview'" x-cloak class="mb-4">
+                    <div class="border border-gray-300 rounded-md p-4 bg-gray-50 mb-2">
+                        <p class="text-xs text-gray-500 mb-2">Preview with frontend styling:</p>
+                        <div
+                            x-ref="preview"
+                            @input="syncFromPreview()"
+                            contenteditable="true"
+                            class="bg-white border border-gray-200 rounded p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style="max-height: 500px; overflow-y: auto;"
+                        ></div>
+                        <p class="text-xs text-gray-500 mt-2">Edit content directly in the preview. HTML tags are preserved.</p>
+                    </div>
+                </div>
 
                 <div class="flex gap-3">
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Save Block</button>
+                    <button type="button" @click="view === 'code' ? updatePreview() : syncFromPreview()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
+                        Sync Views
+                    </button>
                 </div>
             </form>
         </div>
@@ -185,27 +231,94 @@ require __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize CodeMirror for all block content textareas
-    document.querySelectorAll('textarea[name="block_content"]').forEach(function(textarea) {
-        var editor = CodeMirror.fromTextArea(textarea, {
-            mode: 'application/x-httpd-php',
-            theme: 'material-darker',
-            lineNumbers: true,
-            lineWrapping: true,
-            indentUnit: 4,
-            indentWithTabs: false,
-            matchBrackets: true,
-            autoCloseTags: true,
-            viewportMargin: Infinity
-        });
+// Block editor controller for Alpine.js
+function blockEditor(index) {
+    return {
+        view: 'code',
+        editor: null,
 
-        // Update textarea when form submits
-        textarea.closest('form').addEventListener('submit', function() {
-            editor.save();
-        });
-    });
-});
+        init() {
+            // Wait for next tick to ensure DOM is ready
+            this.$nextTick(() => {
+                const textarea = this.$refs.textarea;
+
+                if (!textarea) {
+                    console.error('Textarea not found for block', index);
+                    return;
+                }
+
+                try {
+                    // Initialize CodeMirror for code view
+                    this.editor = CodeMirror.fromTextArea(textarea, {
+                        mode: 'application/x-httpd-php',
+                        theme: 'material-darker',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        indentUnit: 4,
+                        indentWithTabs: false,
+                        matchBrackets: true,
+                        autoCloseTags: true,
+                        viewportMargin: Infinity
+                    });
+
+                    console.log('CodeMirror initialized for block', index);
+
+                    // Refresh CodeMirror to ensure proper display
+                    setTimeout(() => {
+                        if (this.editor) {
+                            this.editor.refresh();
+                        }
+                    }, 100);
+
+                } catch (error) {
+                    console.error('Failed to initialize CodeMirror:', error);
+                }
+            });
+
+            // Save CodeMirror content to textarea before form submit
+            this.$refs.form.addEventListener('submit', (e) => {
+                if (this.editor) {
+                    this.editor.save();
+                } else {
+                    console.warn('CodeMirror not initialized, using textarea value');
+                }
+            });
+        },
+
+        updatePreview() {
+            // Get content from CodeMirror or textarea
+            const content = this.editor ? this.editor.getValue() : this.$refs.textarea.value;
+
+            // Set preview content
+            if (this.$refs.preview) {
+                this.$refs.preview.innerHTML = content;
+            }
+        },
+
+        syncFromPreview() {
+            // Get content from preview (preserves HTML)
+            const content = this.$refs.preview.innerHTML;
+
+            // Update CodeMirror
+            if (this.editor) {
+                this.editor.setValue(content);
+            }
+
+            // Update textarea
+            this.$refs.textarea.value = content;
+        },
+
+        // Make sure CodeMirror is visible when switching to code view
+        switchToCode() {
+            this.view = 'code';
+            this.$nextTick(() => {
+                if (this.editor) {
+                    this.editor.refresh();
+                }
+            });
+        }
+    };
+}
 </script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
