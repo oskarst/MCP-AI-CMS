@@ -22,15 +22,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imageFullWidth = (int)($_POST['image_full_width'] ?? 1920);
         $imageFullHeight = (int)($_POST['image_full_height'] ?? 1080);
 
+        // Load current config
+        $configPath = __DIR__ . '/../config/config.php';
+        $currentConfig = require $configPath;
+
         // MCP Security settings
         $mcpRateLimitEnabled = isset($_POST['mcp_rate_limit_enabled']) ? 'true' : 'false';
         $mcpRateLimitRequests = (int)($_POST['mcp_rate_limit_requests'] ?? 60);
         $mcpRateLimitWindow = (int)($_POST['mcp_rate_limit_window'] ?? 60);
         $mcpIpWhitelist = trim($_POST['mcp_ip_whitelist'] ?? '');
 
-        // Load current config
-        $configPath = __DIR__ . '/../config/config.php';
-        $currentConfig = require $configPath;
+        // Preserve MCP allowed tools from current config
+        $mcpAllowedToolsExport = '[' . implode(', ', array_map(function($tool) {
+            return "'{$tool}'";
+        }, $currentConfig['mcp_allowed_tools'] ?? [])) . ']';
 
         // Update config
         $configContent = <<<PHP
@@ -70,6 +75,7 @@ return [
     'mcp_rate_limit_requests' => {$mcpRateLimitRequests},  // Max requests per window
     'mcp_rate_limit_window' => {$mcpRateLimitWindow},    // Time window in seconds
     'mcp_ip_whitelist' => '{$mcpIpWhitelist}',         // Comma-separated IPs (empty = allow all)
+    'mcp_allowed_tools' => {$mcpAllowedToolsExport},   // Allowed MCP tools
 ];
 PHP;
 

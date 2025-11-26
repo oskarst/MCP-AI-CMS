@@ -10,6 +10,7 @@
 
 // Load configuration and core classes
 $config = require __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/tools-definition.php';
 require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/PageSettings.php';
@@ -96,6 +97,14 @@ $tool = $_GET['tool'] ?? '';
 if (!$tool) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Missing tool parameter']);
+    exit;
+}
+
+// Check if tool is allowed based on permissions
+$allowedTools = $config['mcp_allowed_tools'] ?? array_keys(getMCPTools()); // Default: all tools allowed
+if (!in_array($tool, $allowedTools)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => "Tool '{$tool}' is not allowed. Check MCP permissions in settings."]);
     exit;
 }
 

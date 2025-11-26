@@ -8,6 +8,97 @@
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
+// Handle MCP tool permissions update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
+    CSRF::verifyOrDie();
+
+    try {
+        // Get allowed tools from form (empty array if none selected)
+        $mcpAllowedTools = $_POST['mcp_allowed_tools'] ?? [];
+
+        // Convert to PHP array format for config file
+        $mcpAllowedToolsExport = '[' . implode(', ', array_map(function($tool) {
+            return "'{$tool}'";
+        }, $mcpAllowedTools)) . ']';
+
+        // Load current config
+        $configPath = __DIR__ . '/../config/config.php';
+        $currentConfig = require $configPath;
+
+        // Pre-compute values to avoid nested quotes issue in heredoc
+        $reservedFoldersStr = implode("', '", $currentConfig['reserved_folders']);
+        $mcpToken = $currentConfig['mcp_token'];
+        $rootDir = $currentConfig['root_dir'];
+        $cmsDir = $currentConfig['cms_dir'];
+        $draftsDir = $currentConfig['drafts_dir'];
+        $backupsDir = $currentConfig['backups_dir'];
+        $maxBackups = $currentConfig['max_backups_per_page'];
+        $siteName = $currentConfig['site_name'];
+        $uploadsDir = $currentConfig['uploads_dir'];
+        $thumbWidth = $currentConfig['image_thumbnail_width'];
+        $thumbHeight = $currentConfig['image_thumbnail_height'];
+        $fullWidth = $currentConfig['image_full_width'];
+        $fullHeight = $currentConfig['image_full_height'];
+        $rateLimitEnabled = $currentConfig['mcp_rate_limit_enabled'] ? 'true' : 'false';
+        $rateLimitRequests = $currentConfig['mcp_rate_limit_requests'];
+        $rateLimitWindow = $currentConfig['mcp_rate_limit_window'];
+        $ipWhitelist = $currentConfig['mcp_ip_whitelist'];
+
+        // Update config with new allowed tools
+        $configContent = <<<PHP
+<?php
+/**
+ * Core configuration for flat MCP CMS.
+ */
+return [
+    // Token used by AI MCP clients (ChatGPT, Claude, etc.).
+    'mcp_token' => '$mcpToken',
+
+    // Directories
+    'root_dir'    => '$rootDir',
+    'cms_dir'     => '$cmsDir',
+    'drafts_dir'  => '$draftsDir',
+    'backups_dir' => '$backupsDir',
+
+    // Backups
+    'max_backups_per_page' => $maxBackups,
+
+    // Reserved folder names (cannot be used as page IDs)
+    'reserved_folders' => ['$reservedFoldersStr'],
+
+    // Optional settings
+    'site_name'  => '$siteName',
+    'language'   => 'en',
+
+    // Upload settings
+    'uploads_dir' => '$uploadsDir',
+    'image_thumbnail_width' => $thumbWidth,
+    'image_thumbnail_height' => $thumbHeight,
+    'image_full_width' => $fullWidth,
+    'image_full_height' => $fullHeight,
+
+    // MCP Security Settings
+    'mcp_rate_limit_enabled' => $rateLimitEnabled,
+    'mcp_rate_limit_requests' => $rateLimitRequests,  // Max requests per window
+    'mcp_rate_limit_window' => $rateLimitWindow,    // Time window in seconds
+    'mcp_ip_whitelist' => '$ipWhitelist',         // Comma-separated IPs (empty = allow all)
+    'mcp_allowed_tools' => $mcpAllowedToolsExport,   // Allowed MCP tools
+];
+PHP;
+
+        if (file_put_contents($configPath, $configContent) === false) {
+            throw new Exception('Failed to update config file');
+        }
+
+        // Reload config
+        $config = require $configPath;
+
+        $successMessage = 'MCP tool permissions updated successfully.';
+    } catch (Exception $e) {
+        $errorMessage = $e->getMessage();
+    }
+}
+
 // Handle token regeneration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'regenerate_token') {
     CSRF::verifyOrDie();
@@ -742,40 +833,72 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <div class="bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Available MCP Tools</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">MCP Tool Permissions</h2>
 
-    <p class="text-gray-600 mb-4">Once configured, AI clients will have access to these tools:</p>
+    <form method="post" class="space-y-4">
+        <?php echo CSRF::inputField(); ?>
 
-    <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_pages</code> - List all pages in the CMS</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_blocks</code> - List editable blocks within a page (returns only metadata: name, role, custom)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_blocks</code> - Search for blocks containing specific text with 3 modes: case_insensitive (default), case_sensitive, html_insensitive</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_page</code> - Read the full HTML content of a page</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_block</code> - Read a specific block's content from a page</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_page</code> - Create a new page with optional HTML content</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_block</code> - Update a block's content</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">find_and_replace_block_content</code> - Find and replace text in a block without sending full content</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">insert_block</code> - Insert a new block at a specific position (before/after block or at end)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_in_page</code> - Search within a page and return line ranges with snippets</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_page_region</code> - Get a specific region of a page by line range</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_page_region</code> - Update a page region using optimistic locking</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_page</code> - Publish a page draft to make it live</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">discard_draft</code> - Discard a page draft without publishing</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">restore_backup</code> - Restore a page from backup</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_posts</code> - List all posts in a collection (blog, news)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_post</code> - Create a new draft blog post</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_post</code> - Read post content (prefers draft if exists)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_post_block</code> - Read specific block from a post</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_post_block</code> - Edit post block (saves as draft)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_post</code> - Publish a draft post</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">unpublish_post</code> - Unpublish a post back to drafts</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">upload_file</code> - Upload a file and get its URL</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">upload_image</code> - Upload and optimize an image (auto-resize, WebP/PNG, thumbnails)</li>
-        <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_usage_tips</code> - Get helpful tips for using CMS tools effectively</li>
-    </ul>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">
+                Allowed MCP Tools:
+            </label>
+            <p class="text-sm text-gray-500 mb-4">Select which tools the AI model can access. Unchecked tools will be blocked.</p>
+
+            <?php
+            // Load MCP tools definition
+            require_once __DIR__ . '/../mcp/tools-definition.php';
+            $allTools = getMCPTools();
+            $allowedTools = $config['mcp_allowed_tools'] ?? array_keys($allTools);
+            ?>
+
+            <div class="border border-gray-300 rounded-md p-4 max-h-96 overflow-y-auto bg-gray-50">
+                <div class="space-y-3">
+                    <?php foreach ($allTools as $toolName => $description): ?>
+                    <div class="flex items-start bg-white p-3 rounded border border-gray-200">
+                        <div class="flex items-center h-5 mt-0.5">
+                            <input
+                                type="checkbox"
+                                name="mcp_allowed_tools[]"
+                                value="<?php echo htmlspecialchars($toolName); ?>"
+                                <?php echo in_array($toolName, $allowedTools) ? 'checked' : ''; ?>
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            >
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <label class="font-medium text-gray-900 text-sm">
+                                <?php echo htmlspecialchars($toolName); ?>
+                            </label>
+                            <p class="text-xs text-gray-600 mt-0.5">
+                                <?php echo htmlspecialchars($description); ?>
+                            </p>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+                <button type="button" onclick="document.querySelectorAll('input[name=\'mcp_allowed_tools[]\']').forEach(cb => cb.checked = true)" class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition">
+                    Select All
+                </button>
+                <button type="button" onclick="document.querySelectorAll('input[name=\'mcp_allowed_tools[]\']').forEach(cb => cb.checked = false)" class="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition">
+                    Deselect All
+                </button>
+            </div>
+
+            <div class="mt-3 bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <p class="text-sm text-yellow-700">
+                    <strong>Warning:</strong> Unchecking tools will prevent the AI model from using them. Make sure you understand what each tool does before disabling it.
+                </p>
+            </div>
+        </div>
+
+        <div class="pt-4">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                Save Tool Permissions
+            </button>
+        </div>
+    </form>
 </div>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
