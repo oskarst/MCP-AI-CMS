@@ -547,7 +547,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
 }
 
 $pageTitle = 'MCP Configuration';
-$activePage = 'mcp';
+$activePage = 'settings';
 
 require __DIR__ . '/includes/header.php';
 ?>
