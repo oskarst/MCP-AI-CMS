@@ -49,7 +49,10 @@
                             Create Page
                         </a>
                         <a href="/cms/admin/sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'sync' ? 'bg-gray-500' : ''; ?>">
-                            Sync Blocks
+                            Sync Page Blocks
+                        </a>
+                        <a href="/cms/admin/blog-sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog-sync' ? 'bg-gray-500' : ''; ?>">
+                            Sync Post Blocks
                         </a>
                     </div>
                 </div>
