@@ -5,9 +5,12 @@
 
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/BlogManager.php';
+require_once __DIR__ . '/../core/SitemapGenerator.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
-$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
+$reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator);
 
 // Get current collection (default: blog)
 $collectionId = $_GET['collection'] ?? 'blog';

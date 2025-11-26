@@ -12,19 +12,22 @@ class PageManager
     private array $reservedFolders;
     private string $draftsDir;
     private $backupManager;
+    private $sitemapGenerator;
 
     /**
      * @param string $rootDir Absolute path to the web root
      * @param array $reservedFolders List of reserved folder names
      * @param string|null $draftsDir Absolute path to drafts directory (optional)
      * @param object|null $backupManager Optional BackupManager instance for creating backups
+     * @param object|null $sitemapGenerator Optional SitemapGenerator instance for updating sitemap
      */
-    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null, $backupManager = null)
+    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null, $backupManager = null, $sitemapGenerator = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->reservedFolders = $reservedFolders;
         $this->draftsDir = $draftsDir ? rtrim($draftsDir, '/') . '/pages' : '';
         $this->backupManager = $backupManager;
+        $this->sitemapGenerator = $sitemapGenerator;
     }
 
     /**
@@ -389,6 +392,16 @@ class PageManager
 
         // Delete the draft
         @unlink($draftPath);
+
+        // Regenerate sitemap
+        if ($this->sitemapGenerator) {
+            try {
+                $this->sitemapGenerator->generate();
+            } catch (Exception $e) {
+                // Sitemap generation failed, but don't stop the publish
+                error_log("Sitemap generation failed: " . $e->getMessage());
+            }
+        }
     }
 
     /**

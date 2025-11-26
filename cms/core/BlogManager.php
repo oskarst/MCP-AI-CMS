@@ -16,13 +16,15 @@ class BlogManager
     private string $templatesFile;
     private array $collections;
     private array $templates;
+    private $sitemapGenerator;
 
-    public function __construct(string $rootDir, string $draftsDir)
+    public function __construct(string $rootDir, string $draftsDir, $sitemapGenerator = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->draftsDir = rtrim($draftsDir, '/');
         $this->collectionsFile = dirname($draftsDir) . '/config/collections.json';
         $this->templatesFile = dirname($draftsDir) . '/config/blog-templates.json';
+        $this->sitemapGenerator = $sitemapGenerator;
 
         // Load collections and templates
         $this->loadCollections();
@@ -204,6 +206,16 @@ class BlogManager
 
         // Update meta block to mark as published
         $this->updatePublishedStatus($publishPath . '/index.php', true);
+
+        // Regenerate sitemap
+        if ($this->sitemapGenerator) {
+            try {
+                $this->sitemapGenerator->generate();
+            } catch (Exception $e) {
+                // Sitemap generation failed, but don't stop the publish
+                error_log("Sitemap generation failed: " . $e->getMessage());
+            }
+        }
     }
 
     /**

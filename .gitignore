@@ -4,6 +4,9 @@ cms/config/users.json
 cms/config/collections.json
 cms/config/blog-templates.json
 
+# Auto-generated files
+sitemap.xml
+
 # Installation flag
 cms/.installed
 
