@@ -52,10 +52,14 @@ class UploadManager
                 throw new Exception('Invalid base64 data');
             }
 
-            // Sanitize filename
-            $safeFilename = $this->sanitizeFilename($filename);
+            // Get original extension
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-            // Create unique filename if file already exists
+            // Generate unique hash-based filename
+            $hash = bin2hex(random_bytes(16));
+            $safeFilename = $hash . '.' . $extension;
+
+            // Ensure filename is unique (though hash collision is virtually impossible)
             $finalFilename = $this->getUniqueFilename($safeFilename, $subdir);
 
             // Build full path
@@ -120,11 +124,11 @@ class UploadManager
             $originalWidth = imagesx($sourceImage);
             $originalHeight = imagesy($sourceImage);
 
-            // Sanitize filename (remove extension, we'll add our own)
-            $safeFilename = pathinfo($this->sanitizeFilename($filename), PATHINFO_FILENAME);
+            // Generate unique hash-based filename (no extension yet)
+            $hash = bin2hex(random_bytes(16));
 
-            // Create unique base filename
-            $baseFilename = $this->getUniqueFilename($safeFilename, $subdir, false);
+            // Create unique base filename (ensure uniqueness though collision is virtually impossible)
+            $baseFilename = $this->getUniqueFilename($hash, $subdir, false);
 
             // Build directory path
             $relativePath = $this->uploadsDir;

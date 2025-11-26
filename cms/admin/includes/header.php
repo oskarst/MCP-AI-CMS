@@ -65,6 +65,11 @@
                     <span class="font-medium">File Manager</span>
                 </a>
 
+                <!-- Media -->
+                <a href="/cms/admin/media.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'media' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
+                    <span class="font-medium">Media</span>
+                </a>
+
                 <!-- Settings Menu (Collapsible) -->
                 <div class="relative">
                     <button @click="settingsOpen = !settingsOpen" class="w-full text-left px-6 py-3 hover:bg-gray-500 transition flex items-center justify-between <?php echo ($activePage ?? '') === 'settings' || in_array($_SERVER['PHP_SELF'] ?? '', ['/cms/admin/settings.php', '/cms/admin/blog-templates.php', '/cms/admin/mcp-config.php']) ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
