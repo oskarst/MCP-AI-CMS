@@ -208,13 +208,14 @@ require __DIR__ . '/includes/header.php';
                 <div x-show="view === 'preview'" x-cloak class="mb-4">
                     <div class="border border-gray-300 rounded-md p-4 bg-gray-50 mb-2">
                         <p class="text-xs text-gray-500 mb-2">Preview with frontend styling:</p>
-                        <div
-                            x-ref="preview"
-                            @input="syncFromPreview()"
-                            contenteditable="true"
-                            class="bg-white border border-gray-200 rounded p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            style="max-height: 500px; overflow-y: auto;"
-                        ></div>
+                        <div class="preview-wrapper bg-white border border-gray-200 rounded p-4" style="max-height: 500px; overflow-y: auto;">
+                            <div
+                                x-ref="preview"
+                                @input="syncFromPreview()"
+                                contenteditable="true"
+                                class="preview-content min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            ></div>
+                        </div>
                         <p class="text-xs text-gray-500 mt-2">Edit content directly in the preview. HTML tags are preserved.</p>
                     </div>
                 </div>
@@ -230,12 +231,88 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
 <?php endif; ?>
 
+<style>
+/* Preview-specific CSS overrides */
+.preview-content * {
+    /* Override fixed/absolute positioning to prevent layout issues */
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+}
+
+/* Allow relative positioning for some elements */
+.preview-content *[style*="position: relative"] {
+    position: relative !important;
+}
+
+/* Reset some common fixed elements */
+.preview-content nav,
+.preview-content header,
+.preview-content footer {
+    position: static !important;
+    width: auto !important;
+}
+</style>
+
 <script>
+// Load page CSS dynamically
+let pageCSSLoaded = false;
+
+function loadPageCSS(pageUrl) {
+    if (pageCSSLoaded) return Promise.resolve();
+
+    return fetch(pageUrl)
+        .then(response => response.text())
+        .then(html => {
+            // Parse HTML to extract stylesheets
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Find all link tags with stylesheets
+            const stylesheets = doc.querySelectorAll('link[rel="stylesheet"]');
+            const promises = [];
+
+            stylesheets.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href) {
+                    // Create new link element in admin page
+                    const newLink = document.createElement('link');
+                    newLink.rel = 'stylesheet';
+                    newLink.href = href;
+                    document.head.appendChild(newLink);
+
+                    promises.push(new Promise(resolve => {
+                        newLink.onload = resolve;
+                        newLink.onerror = resolve; // Continue even if some CSS fails
+                    }));
+                }
+            });
+
+            // Also extract inline styles
+            const styles = doc.querySelectorAll('style');
+            styles.forEach(style => {
+                const newStyle = document.createElement('style');
+                newStyle.textContent = style.textContent;
+                document.head.appendChild(newStyle);
+            });
+
+            pageCSSLoaded = true;
+            return Promise.all(promises);
+        })
+        .catch(error => {
+            console.error('Failed to load page CSS:', error);
+        });
+}
+
 // Block editor controller for Alpine.js
 function blockEditor(index) {
     return {
         view: 'code',
         editor: null,
+        cssLoaded: false,
 
         init() {
             // Wait for next tick to ensure DOM is ready
@@ -286,6 +363,21 @@ function blockEditor(index) {
         },
 
         updatePreview() {
+            // Load page CSS first (only once)
+            if (!this.cssLoaded) {
+                const pageId = '<?php echo addslashes($pageId); ?>';
+                const pageUrl = pageId ? '/' + pageId + '/' : '/';
+
+                loadPageCSS(pageUrl).then(() => {
+                    this.cssLoaded = true;
+                    this.renderPreview();
+                });
+            } else {
+                this.renderPreview();
+            }
+        },
+
+        renderPreview() {
             // Get content from CodeMirror or textarea
             const content = this.editor ? this.editor.getValue() : this.$refs.textarea.value;
 

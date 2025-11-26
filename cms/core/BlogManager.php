@@ -192,13 +192,9 @@ class BlogManager
             throw new Exception("Draft not found: {$slug}");
         }
 
-        if (file_exists($publishPath)) {
-            throw new Exception("Published post already exists: {$slug}");
-        }
-
-        // Create published directory
-        if (!is_dir(dirname($publishPath))) {
-            mkdir(dirname($publishPath), 0755, true);
+        // Create published directory if it doesn't exist
+        if (!is_dir($publishPath)) {
+            mkdir($publishPath, 0755, true);
         }
 
         // Create backup of current published post before overwriting (if it exists)
