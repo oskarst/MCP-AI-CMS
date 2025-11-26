@@ -1118,6 +1118,168 @@ try {
             }
             break;
 
+        case 'read_post':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            try {
+                // Check if draft exists first, otherwise use published
+                $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+                $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+
+                if ($draftPath) {
+                    $postPath = $draftPath;
+                    $status = 'draft';
+                } elseif ($publishedPath) {
+                    $postPath = $publishedPath;
+                    $status = 'published';
+                } else {
+                    throw new Exception("Post not found: {$slug}");
+                }
+
+                $content = file_get_contents($postPath);
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'status' => $status,
+                    'content' => $content
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'read_post_block':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+            $blockName = $input['block_name'] ?? '';
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            if (!$blockName) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing block_name parameter']);
+                exit;
+            }
+
+            try {
+                // Check if draft exists first, otherwise use published
+                $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+                $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+
+                if ($draftPath) {
+                    $postPath = $draftPath;
+                    $status = 'draft';
+                } elseif ($publishedPath) {
+                    $postPath = $publishedPath;
+                    $status = 'published';
+                } else {
+                    throw new Exception("Post not found: {$slug}");
+                }
+
+                $blocks = $blockParser->parseBlocks($postPath);
+                $foundBlock = null;
+
+                foreach ($blocks as $block) {
+                    if ($block['name'] === $blockName) {
+                        $foundBlock = $block;
+                        break;
+                    }
+                }
+
+                if (!$foundBlock) {
+                    http_response_code(404);
+                    echo json_encode(['success' => false, 'error' => "Block not found: {$blockName}"]);
+                    exit;
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'status' => $status,
+                    'block' => $foundBlock
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'update_post_block':
+            $collectionId = $input['collection_id'] ?? 'blog';
+            $slug = $input['slug'] ?? '';
+            $blockName = $input['block_name'] ?? '';
+            $newContent = $input['new_content'] ?? '';
+            $customFlag = $input['custom'] ?? null;
+
+            if (!$slug) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
+                exit;
+            }
+
+            if (!$blockName) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing block_name parameter']);
+                exit;
+            }
+
+            try {
+                // Always save to draft (like pages)
+                $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+                $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+
+                // If editing a published post and no draft exists, copy published to draft first
+                if (!$draftPath && $publishedPath) {
+                    $draftDir = $config['drafts_dir'] . '/' . $collectionId . '/' . $slug;
+
+                    // Create draft directory
+                    if (!is_dir($draftDir)) {
+                        mkdir($draftDir, 0755, true);
+                    }
+
+                    // Copy published content to draft
+                    copy($publishedPath, $draftDir . '/index.php');
+                    $draftPath = $draftDir . '/index.php';
+                }
+
+                // Get the path to edit (draft if exists, otherwise error)
+                $editPath = $draftPath ?: $publishedPath;
+
+                if (!$editPath) {
+                    throw new Exception("Post not found: {$slug}");
+                }
+
+                // Update the block
+                $blockParser->updateBlock($editPath, $blockName, $newContent, $customFlag);
+
+                echo json_encode([
+                    'success' => true,
+                    'collection_id' => $collectionId,
+                    'slug' => $slug,
+                    'block_name' => $blockName,
+                    'status' => 'draft',
+                    'message' => 'Block updated in draft. Use publish_post to make it live.'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
         case 'find_and_replace_block_content':
             handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager);
             break;

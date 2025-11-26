@@ -338,6 +338,77 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                         ],
                     ],
                     [
+                        'name' => 'read_post',
+                        'description' => 'Read the full content of a blog post. READ-ONLY: Returns the complete post content. If a draft exists, returns the draft version. Otherwise returns the published version. Use this to see the current state of a post before editing.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug',
+                                ],
+                            ],
+                            'required' => ['slug'],
+                        ],
+                    ],
+                    [
+                        'name' => 'read_post_block',
+                        'description' => 'Read a specific block from a blog post. READ-ONLY: Returns the block content, name, role, and custom flag. If a draft exists, reads from draft. Otherwise reads from published version. Use this to inspect a specific block before editing.',
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug',
+                                ],
+                                'block_name' => [
+                                    'type' => 'string',
+                                    'description' => 'Name of the block to read (e.g., "content", "header", "footer")',
+                                ],
+                            ],
+                            'required' => ['slug', 'block_name'],
+                        ],
+                    ],
+                    [
+                        'name' => 'update_post_block',
+                        'description' => 'Update a specific block in a blog post. DESTRUCTIVE: Modifies post content. ALWAYS saves as draft first - the live post is never modified directly. If editing a published post, automatically creates a draft copy first. Use publish_post to make changes live. Supports custom flag to make block per-post instead of shared. Workflow: 1) read_post_block to see current content, 2) update_post_block with new content, 3) publish_post when ready.',
+                        'destructiveHint' => true,
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'collection_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Collection ID (default: "blog")',
+                                ],
+                                'slug' => [
+                                    'type' => 'string',
+                                    'description' => 'Post slug',
+                                ],
+                                'block_name' => [
+                                    'type' => 'string',
+                                    'description' => 'Name of the block to update',
+                                ],
+                                'new_content' => [
+                                    'type' => 'string',
+                                    'description' => 'New content for the block (HTML)',
+                                ],
+                                'custom' => [
+                                    'type' => 'boolean',
+                                    'description' => 'Optional: Mark block as custom (per-post) if true, or remove custom flag if false',
+                                ],
+                            ],
+                            'required' => ['slug', 'block_name', 'new_content'],
+                        ],
+                    ],
+                    [
                         'name' => 'find_and_replace_block_content',
                         'description' => 'Find and replace text inside a CMS block without sending full block content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks. PREFERRED for small textual edits inside CMS blocks (e.g., fix typo, update name, change phone number). Server handles the replacement - DO NOT fetch/send full block content. Always prefer this over update_block for small text changes. Workflow: 1) search_blocks to find block, 2) call this tool with exact search/replace strings. If no match found, returns replacements=0 without modifying file.',
                         'destructiveHint' => true,
@@ -650,6 +721,9 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">restore_backup</code> - Restore a page from backup</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_posts</code> - List all posts in a collection (blog, news)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">create_post</code> - Create a new draft blog post</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_post</code> - Read post content (prefers draft if exists)</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">read_post_block</code> - Read specific block from a post</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_post_block</code> - Edit post block (saves as draft)</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_post</code> - Publish a draft post</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">unpublish_post</code> - Unpublish a post back to drafts</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_usage_tips</code> - Get helpful tips for using CMS tools effectively</li>
