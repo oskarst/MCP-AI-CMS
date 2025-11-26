@@ -260,6 +260,11 @@ require __DIR__ . '/includes/header.php';
                                         role: <?php echo htmlspecialchars($block['role']); ?>
                                     </span>
                                 <?php endif; ?>
+                                <?php if ($block['system'] ?? false): ?>
+                                    <span class="text-sm px-3 py-1 bg-red-100 text-red-800 rounded-full">
+                                        System
+                                    </span>
+                                <?php endif; ?>
                                 <label class="flex items-center text-sm text-gray-700">
                                     <input type="checkbox" name="custom_<?php echo htmlspecialchars($block['name']); ?>"
                                            <?php echo $block['custom'] ? 'checked' : ''; ?>

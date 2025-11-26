@@ -151,7 +151,8 @@ require __DIR__ . '/includes/header.php';
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-2xl font-semibold text-gray-900">Block: <?php echo htmlspecialchars($block['name']); ?></h2>
 
-                <!-- View Toggle -->
+                <!-- View Toggle (hide for system blocks) -->
+                <?php if (!($block['system'] ?? false)): ?>
                 <div class="flex border border-gray-300 rounded-md overflow-hidden">
                     <button
                         type="button"
@@ -168,6 +169,7 @@ require __DIR__ . '/includes/header.php';
                         Preview View
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div class="mb-4 text-sm text-gray-600">
@@ -179,6 +181,11 @@ require __DIR__ . '/includes/header.php';
                 <span class="inline-block <?php echo $block['custom'] ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'; ?> px-2 py-1 rounded">
                     <?php echo $block['custom'] ? 'Custom' : 'Global'; ?>
                 </span>
+                <?php if ($block['system'] ?? false): ?>
+                    <span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded ml-2">
+                        System
+                    </span>
+                <?php endif; ?>
             </div>
 
             <form method="post" x-ref="form">
@@ -204,7 +211,8 @@ require __DIR__ . '/includes/header.php';
                     </label>
                 </div>
 
-                <!-- Preview View -->
+                <!-- Preview View (hide for system blocks) -->
+                <?php if (!($block['system'] ?? false)): ?>
                 <div x-show="view === 'preview'" x-cloak class="mb-4">
                     <div class="border border-gray-300 rounded-md p-4 bg-gray-50 mb-2">
                         <p class="text-xs text-gray-500 mb-2">Preview with frontend styling:</p>
@@ -219,12 +227,15 @@ require __DIR__ . '/includes/header.php';
                         <p class="text-xs text-gray-500 mt-2">Edit content directly in the preview. HTML tags are preserved.</p>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <div class="flex gap-3">
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Save Block</button>
+                    <?php if (!($block['system'] ?? false)): ?>
                     <button type="button" @click="view === 'code' ? updatePreview() : syncFromPreview()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
                         Sync Views
                     </button>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>

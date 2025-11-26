@@ -16,17 +16,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     CSRF::verifyOrDie();
 
     $creationType = $_POST['creation_type'] ?? 'duplicate';
-    $newPageId = trim($_POST['new_page_id'] ?? '', '/');
+    $parentPage = $_POST['parent_page'] ?? '';
+    $pageName = trim($_POST['page_name'] ?? '', '/');
 
     try {
-        if (!$newPageId) {
-            throw new Exception('New page ID is required');
+        if (!$pageName) {
+            throw new Exception('Page name is required');
         }
 
-        // Validate page ID format (alphanumeric, hyphens, slashes)
-        if (!preg_match('/^[a-z0-9\-\/]+$/i', $newPageId)) {
-            throw new Exception('Invalid page ID format. Use only letters, numbers, hyphens, and slashes.');
+        // Validate page name format (alphanumeric, hyphens only - no slashes)
+        if (!preg_match('/^[a-z0-9\-]+$/i', $pageName)) {
+            throw new Exception('Invalid page name format. Use only letters, numbers, and hyphens.');
         }
+
+        // Combine parent and page name to create full page ID
+        $newPageId = $parentPage ? trim($parentPage, '/') . '/' . $pageName : $pageName;
 
         if ($creationType === 'duplicate') {
             // Duplicate existing page
@@ -117,10 +121,25 @@ require __DIR__ . '/includes/header.php';
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    New Page ID:
+                    Parent Page (optional):
                 </label>
-                <input type="text" name="new_page_id" placeholder="e.g., about, services/web-design" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="mt-1 text-sm text-gray-500">Use lowercase letters, numbers, hyphens, and slashes for nested pages.</p>
+                <select name="parent_page" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- No Parent (Top Level) --</option>
+                    <?php foreach ($pages as $page): ?>
+                        <option value="<?php echo htmlspecialchars($page['id']); ?>">
+                            <?php echo htmlspecialchars($page['id'] ?: '/ (Home)'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">Select a parent page to create a sub-page, or leave blank for top-level page.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Page Name:
+                </label>
+                <input type="text" name="page_name" placeholder="e.g., about, team, contact" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="mt-1 text-sm text-gray-500">Use lowercase letters, numbers, and hyphens only. Select a parent page above to create nested pages.</p>
             </div>
 
             <div>
@@ -196,10 +215,25 @@ require __DIR__ . '/includes/header.php';
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    New Page ID:
+                    Parent Page (optional):
                 </label>
-                <input type="text" name="new_page_id" placeholder="e.g., about, services/web-design" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="mt-1 text-sm text-gray-500">Use lowercase letters, numbers, hyphens, and slashes for nested pages. Example: <code class="bg-gray-100 px-1 py-0.5 rounded">about</code> or <code class="bg-gray-100 px-1 py-0.5 rounded">services/web-design</code></p>
+                <select name="parent_page" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- No Parent (Top Level) --</option>
+                    <?php foreach ($pages as $page): ?>
+                        <option value="<?php echo htmlspecialchars($page['id']); ?>">
+                            <?php echo htmlspecialchars($page['id'] ?: '/ (Home)'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">Select a parent page to create a sub-page, or leave blank for top-level page.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Page Name:
+                </label>
+                <input type="text" name="page_name" placeholder="e.g., about, team, contact" required class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="mt-1 text-sm text-gray-500">Use lowercase letters, numbers, and hyphens only. Select a parent page above to create nested pages.</p>
             </div>
 
             <div>

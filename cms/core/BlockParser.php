@@ -65,6 +65,7 @@ class BlockParser
                     'name' => $blockName,
                     'role' => $attributes['role'] ?? null,
                     'custom' => isset($attributes['custom']) && $attributes['custom'] === '1',
+                    'system' => isset($attributes['system']) && $attributes['system'] === '1',
                     'content' => $blockContent,
                     'start_pos' => $startPos,
                     'end_pos' => $endPos + strlen($endTag),
