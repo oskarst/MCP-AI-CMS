@@ -17,14 +17,16 @@ class BlogManager
     private array $collections;
     private array $templates;
     private $sitemapGenerator;
+    private $backupManager;
 
-    public function __construct(string $rootDir, string $draftsDir, $sitemapGenerator = null)
+    public function __construct(string $rootDir, string $draftsDir, $sitemapGenerator = null, $backupManager = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->draftsDir = rtrim($draftsDir, '/');
         $this->collectionsFile = dirname($draftsDir) . '/config/collections.json';
         $this->templatesFile = dirname($draftsDir) . '/config/blog-templates.json';
         $this->sitemapGenerator = $sitemapGenerator;
+        $this->backupManager = $backupManager;
 
         // Load collections and templates
         $this->loadCollections();
@@ -197,6 +199,19 @@ class BlogManager
         // Create published directory
         if (!is_dir(dirname($publishPath))) {
             mkdir(dirname($publishPath), 0755, true);
+        }
+
+        // Create backup of current published post before overwriting (if it exists)
+        $publishedIndexPath = $publishPath . '/index.php';
+        if (file_exists($publishedIndexPath) && $this->backupManager) {
+            try {
+                // Use collection/slug as the backup ID
+                $backupId = $collectionId . '/' . $slug;
+                $this->backupManager->createBackup($backupId, $publishedIndexPath);
+            } catch (Exception $e) {
+                // Backup failed, but don't stop publishing
+                error_log("Backup failed during blog publish: " . $e->getMessage());
+            }
         }
 
         // Move draft to published location

@@ -6,12 +6,14 @@
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/BlogManager.php';
 require_once __DIR__ . '/../core/BlockParser.php';
+require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
-$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator);
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator, $backupManager);
 $blockParser = new BlockParser();
 
 $collectionId = $_GET['collection'] ?? 'blog';
@@ -37,19 +39,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
     } elseif ($action === 'save') {
-        // Save block content
+        // Save block content - ALWAYS save to draft
         try {
-            $postPath = $blogManager->getPostPath($collectionId, $slug, $status);
-            if ($postPath) {
+            // Get draft path (or published if no draft exists yet)
+            $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+            $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+
+            // If editing a published post and no draft exists, copy published to draft first
+            if ($status === 'published' && !$draftPath && $publishedPath) {
+                $collection = $blogManager->getCollection($collectionId);
+                $draftDir = $config['drafts_dir'] . '/' . $collectionId . '/' . $slug;
+
+                // Create draft directory
+                if (!is_dir($draftDir)) {
+                    mkdir($draftDir, 0755, true);
+                }
+
+                // Copy published content to draft
+                copy($publishedPath, $draftDir . '/index.php');
+                $draftPath = $draftDir . '/index.php';
+            }
+
+            // Get the path to edit (draft if exists, otherwise use current)
+            $editPath = $draftPath ?: $blogManager->getPostPath($collectionId, $slug, $status);
+
+            if ($editPath) {
                 // Update each block
                 foreach ($_POST as $key => $value) {
                     if (strpos($key, 'block_') === 0) {
                         $blockName = substr($key, 6); // Remove 'block_' prefix
                         $customFlag = isset($_POST['custom_' . $blockName]) ? true : null;
-                        $blockParser->updateBlock($postPath, $blockName, $value, $customFlag);
+                        $blockParser->updateBlock($editPath, $blockName, $value, $customFlag);
                     }
                 }
-                $successMessage = 'Post saved successfully.';
+
+                // If we were editing a published post, redirect to draft view
+                if ($status === 'published') {
+                    header('Location: /cms/admin/blog-edit.php?collection=' . urlencode($collectionId) . '&slug=' . urlencode($slug) . '&status=draft');
+                    exit;
+                }
+
+                $successMessage = 'Post saved as draft.';
+            }
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+        }
+    } elseif ($action === 'publish') {
+        // Publish draft post
+        try {
+            // Check if draft exists
+            $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+            if ($draftPath) {
+                $blogManager->publishPost($collectionId, $slug);
+                $successMessage = 'Post published successfully.';
+                // Redirect to published version
+                header('Location: /cms/admin/blog-edit.php?collection=' . urlencode($collectionId) . '&slug=' . urlencode($slug) . '&status=published');
+                exit;
+            } else {
+                throw new Exception('No draft to publish');
             }
         } catch (Exception $e) {
             $errorMessage = $e->getMessage();
@@ -57,16 +104,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Get post data
+// Get post data - always prefer draft if it exists
 $postPath = null;
 $blocks = [];
+$hasDraft = false;
+$actualStatus = $status;
 
 if (!$isNew) {
-    $postPath = $blogManager->getPostPath($collectionId, $slug, $status);
-    if ($postPath) {
-        $blocks = $blockParser->parseBlocks($postPath);
+    // Check if draft exists
+    $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+    $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+
+    if ($draftPath) {
+        // Draft exists, use it for editing
+        $postPath = $draftPath;
+        $hasDraft = true;
+        $actualStatus = 'draft';
+    } elseif ($publishedPath) {
+        // No draft, use published
+        $postPath = $publishedPath;
+        $actualStatus = 'published';
     } else {
         $errorMessage = 'Post not found.';
+    }
+
+    if ($postPath) {
+        $blocks = $blockParser->parseBlocks($postPath);
     }
 }
 
@@ -77,10 +140,42 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2"><?php echo $isNew ? 'Create New Post' : 'Edit Post'; ?></h1>
-    <p class="text-gray-600">
-        <a href="/cms/admin/blog.php?collection=<?php echo urlencode($collectionId); ?>" class="text-blue-600 hover:text-blue-800">&larr; Back to Blog Posts</a>
-    </p>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        <?php echo $isNew ? 'Create New Post' : 'Edit Post'; ?>
+        <?php if (!$isNew && $hasDraft): ?>
+            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Has Draft</span>
+        <?php elseif (!$isNew && $actualStatus === 'published'): ?>
+            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Published</span>
+        <?php endif; ?>
+    </h1>
+
+    <?php if (!$isNew): ?>
+        <div class="flex items-center gap-3 text-sm">
+            <a href="/cms/admin/blog.php?collection=<?php echo urlencode($collectionId); ?>" class="text-blue-600 hover:text-blue-800">&larr; Back to Blog Posts</a>
+
+            <!-- Always show preview live if published version exists -->
+            <?php if ($publishedPath): ?>
+                <span class="text-gray-400">|</span>
+                <a href="/cms/admin/blog-preview.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($slug); ?>" target="_blank" class="text-green-600 hover:text-green-800">Preview Live</a>
+            <?php endif; ?>
+
+            <!-- Show draft preview and publish if draft exists -->
+            <?php if ($hasDraft): ?>
+                <span class="text-gray-400">|</span>
+                <a href="/cms/admin/blog-preview.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($slug); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800">Preview Draft</a>
+                <span class="text-gray-400">|</span>
+                <form method="post" class="inline" onsubmit="return confirm('Publish this post?');">
+                    <?php echo CSRF::inputField(); ?>
+                    <input type="hidden" name="action" value="publish">
+                    <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Publish</button>
+                </form>
+            <?php endif; ?>
+        </div>
+    <?php else: ?>
+        <p class="text-gray-600">
+            <a href="/cms/admin/blog.php?collection=<?php echo urlencode($collectionId); ?>" class="text-blue-600 hover:text-blue-800">&larr; Back to Blog Posts</a>
+        </p>
+    <?php endif; ?>
 </div>
 
 <?php if (isset($successMessage)): ?>

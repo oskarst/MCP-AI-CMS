@@ -5,12 +5,14 @@
 
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/BlogManager.php';
+require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
+$backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
-$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator);
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator, $backupManager);
 
 // Get current collection (default: blog)
 $collectionId = $_GET['collection'] ?? 'blog';
@@ -128,6 +130,8 @@ require __DIR__ . '/includes/header.php';
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <a href="/cms/admin/blog-edit.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($post['slug']); ?>&status=draft" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
 
+                                    <a href="/cms/admin/blog-preview.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($post['slug']); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800 mr-3">Preview Draft</a>
+
                                     <form method="post" class="inline" onsubmit="return confirm('Publish this post?');">
                                         <?php echo CSRF::inputField(); ?>
                                         <input type="hidden" name="action" value="publish">
@@ -178,7 +182,7 @@ require __DIR__ . '/includes/header.php';
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <a href="/cms/admin/blog-edit.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($post['slug']); ?>&status=published" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
 
-                                    <a href="/<?php echo htmlspecialchars($collectionId); ?>/<?php echo htmlspecialchars($post['slug']); ?>/" target="_blank" class="text-purple-600 hover:text-purple-800 mr-3">View</a>
+                                    <a href="/cms/admin/blog-preview.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($post['slug']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview Live</a>
 
                                     <form method="post" class="inline" onsubmit="return confirm('Unpublish this post?');">
                                         <?php echo CSRF::inputField(); ?>
