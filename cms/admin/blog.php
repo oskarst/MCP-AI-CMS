@@ -7,12 +7,14 @@ require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/BlogManager.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
+require_once __DIR__ . '/../core/CollectionIndexGenerator.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'] ?? 'http://localhost', $reservedFolders, $config['drafts_dir'] ?? null);
-$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator, $backupManager);
+$indexGenerator = new CollectionIndexGenerator($config['root_dir'], __DIR__ . '/../config/blog-templates.json');
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator, $backupManager, $indexGenerator);
 
 // Get current collection (default: blog)
 $collectionId = $_GET['collection'] ?? 'blog';

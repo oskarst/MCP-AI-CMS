@@ -18,8 +18,9 @@ class BlogManager
     private array $templates;
     private $sitemapGenerator;
     private $backupManager;
+    private $indexGenerator;
 
-    public function __construct(string $rootDir, string $draftsDir, $sitemapGenerator = null, $backupManager = null)
+    public function __construct(string $rootDir, string $draftsDir, $sitemapGenerator = null, $backupManager = null, $indexGenerator = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->draftsDir = rtrim($draftsDir, '/');
@@ -27,6 +28,7 @@ class BlogManager
         $this->templatesFile = dirname($draftsDir) . '/config/blog-templates.json';
         $this->sitemapGenerator = $sitemapGenerator;
         $this->backupManager = $backupManager;
+        $this->indexGenerator = $indexGenerator;
 
         // Load collections and templates
         $this->loadCollections();
@@ -218,6 +220,16 @@ class BlogManager
         // Update meta block to mark as published
         $this->updatePublishedStatus($publishPath . '/index.php', true);
 
+        // Regenerate collection index
+        if ($this->indexGenerator) {
+            try {
+                $posts = $this->listPosts($collectionId);
+                $this->indexGenerator->generateIndex($collection, $posts);
+            } catch (Exception $e) {
+                error_log("Index generation failed: " . $e->getMessage());
+            }
+        }
+
         // Regenerate sitemap
         if ($this->sitemapGenerator) {
             try {
@@ -262,6 +274,16 @@ class BlogManager
 
         // Update meta block to mark as draft
         $this->updatePublishedStatus($draftPath . '/index.php', false);
+
+        // Regenerate collection index
+        if ($this->indexGenerator) {
+            try {
+                $posts = $this->listPosts($collectionId);
+                $this->indexGenerator->generateIndex($collection, $posts);
+            } catch (Exception $e) {
+                error_log("Index generation failed: " . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -286,6 +308,16 @@ class BlogManager
 
         // Delete directory and contents
         $this->deleteDirectory($postPath);
+
+        // Regenerate collection index if published post was deleted
+        if ($status === 'published' && $this->indexGenerator) {
+            try {
+                $posts = $this->listPosts($collectionId);
+                $this->indexGenerator->generateIndex($collection, $posts);
+            } catch (Exception $e) {
+                error_log("Index generation failed: " . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -430,5 +462,129 @@ class BlogManager
 </body>
 </html>
 HTML;
+    }
+
+    /**
+     * ===== COLLECTION MANAGEMENT METHODS =====
+     */
+
+    /**
+     * Create a new collection
+     */
+    public function createCollection(string $id, string $label, string $basePath, string $indexType = 'auto'): void
+    {
+        // Validate ID
+        $id = $this->sanitizeSlug($id);
+        if (empty($id)) {
+            throw new Exception("Invalid collection ID");
+        }
+
+        // Check if collection already exists
+        if ($this->getCollection($id) !== null) {
+            throw new Exception("Collection already exists: {$id}");
+        }
+
+        // Create new collection
+        $newCollection = [
+            'id' => $id,
+            'base_path' => $basePath,
+            'label' => $label,
+            'index_type' => $indexType,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->collections[] = $newCollection;
+        $this->saveCollections();
+
+        // Create drafts directory
+        $draftsDir = $this->draftsDir . '/' . $id;
+        if (!is_dir($draftsDir)) {
+            mkdir($draftsDir, 0755, true);
+        }
+
+        // Create base path directory
+        $baseDir = $this->rootDir . '/' . $basePath;
+        if (!is_dir($baseDir)) {
+            mkdir($baseDir, 0755, true);
+        }
+    }
+
+    /**
+     * Update a collection
+     */
+    public function updateCollection(string $id, string $label, string $basePath, string $indexType = 'auto'): void
+    {
+        $found = false;
+        foreach ($this->collections as &$collection) {
+            if ($collection['id'] === $id) {
+                $collection['label'] = $label;
+                $collection['base_path'] = $basePath;
+                $collection['index_type'] = $indexType;
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            throw new Exception("Collection not found: {$id}");
+        }
+
+        $this->saveCollections();
+    }
+
+    /**
+     * Delete a collection
+     */
+    public function deleteCollection(string $id): void
+    {
+        // Don't allow deleting the last collection
+        if (count($this->collections) <= 1) {
+            throw new Exception("Cannot delete the last collection");
+        }
+
+        // Check if collection has posts
+        $posts = $this->listPosts($id);
+        if (!empty($posts)) {
+            throw new Exception("Cannot delete collection with existing posts. Delete all posts first.");
+        }
+
+        // Remove from collections array
+        $this->collections = array_filter($this->collections, function($collection) use ($id) {
+            return $collection['id'] !== $id;
+        });
+
+        // Reindex array
+        $this->collections = array_values($this->collections);
+        $this->saveCollections();
+
+        // Remove drafts directory
+        $draftsDir = $this->draftsDir . '/' . $id;
+        if (is_dir($draftsDir)) {
+            $this->deleteDirectory($draftsDir);
+        }
+    }
+
+    /**
+     * Get post count for a collection
+     */
+    public function getPostCount(string $collectionId): int
+    {
+        try {
+            $posts = $this->listPosts($collectionId);
+            return count(array_filter($posts, fn($post) => $post['status'] === 'published'));
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Save collections to file
+     */
+    private function saveCollections(): void
+    {
+        $json = json_encode($this->collections, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (file_put_contents($this->collectionsFile, $json) === false) {
+            throw new Exception("Failed to save collections");
+        }
     }
 }

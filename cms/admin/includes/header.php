@@ -48,12 +48,37 @@
                         <a href="/cms/admin/create.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'create' ? 'bg-gray-500' : ''; ?>">
                             Create Page
                         </a>
-                        <a href="/cms/admin/blog.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog' ? 'bg-gray-500' : ''; ?>">
-                            Blog Posts
-                        </a>
                         <a href="/cms/admin/sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'sync' ? 'bg-gray-500' : ''; ?>">
                             Sync Page Blocks
                         </a>
+                    </div>
+                </div>
+
+                <!-- Collections Menu (Collapsible) -->
+                <?php
+                // Load collections for dynamic menu
+                if (!isset($blogManager)) {
+                    require_once __DIR__ . '/../../core/BlogManager.php';
+                    $blogManager = new BlogManager($config['root_dir'] ?? '', $config['drafts_dir'] ?? '');
+                }
+                $navCollections = $blogManager->getCollections();
+                ?>
+                <div class="relative" x-data="{ collectionsOpen: <?php echo in_array($activePage ?? '', ['collections', 'posts', 'blog', 'blog-sync']) ? 'true' : 'false'; ?> }">
+                    <button @click="collectionsOpen = !collectionsOpen" class="w-full text-left px-6 py-3 hover:bg-gray-500 transition flex items-center justify-between <?php echo in_array($activePage ?? '', ['collections', 'posts', 'blog', 'blog-sync']) ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
+                        <span class="font-medium">Collections</span>
+                        <svg class="w-4 h-4 transition-transform" :class="collectionsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="collectionsOpen" x-cloak x-collapse class="bg-gray-700">
+                        <a href="/cms/admin/collections.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'collections' ? 'bg-gray-500' : ''; ?>">
+                            Manage Collections
+                        </a>
+                        <?php foreach ($navCollections as $navCollection): ?>
+                        <a href="/cms/admin/blog.php?collection=<?php echo urlencode($navCollection['id']); ?>" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog' && ($_GET['collection'] ?? 'blog') === $navCollection['id'] ? 'bg-gray-500' : ''; ?>">
+                            <?php echo htmlspecialchars($navCollection['label']); ?> Posts
+                        </a>
+                        <?php endforeach; ?>
                         <a href="/cms/admin/blog-sync-blocks.php" class="block px-6 py-2 pl-12 text-sm hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog-sync' ? 'bg-gray-500' : ''; ?>">
                             Sync Post Blocks
                         </a>
