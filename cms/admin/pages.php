@@ -5,10 +5,12 @@
 
 require_once __DIR__ . '/includes/auth-guard.php';
 require_once __DIR__ . '/../core/PageManager.php';
+require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null);
+$backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager);
 
 // Handle page actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -95,7 +97,11 @@ require __DIR__ . '/includes/header.php';
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <a href="/cms/admin/edit.php?page_id=<?php echo urlencode($page['id']); ?>" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
 
+                                <!-- Always show Preview Live -->
+                                <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview Live</a>
+
                                 <?php if ($hasDraft): ?>
+                                    <!-- Show draft-specific actions -->
                                     <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800 mr-3">Preview Draft</a>
 
                                     <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
@@ -111,8 +117,6 @@ require __DIR__ . '/includes/header.php';
                                         <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
                                         <button type="submit" class="text-orange-600 hover:text-orange-800 mr-3">Discard</button>
                                     </form>
-                                <?php else: ?>
-                                    <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview Live</a>
                                 <?php endif; ?>
 
                                 <?php if ($page['id'] !== ''): ?>

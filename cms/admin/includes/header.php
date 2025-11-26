@@ -45,9 +45,22 @@
                 <a href="/cms/admin/blog.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'blog' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">Blog</span>
                 </a>
-                <a href="/cms/admin/settings.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'settings' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
-                    <span class="font-medium">Settings</span>
-                </a>
+
+                <!-- Settings Menu with Submenu -->
+                <div class="relative">
+                    <div class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'settings' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
+                        <span class="font-medium">Settings</span>
+                    </div>
+                    <div class="pl-6 bg-gray-700">
+                        <a href="/cms/admin/settings.php" class="block px-6 py-2 text-sm hover:bg-gray-500 transition <?php echo ($_SERVER['PHP_SELF'] ?? '') === '/cms/admin/settings.php' ? 'bg-gray-500' : ''; ?>">
+                            General
+                        </a>
+                        <a href="/cms/admin/blog-templates.php" class="block px-6 py-2 text-sm hover:bg-gray-500 transition <?php echo ($_SERVER['PHP_SELF'] ?? '') === '/cms/admin/blog-templates.php' ? 'bg-gray-500' : ''; ?>">
+                            Blog Templates
+                        </a>
+                    </div>
+                </div>
+
                 <a href="/cms/admin/mcp-config.php" class="block px-6 py-3 hover:bg-gray-500 transition <?php echo ($activePage ?? '') === 'mcp' ? 'bg-gray-500 border-l-4 border-blue-400' : ''; ?>">
                     <span class="font-medium">MCP Config</span>
                 </a>

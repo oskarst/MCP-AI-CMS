@@ -11,17 +11,20 @@ class PageManager
     private string $rootDir;
     private array $reservedFolders;
     private string $draftsDir;
+    private $backupManager;
 
     /**
      * @param string $rootDir Absolute path to the web root
      * @param array $reservedFolders List of reserved folder names
      * @param string|null $draftsDir Absolute path to drafts directory (optional)
+     * @param object|null $backupManager Optional BackupManager instance for creating backups
      */
-    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null)
+    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null, $backupManager = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->reservedFolders = $reservedFolders;
         $this->draftsDir = $draftsDir ? rtrim($draftsDir, '/') . '/pages' : '';
+        $this->backupManager = $backupManager;
     }
 
     /**
@@ -367,6 +370,16 @@ class PageManager
             }
 
             $livePath = $liveDir . '/index.php';
+        }
+
+        // Create backup of current live page before overwriting
+        if (file_exists($livePath) && $this->backupManager) {
+            try {
+                $this->backupManager->createBackup($pageId, $livePath);
+            } catch (Exception $e) {
+                // Backup failed, but don't stop publishing
+                error_log("Backup failed during publish: " . $e->getMessage());
+            }
         }
 
         // Write to live page

@@ -2,6 +2,7 @@
 cms/config/config.php
 cms/config/users.json
 cms/config/collections.json
+cms/config/blog-templates.json
 
 # Installation flag
 cms/.installed

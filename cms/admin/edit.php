@@ -10,9 +10,9 @@ require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders);
-$blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, $backupManager);
+$blockParser = new BlockParser();
 
 $pageId = $_GET['page_id'] ?? '';
 $pagePath = $pageManager->getPagePath($pageId);
@@ -22,30 +22,65 @@ if (!$pagePath) {
     exit;
 }
 
-// Handle block update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_block') {
+// Handle actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     CSRF::verifyOrDie();
 
-    $blockName = $_POST['block_name'] ?? '';
-    $blockContent = $_POST['block_content'] ?? '';
-    $blockCustom = isset($_POST['block_custom']) ? true : false;
+    $action = $_POST['action'] ?? '';
 
     try {
-        // Create backup before updating
-        $backupManager->createBackup($pageId, $pagePath);
+        switch ($action) {
+            case 'update_block':
+                $blockName = $_POST['block_name'] ?? '';
+                $blockContent = $_POST['block_content'] ?? '';
+                $blockCustom = isset($_POST['block_custom']) ? true : false;
 
-        // Update the block
-        $blockParser->updateBlock($pagePath, $blockName, $blockContent, $blockCustom);
+                // Get draft content (from existing draft or live page)
+                $draftContent = $pageManager->hasDraft($pageId)
+                    ? $pageManager->getDraft($pageId)
+                    : file_get_contents($pagePath);
 
-        $successMessage = "Block updated successfully.";
+                // Create temporary file to update the block
+                $tempFile = tempnam(sys_get_temp_dir(), 'cms_block_edit_');
+                file_put_contents($tempFile, $draftContent);
+
+                // Update the block in the temp file
+                $blockParser->updateBlock($tempFile, $blockName, $blockContent, $blockCustom);
+
+                // Save the updated content as draft
+                $pageManager->saveDraft($pageId, file_get_contents($tempFile));
+
+                // Clean up
+                @unlink($tempFile);
+
+                $successMessage = "Block saved as draft. Preview or publish when ready.";
+                break;
+
+            case 'publish':
+                $pageManager->publishDraft($pageId);
+                $successMessage = "Draft published successfully.";
+                break;
+        }
     } catch (Exception $e) {
         $errorMessage = $e->getMessage();
     }
 }
 
-// Parse blocks from the page
+$hasDraft = $pageManager->hasDraft($pageId);
+
+// Parse blocks from the page (use draft if exists, otherwise live)
 try {
-    $blocks = $blockParser->parseBlocks($pagePath);
+    if ($hasDraft) {
+        // Parse from draft content
+        $draftContent = $pageManager->getDraft($pageId);
+        $tempFile = tempnam(sys_get_temp_dir(), 'cms_parse_');
+        file_put_contents($tempFile, $draftContent);
+        $blocks = $blockParser->parseBlocks($tempFile);
+        @unlink($tempFile);
+    } else {
+        // Parse from live page
+        $blocks = $blockParser->parseBlocks($pagePath);
+    }
 } catch (Exception $e) {
     $errorMessage = "Failed to parse blocks: " . $e->getMessage();
     $blocks = [];
@@ -58,12 +93,28 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Edit Page: <code class="text-blue-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code></h1>
-    <p class="text-gray-600">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        Edit Page: <code class="text-blue-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code>
+        <?php if ($hasDraft): ?>
+            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Has Draft</span>
+        <?php endif; ?>
+    </h1>
+    <div class="flex items-center gap-3 text-sm">
         <a href="/cms/admin/pages.php" class="text-blue-600 hover:text-blue-800">&larr; Back to Pages</a>
-        <span class="mx-2">|</span>
-        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>" target="_blank" class="text-green-600 hover:text-green-800">Preview Page</a>
-    </p>
+        <span class="text-gray-400">|</span>
+        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>" target="_blank" class="text-green-600 hover:text-green-800">Preview Live</a>
+
+        <?php if ($hasDraft): ?>
+            <span class="text-gray-400">|</span>
+            <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800">Preview Draft</a>
+            <span class="text-gray-400">|</span>
+            <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
+                <?php echo CSRF::inputField(); ?>
+                <input type="hidden" name="action" value="publish">
+                <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Publish</button>
+            </form>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php if (isset($successMessage)): ?>

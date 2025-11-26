@@ -13,16 +13,20 @@ class BlogManager
     private string $rootDir;
     private string $draftsDir;
     private string $collectionsFile;
+    private string $templatesFile;
     private array $collections;
+    private array $templates;
 
     public function __construct(string $rootDir, string $draftsDir)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->draftsDir = rtrim($draftsDir, '/');
         $this->collectionsFile = dirname($draftsDir) . '/config/collections.json';
+        $this->templatesFile = dirname($draftsDir) . '/config/blog-templates.json';
 
-        // Load collections
+        // Load collections and templates
         $this->loadCollections();
+        $this->loadTemplates();
     }
 
     /**
@@ -38,6 +42,20 @@ class BlogManager
             $this->collections = [
                 ['id' => 'blog', 'base_path' => 'blog', 'label' => 'Blog'],
             ];
+        }
+    }
+
+    /**
+     * Load templates from config file
+     */
+    private function loadTemplates(): void
+    {
+        if (file_exists($this->templatesFile)) {
+            $data = json_decode(file_get_contents($this->templatesFile), true);
+            $this->templates = $data ?? [];
+        } else {
+            // Fallback to empty templates
+            $this->templates = [];
         }
     }
 
@@ -334,6 +352,19 @@ class BlogManager
         $title = ucwords(str_replace('-', ' ', $slug));
         $date = date('Y-m-d');
 
+        // Use template from configuration if available
+        if (!empty($this->templates['post_template'])) {
+            $template = $this->templates['post_template'];
+
+            // Replace placeholders
+            $template = str_replace('{TITLE}', $title, $template);
+            $template = str_replace('{DATE}', $date, $template);
+            $template = str_replace('{COLLECTION_LABEL}', $collectionLabel, $template);
+
+            return $template;
+        }
+
+        // Fallback to default template
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
