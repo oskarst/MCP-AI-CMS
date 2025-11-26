@@ -231,11 +231,6 @@ require __DIR__ . '/includes/header.php';
 
                 <div class="flex gap-3">
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Save Block</button>
-                    <?php if (!($block['system'] ?? false)): ?>
-                    <button type="button" @click="view === 'code' ? updatePreview() : syncFromPreview()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
-                        Sync Views
-                    </button>
-                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -413,6 +408,11 @@ function blockEditor(index) {
 
         // Make sure CodeMirror is visible when switching to code view
         switchToCode() {
+            // Sync any changes from preview before switching
+            if (this.$refs.preview && this.$refs.preview.innerHTML) {
+                this.syncFromPreview();
+            }
+
             this.view = 'code';
             this.$nextTick(() => {
                 if (this.editor) {
