@@ -8,17 +8,32 @@ require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders);
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null);
 
-// Handle page deletion
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+// Handle page actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     CSRF::verifyOrDie();
 
-    $pageIdToDelete = $_POST['page_id'] ?? '';
+    $action = $_POST['action'] ?? '';
+    $pageId = $_POST['page_id'] ?? '';
 
     try {
-        $pageManager->deletePage($pageIdToDelete);
-        $successMessage = "Page deleted successfully.";
+        switch ($action) {
+            case 'delete':
+                $pageManager->deletePage($pageId);
+                $successMessage = "Page deleted successfully.";
+                break;
+
+            case 'publish':
+                $pageManager->publishDraft($pageId);
+                $successMessage = "Draft published successfully.";
+                break;
+
+            case 'discard':
+                $pageManager->discardDraft($pageId);
+                $successMessage = "Draft discarded successfully.";
+                break;
+        }
     } catch (Exception $e) {
         $errorMessage = $e->getMessage();
     }
@@ -59,23 +74,47 @@ require __DIR__ . '/includes/header.php';
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <?php foreach ($pages as $page): ?>
+                        <?php $hasDraft = $pageManager->hasDraft($page['id']); ?>
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <code class="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($page['id'] ?: '/'); ?></code>
                             </td>
-                            <td class="px-6 py-4">
-                                <small class="text-gray-500 text-xs"><?php echo htmlspecialchars($page['path']); ?></small>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <?php if ($hasDraft): ?>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Has Draft</span>
+                                <?php else: ?>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Live</span>
+                                <?php endif; ?>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <a href="/cms/admin/edit.php?page_id=<?php echo urlencode($page['id']); ?>" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
-                                <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview</a>
-                                <a href="/cms/admin/preview-blocks.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-purple-600 hover:text-purple-800 mr-3">Preview Blocks</a>
+
+                                <?php if ($hasDraft): ?>
+                                    <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800 mr-3">Preview Draft</a>
+
+                                    <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
+                                        <?php echo CSRF::inputField(); ?>
+                                        <input type="hidden" name="action" value="publish">
+                                        <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
+                                        <button type="submit" class="text-green-600 hover:text-green-800 mr-3">Publish</button>
+                                    </form>
+
+                                    <form method="post" class="inline" onsubmit="return confirm('Discard this draft?');">
+                                        <?php echo CSRF::inputField(); ?>
+                                        <input type="hidden" name="action" value="discard">
+                                        <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
+                                        <button type="submit" class="text-orange-600 hover:text-orange-800 mr-3">Discard</button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview Live</a>
+                                <?php endif; ?>
+
                                 <?php if ($page['id'] !== ''): ?>
                                     <form method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this page?');">
                                         <?php echo CSRF::inputField(); ?>

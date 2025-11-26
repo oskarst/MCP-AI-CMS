@@ -10,15 +10,18 @@ class PageManager
 {
     private string $rootDir;
     private array $reservedFolders;
+    private string $draftsDir;
 
     /**
      * @param string $rootDir Absolute path to the web root
      * @param array $reservedFolders List of reserved folder names
+     * @param string|null $draftsDir Absolute path to drafts directory (optional)
      */
-    public function __construct(string $rootDir, array $reservedFolders = ['cms'])
+    public function __construct(string $rootDir, array $reservedFolders = ['cms'], ?string $draftsDir = null)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->reservedFolders = $reservedFolders;
+        $this->draftsDir = $draftsDir ? rtrim($draftsDir, '/') . '/pages' : '';
     }
 
     /**
@@ -252,6 +255,145 @@ class PageManager
                 $newRelPath = $relPath === '' ? $item : $relPath . '/' . $item;
                 $this->scanDirectory($itemPath, $newRelPath, $pages);
             }
+        }
+    }
+
+    /**
+     * Get the draft file path for a page ID.
+     *
+     * @param string $pageId Page ID
+     * @return string|null Draft file path, or null if drafts not configured
+     */
+    public function getDraftPath(string $pageId): ?string
+    {
+        if (!$this->draftsDir) {
+            return null;
+        }
+
+        $pageId = trim($pageId, '/');
+        $safeName = $pageId === '' ? '__homepage__' : str_replace('/', '__', $pageId);
+        return $this->draftsDir . '/' . $safeName . '.php';
+    }
+
+    /**
+     * Check if a page has a draft.
+     *
+     * @param string $pageId Page ID
+     * @return bool True if draft exists
+     */
+    public function hasDraft(string $pageId): bool
+    {
+        $draftPath = $this->getDraftPath($pageId);
+        return $draftPath && file_exists($draftPath);
+    }
+
+    /**
+     * Save page content as a draft.
+     *
+     * @param string $pageId Page ID
+     * @param string $content Page content
+     * @return void
+     * @throws Exception if drafts not configured or save fails
+     */
+    public function saveDraft(string $pageId, string $content): void
+    {
+        $draftPath = $this->getDraftPath($pageId);
+        if (!$draftPath) {
+            throw new Exception('Drafts directory not configured');
+        }
+
+        // Ensure drafts directory exists
+        if (!is_dir($this->draftsDir)) {
+            if (!mkdir($this->draftsDir, 0755, true)) {
+                throw new Exception('Failed to create drafts directory');
+            }
+        }
+
+        // Save draft
+        if (file_put_contents($draftPath, $content) === false) {
+            throw new Exception('Failed to save draft');
+        }
+    }
+
+    /**
+     * Get draft content for a page.
+     *
+     * @param string $pageId Page ID
+     * @return string|null Draft content, or null if no draft exists
+     */
+    public function getDraft(string $pageId): ?string
+    {
+        if (!$this->hasDraft($pageId)) {
+            return null;
+        }
+
+        $draftPath = $this->getDraftPath($pageId);
+        $content = file_get_contents($draftPath);
+        return $content !== false ? $content : null;
+    }
+
+    /**
+     * Publish a draft to the live page.
+     *
+     * @param string $pageId Page ID
+     * @return void
+     * @throws Exception if no draft exists or publish fails
+     */
+    public function publishDraft(string $pageId): void
+    {
+        if (!$this->hasDraft($pageId)) {
+            throw new Exception("No draft exists for page '{$pageId}'");
+        }
+
+        $draftPath = $this->getDraftPath($pageId);
+        $draftContent = file_get_contents($draftPath);
+
+        if ($draftContent === false) {
+            throw new Exception('Failed to read draft content');
+        }
+
+        // Get or create live page path
+        $pageId = trim($pageId, '/');
+        if ($pageId === '' || $pageId === 'index') {
+            $livePath = $this->rootDir . '/index.php';
+        } else {
+            $liveDir = $this->rootDir . '/' . $pageId;
+
+            // Create directory if it doesn't exist
+            if (!is_dir($liveDir)) {
+                if (!mkdir($liveDir, 0755, true)) {
+                    throw new Exception('Failed to create page directory');
+                }
+            }
+
+            $livePath = $liveDir . '/index.php';
+        }
+
+        // Write to live page
+        if (file_put_contents($livePath, $draftContent) === false) {
+            throw new Exception('Failed to publish draft to live page');
+        }
+
+        // Delete the draft
+        @unlink($draftPath);
+    }
+
+    /**
+     * Discard a draft.
+     *
+     * @param string $pageId Page ID
+     * @return void
+     * @throws Exception if no draft exists or delete fails
+     */
+    public function discardDraft(string $pageId): void
+    {
+        if (!$this->hasDraft($pageId)) {
+            throw new Exception("No draft exists for page '{$pageId}'");
+        }
+
+        $draftPath = $this->getDraftPath($pageId);
+        if (!unlink($draftPath)) {
+            throw new Exception('Failed to discard draft');
         }
     }
 }

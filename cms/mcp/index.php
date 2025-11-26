@@ -107,7 +107,7 @@ if ($input === null && json_last_error() !== JSON_ERROR_NONE) {
 
 // Initialize managers
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
-$pageManager = new PageManager($config['root_dir'], $reservedFolders);
+$pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
@@ -173,16 +173,23 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
         exit;
     }
 
-    // Read file content
-    $fileContent = file_get_contents($pagePath);
+    // Get current content (draft if exists, otherwise live page)
+    $fileContent = $pageManager->hasDraft($pageId)
+        ? $pageManager->getDraft($pageId)
+        : file_get_contents($pagePath);
+
     if ($fileContent === false) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
         exit;
     }
 
+    // Create a temporary file to parse blocks
+    $tempFile = tempnam(sys_get_temp_dir(), 'cms_draft_');
+    file_put_contents($tempFile, $fileContent);
+
     // Parse existing blocks
-    $blocks = $blockParser->parseBlocks($pagePath);
+    $blocks = $blockParser->parseBlocks($tempFile);
 
     // Check for duplicate block name
     foreach ($blocks as $block) {
@@ -262,20 +269,24 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
     $newBlockMarkup .= $content;
     $newBlockMarkup .= "\n<?php /* CMS:BLOCK name={$name} end */ ?>\n";
 
-    // Create backup before modifying
-    $backupManager->createBackup($pageId, $pagePath);
-
     // Insert the new block
     $newFileContent = substr($fileContent, 0, $insertPos) . $newBlockMarkup . substr($fileContent, $insertPos);
 
-    // Write back to file
-    if (file_put_contents($pagePath, $newFileContent) === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to write to page file']);
-        exit;
-    }
+    try {
+        // Save as draft
+        $pageManager->saveDraft($pageId, $newFileContent);
 
-    echo json_encode(['success' => true]);
+        // Create backup of live page (not draft)
+        $backupManager->createBackup($pageId, $pagePath);
+
+        echo json_encode(['success' => true, 'message' => 'Block inserted and saved as draft']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()]);
+    } finally {
+        // Clean up temporary file
+        @unlink($tempFile);
+    }
     exit;
 }
 
@@ -465,14 +476,17 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager) {
 
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
-    if (!$pagePath || !is_readable($pagePath) || !is_writable($pagePath)) {
+    if (!$pagePath) {
         http_response_code(404);
         echo json_encode(['success' => false, 'error' => 'Page not found']);
         exit;
     }
 
-    // Read file content
-    $content = file_get_contents($pagePath);
+    // Get current content (draft if exists, otherwise live page)
+    $content = $pageManager->hasDraft($pageId)
+        ? $pageManager->getDraft($pageId)
+        : file_get_contents($pagePath);
+
     if ($content === false) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
@@ -506,9 +520,6 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager) {
         exit;
     }
 
-    // Create backup before modifying
-    $backupManager->createBackup($pageId, $pagePath);
-
     // Split new region into lines
     $newRegionLines = preg_split("/\r\n|\n|\r/", $newRegion);
 
@@ -518,14 +529,18 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager) {
     // Join back into file content
     $newContent = implode("\n", $lines);
 
-    // Write back to file
-    if (file_put_contents($pagePath, $newContent) === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to write to page file']);
-        exit;
-    }
+    // Save as draft
+    try {
+        $pageManager->saveDraft($pageId, $newContent);
 
-    echo json_encode(['success' => true]);
+        // Create backup of live page (not draft)
+        $backupManager->createBackup($pageId, $pagePath);
+
+        echo json_encode(['success' => true, 'message' => 'Page region updated and saved as draft']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()]);
+    }
     exit;
 }
 
@@ -562,8 +577,17 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
         exit;
     }
 
-    // Parse blocks
-    $blocks = $blockParser->parseBlocks($pagePath);
+    // Get current content (draft if exists, otherwise live page)
+    $currentContent = $pageManager->hasDraft($pageId)
+        ? $pageManager->getDraft($pageId)
+        : file_get_contents($pagePath);
+
+    // Create a temporary file to parse blocks
+    $tempFile = tempnam(sys_get_temp_dir(), 'cms_draft_');
+    file_put_contents($tempFile, $currentContent);
+
+    // Parse blocks from the working content
+    $blocks = $blockParser->parseBlocks($tempFile);
 
     // Find the target block
     $targetBlock = null;
@@ -617,6 +641,7 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
 
     // If no replacements, return without modifying file
     if ($replacements === 0) {
+        @unlink($tempFile);
         echo json_encode([
             'success' => true,
             'replacements' => 0,
@@ -625,17 +650,29 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
         exit;
     }
 
-    // Create backup before modifying
-    $backupManager->createBackup($pageId, $pagePath);
+    try {
+        // Update the block in the temporary file
+        $blockParser->updateBlock($tempFile, $blockName, $newContent, $targetBlock['custom'] ? true : null);
 
-    // Update the block
-    $blockParser->updateBlock($pagePath, $blockName, $newContent, $targetBlock['custom'] ? true : null);
+        // Read the updated content
+        $updatedContent = file_get_contents($tempFile);
 
-    // Return success with replacement count
-    echo json_encode([
-        'success' => true,
-        'replacements' => $replacements
-    ]);
+        // Save as draft
+        $pageManager->saveDraft($pageId, $updatedContent);
+
+        // Create backup of live page (not draft)
+        $backupManager->createBackup($pageId, $pagePath);
+
+        // Return success with replacement count
+        echo json_encode([
+            'success' => true,
+            'replacements' => $replacements,
+            'message' => 'Content replaced and saved as draft'
+        ]);
+    } finally {
+        // Clean up temporary file
+        @unlink($tempFile);
+    }
     exit;
 }
 
@@ -690,13 +727,33 @@ try {
                 exit;
             }
 
-            // Create backup before updating
-            $backupManager->createBackup($pageId, $pagePath);
+            // Get current content (draft if exists, otherwise live page)
+            $currentContent = $pageManager->hasDraft($pageId)
+                ? $pageManager->getDraft($pageId)
+                : file_get_contents($pagePath);
 
-            // Update the block
-            $blockParser->updateBlock($pagePath, $blockName, $content, $custom);
+            // Create a temporary file to work with BlockParser
+            $tempFile = tempnam(sys_get_temp_dir(), 'cms_draft_');
+            file_put_contents($tempFile, $currentContent);
 
-            echo json_encode(['success' => true]);
+            try {
+                // Update the block in the temporary file
+                $blockParser->updateBlock($tempFile, $blockName, $content, $custom);
+
+                // Read the updated content
+                $updatedContent = file_get_contents($tempFile);
+
+                // Save as draft
+                $pageManager->saveDraft($pageId, $updatedContent);
+
+                // Create backup of live page (not draft)
+                $backupManager->createBackup($pageId, $pagePath);
+
+                echo json_encode(['success' => true, 'message' => 'Block updated and saved as draft']);
+            } finally {
+                // Clean up temporary file
+                @unlink($tempFile);
+            }
             break;
 
         case 'duplicate_page':
@@ -891,6 +948,42 @@ try {
                 'path' => $pagePath,
                 'content' => $content
             ]);
+            break;
+
+        case 'publish_page':
+            $pageId = normalizePageId($input['page_id'] ?? '');
+
+            if (!isset($input['page_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
+                exit;
+            }
+
+            try {
+                $pageManager->publishDraft($pageId);
+                echo json_encode(['success' => true, 'message' => 'Draft published successfully']);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            break;
+
+        case 'discard_draft':
+            $pageId = normalizePageId($input['page_id'] ?? '');
+
+            if (!isset($input['page_id'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
+                exit;
+            }
+
+            try {
+                $pageManager->discardDraft($pageId);
+                echo json_encode(['success' => true, 'message' => 'Draft discarded successfully']);
+            } catch (Exception $e) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
             break;
 
         case 'read_block':

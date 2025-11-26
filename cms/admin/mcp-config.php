@@ -505,6 +505,36 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                             'required' => ['page_id', 'start_line', 'end_line', 'old_region', 'new_region'],
                         ],
                     ],
+                    [
+                        'name' => 'publish_page',
+                        'description' => 'Publish a page draft to make it live. DESTRUCTIVE: Moves the draft content to the live page, making it publicly accessible. The page must have a draft saved first (from any edit operation). This action replaces the current live page with the draft version.',
+                        'destructiveHint' => true,
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                            ],
+                            'required' => ['page_id'],
+                        ],
+                    ],
+                    [
+                        'name' => 'discard_draft',
+                        'description' => 'Discard a page draft without publishing. DESTRUCTIVE: Permanently deletes the draft version, keeping the live page unchanged. Use this to abandon unpublished changes. Cannot be undone.',
+                        'destructiveHint' => true,
+                        'input_schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'page_id' => [
+                                    'type' => 'string',
+                                    'description' => 'Page ID. For homepage use: "" or "/"',
+                                ],
+                            ],
+                            'required' => ['page_id'],
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -612,6 +642,8 @@ require __DIR__ . '/includes/header.php';
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">search_in_page</code> - Search within a page and return line ranges with snippets</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">get_page_region</code> - Get a specific region of a page by line range</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">update_page_region</code> - Update a page region using optimistic locking</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">publish_page</code> - Publish a page draft to make it live</li>
+        <li><code class="bg-gray-100 px-1 py-0.5 rounded">discard_draft</code> - Discard a page draft without publishing</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">duplicate_page</code> - Create a new page by duplicating an existing one</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">delete_page</code> - Delete a page</li>
         <li><code class="bg-gray-100 px-1 py-0.5 rounded">list_backups</code> - List backups for a page</li>
