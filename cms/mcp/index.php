@@ -130,6 +130,25 @@ if ($isJsonRpc) {
     $method = $jsonInput['method'] ?? '';
     $params = $jsonInput['params'] ?? [];
 
+    // Handle initialize method (MCP handshake)
+    if ($method === 'initialize') {
+        jsonRpcSuccess([
+            'protocolVersion' => '2024-11-05',
+            'capabilities' => [
+                'tools' => new stdClass()
+            ],
+            'serverInfo' => [
+                'name' => 'cms-mcp',
+                'version' => '1.0.0'
+            ]
+        ], $jsonRpcId);
+    }
+
+    // Handle initialized notification (no response needed, but acknowledge)
+    if ($method === 'notifications/initialized' || $method === 'initialized') {
+        jsonRpcSuccess(new stdClass(), $jsonRpcId);
+    }
+
     // Handle tools/list method (discovery)
     if ($method === 'tools/list') {
         $toolsDefinition = getMCPToolsWithSchema();
@@ -286,9 +305,7 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
     if (!$pagePath) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Page not found']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Page not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Get current content (draft if exists, otherwise live page)
@@ -297,9 +314,7 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
         : file_get_contents($pagePath);
 
     if ($fileContent === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Failed to read page file'], $isJsonRpc, $jsonRpcId);
     }
 
     // Create a temporary file to parse blocks
@@ -312,9 +327,8 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
     // Check for duplicate block name
     foreach ($blocks as $block) {
         if ($block['name'] === $name) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => "Block with name '{$name}' already exists on this page"]);
-            exit;
+            @unlink($tempFile);
+            outputResult(['success' => false, 'error' => "Block with name '{$name}' already exists on this page"], $isJsonRpc, $jsonRpcId);
         }
     }
 
@@ -333,9 +347,8 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
                 }
             }
             if (!$found) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"]);
-                exit;
+                @unlink($tempFile);
+                outputResult(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"], $isJsonRpc, $jsonRpcId);
             }
             break;
 
@@ -350,9 +363,8 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
                 }
             }
             if (!$found) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"]);
-                exit;
+                @unlink($tempFile);
+                outputResult(['success' => false, 'error' => "Reference block '{$referenceBlockName}' not found on this page"], $isJsonRpc, $jsonRpcId);
             }
             break;
 
@@ -397,15 +409,12 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $
         // Create backup of live page (not draft)
         $backupManager->createBackup($pageId, $pagePath);
 
-        echo json_encode(['success' => true, 'message' => 'Block inserted and saved as draft']);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()]);
-    } finally {
-        // Clean up temporary file
         @unlink($tempFile);
+        outputResult(['success' => true, 'message' => 'Block inserted and saved as draft'], $isJsonRpc, $jsonRpcId);
+    } catch (Exception $e) {
+        @unlink($tempFile);
+        outputResult(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()], $isJsonRpc, $jsonRpcId);
     }
-    exit;
 }
 
 // Handler for search_in_page tool
@@ -415,9 +424,7 @@ function handleSearchInPage($input, $pageManager, $isJsonRpc = false, $jsonRpcId
     $search = $input['search'] ?? '';
 
     if ($pageId === null || $search === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, search']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Missing required parameters: page_id, search'], $isJsonRpc, $jsonRpcId);
     }
 
     // Optional parameters
@@ -427,17 +434,13 @@ function handleSearchInPage($input, $pageManager, $isJsonRpc = false, $jsonRpcId
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
     if (!$pagePath || !is_readable($pagePath)) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Page not found']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Page not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Read file content
     $content = file_get_contents($pagePath);
     if ($content === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Failed to read page file'], $isJsonRpc, $jsonRpcId);
     }
 
     // Split into lines
@@ -480,11 +483,10 @@ function handleSearchInPage($input, $pageManager, $isJsonRpc = false, $jsonRpcId
         }
     }
 
-    echo json_encode([
+    outputResult([
         'success' => true,
         'matches' => $matches
-    ]);
-    exit;
+    ], $isJsonRpc, $jsonRpcId);
 }
 
 // Handler for get_page_region tool
@@ -495,16 +497,12 @@ function handleGetPageRegion($input, $pageManager, $isJsonRpc = false, $jsonRpcI
     $endLine = $input['end_line'] ?? null;
 
     if ($pageId === null || $startLine === null || $endLine === null) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line'], $isJsonRpc, $jsonRpcId);
     }
 
     // Validate line numbers
     if (!is_int($startLine) || !is_int($endLine) || $startLine < 1 || $endLine < $startLine) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid line range'], $isJsonRpc, $jsonRpcId);
     }
 
     // Optional parameters
@@ -513,17 +511,13 @@ function handleGetPageRegion($input, $pageManager, $isJsonRpc = false, $jsonRpcI
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
     if (!$pagePath || !is_readable($pagePath)) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Page not found']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Page not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Read file content
     $content = file_get_contents($pagePath);
     if ($content === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Failed to read page file'], $isJsonRpc, $jsonRpcId);
     }
 
     // Split into lines
@@ -532,9 +526,7 @@ function handleGetPageRegion($input, $pageManager, $isJsonRpc = false, $jsonRpcI
 
     // Validate start line
     if ($startLine > $totalLines) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid line range'], $isJsonRpc, $jsonRpcId);
     }
 
     // Clamp end line
@@ -561,13 +553,12 @@ function handleGetPageRegion($input, $pageManager, $isJsonRpc = false, $jsonRpcI
 
     $region = implode("\n", $regionLines);
 
-    echo json_encode([
+    outputResult([
         'success' => true,
         'region' => $region,
         'start_line' => $startLine,
         'end_line' => $actualEndLine
-    ]);
-    exit;
+    ], $isJsonRpc, $jsonRpcId);
 }
 
 // Handler for update_page_region tool
@@ -580,24 +571,18 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
     $newRegion = $input['new_region'] ?? '';
 
     if ($pageId === null || $startLine === null || $endLine === null || $oldRegion === '' || $newRegion === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line, old_region, new_region']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Missing required parameters: page_id, start_line, end_line, old_region, new_region'], $isJsonRpc, $jsonRpcId);
     }
 
     // Validate line numbers
     if (!is_int($startLine) || !is_int($endLine) || $startLine < 1 || $endLine < $startLine) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid line range'], $isJsonRpc, $jsonRpcId);
     }
 
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
     if (!$pagePath) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Page not found']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Page not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Get current content (draft if exists, otherwise live page)
@@ -606,9 +591,7 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
         : file_get_contents($pagePath);
 
     if ($content === false) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to read page file']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Failed to read page file'], $isJsonRpc, $jsonRpcId);
     }
 
     // Split into lines
@@ -617,9 +600,7 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
 
     // Validate line range
     if ($startLine > $totalLines || $endLine > $totalLines) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid line range']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid line range'], $isJsonRpc, $jsonRpcId);
     }
 
     // Extract current region
@@ -630,12 +611,10 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
 
     // Check if old_region matches current region (optimistic locking)
     if ($currentRegion !== $oldRegion) {
-        http_response_code(409);
-        echo json_encode([
+        outputResult([
             'success' => false,
             'error' => 'Region has changed since retrieval'
-        ]);
-        exit;
+        ], $isJsonRpc, $jsonRpcId);
     }
 
     // Split new region into lines
@@ -654,12 +633,10 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
         // Create backup of live page (not draft)
         $backupManager->createBackup($pageId, $pagePath);
 
-        echo json_encode(['success' => true, 'message' => 'Page region updated and saved as draft']);
+        outputResult(['success' => true, 'message' => 'Page region updated and saved as draft'], $isJsonRpc, $jsonRpcId);
     } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()]);
+        outputResult(['success' => false, 'error' => 'Failed to save draft: ' . $e->getMessage()], $isJsonRpc, $jsonRpcId);
     }
-    exit;
 }
 
 // Handler for find_and_replace_block_content tool
@@ -671,9 +648,7 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
     $replace = $input['replace'] ?? '';
 
     if ($pageId === null || !$blockName || $search === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, name, search']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Missing required parameters: page_id, name, search'], $isJsonRpc, $jsonRpcId);
     }
 
     // Optional parameters with defaults
@@ -682,17 +657,13 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
 
     // Validate mode
     if (!in_array($mode, ['first', 'all'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid mode. Must be "first" or "all"']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid mode. Must be "first" or "all"'], $isJsonRpc, $jsonRpcId);
     }
 
     // Get page path
     $pagePath = $pageManager->getPagePath($pageId);
     if (!$pagePath) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Page not found']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Page not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Get current content (draft if exists, otherwise live page)
@@ -719,9 +690,8 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
     }
 
     if (!$targetBlock) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Block not found']);
-        exit;
+        @unlink($tempFile);
+        outputResult(['success' => false, 'error' => 'Block not found'], $isJsonRpc, $jsonRpcId);
     }
 
     // Perform find and replace
@@ -760,12 +730,11 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
     // If no replacements, return without modifying file
     if ($replacements === 0) {
         @unlink($tempFile);
-        echo json_encode([
+        outputResult([
             'success' => true,
             'replacements' => 0,
             'message' => 'No occurrences of the search text were found in this block.'
-        ]);
-        exit;
+        ], $isJsonRpc, $jsonRpcId);
     }
 
     try {
@@ -782,16 +751,15 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
         $backupManager->createBackup($pageId, $pagePath);
 
         // Return success with replacement count
-        echo json_encode([
+        outputResult([
             'success' => true,
             'replacements' => $replacements,
             'message' => 'Content replaced and saved as draft'
-        ]);
+        ], $isJsonRpc, $jsonRpcId);
     } finally {
         // Clean up temporary file
         @unlink($tempFile);
     }
-    exit;
 }
 
 // Route to appropriate tool handler
