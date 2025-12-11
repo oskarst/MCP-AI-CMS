@@ -45,22 +45,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'update':
                 $id = $_POST['id'] ?? '';
-                $label = trim($_POST['label'] ?? '');
-                $basePath = trim($_POST['base_path'] ?? '');
-                $indexType = $_POST['index_type'] ?? 'auto';
+                $settings = [
+                    'label' => trim($_POST['label'] ?? ''),
+                    'base_path' => trim($_POST['base_path'] ?? ''),
+                    'index_type' => $_POST['index_type'] ?? 'auto',
+                    'posts_per_page' => (int)($_POST['posts_per_page'] ?? 10),
+                    'sort_by' => $_POST['sort_by'] ?? 'date',
+                    'sort_order' => $_POST['sort_order'] ?? 'desc',
+                    'show_excerpts' => isset($_POST['show_excerpts']),
+                ];
 
-                if (empty($label) || empty($id) || empty($basePath)) {
-                    throw new Exception("All fields are required");
+                if (empty($settings['label']) || empty($id) || empty($settings['base_path'])) {
+                    throw new Exception("All required fields must be filled");
                 }
 
-                $blogManager->updateCollection($id, $label, $basePath, $indexType);
+                $blogManager->updateCollection($id, $settings);
 
                 // Regenerate index page
                 $collection = $blogManager->getCollection($id);
                 $posts = $blogManager->listPosts($id);
                 $indexGenerator->generateIndex($collection, $posts);
 
-                $successMessage = "Collection '{$label}' updated successfully.";
+                $successMessage = "Collection '{$settings['label']}' updated successfully.";
                 break;
 
             case 'delete':
@@ -103,6 +109,7 @@ $collections = $blogManager->getCollections();
 foreach ($collections as &$collection) {
     $collection['post_count'] = $blogManager->getPostCount($collection['id']);
 }
+unset($collection); // Important: unset reference to avoid bugs in subsequent foreach loops
 
 $pageTitle = 'Manage Collections';
 $activePage = 'collections';
@@ -274,33 +281,21 @@ require __DIR__ . '/includes/header.php';
                         </select>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                        <!-- Edit/Save -->
+                        <!-- View Collection -->
+                        <a
+                            href="/<?php echo htmlspecialchars($collection['base_path']); ?>/"
+                            target="_blank"
+                            class="text-blue-600 hover:text-blue-800"
+                            title="View collection index page">
+                            View
+                        </a>
+
+                        <!-- Settings Button -->
                         <button
                             x-show="!editing"
-                            @click="editing = true"
-                            class="text-blue-600 hover:text-blue-800">
-                            Edit
-                        </button>
-                        <form x-show="editing" x-cloak method="post" class="inline" @submit.prevent="
-                            $el.querySelector('[name=label]').value = $refs.editLabel_<?php echo htmlspecialchars($collection['id']); ?>.value;
-                            $el.querySelector('[name=base_path]').value = $refs.editBasePath_<?php echo htmlspecialchars($collection['id']); ?>.value;
-                            $el.querySelector('[name=index_type]').value = $refs.editIndexType_<?php echo htmlspecialchars($collection['id']); ?>.value;
-                            $el.submit();
-                        ">
-                            <?php echo CSRF::inputField(); ?>
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="id" value="<?php echo htmlspecialchars($collection['id']); ?>">
-                            <input type="hidden" name="label">
-                            <input type="hidden" name="base_path">
-                            <input type="hidden" name="index_type">
-                            <button type="submit" class="text-green-600 hover:text-green-800">Save</button>
-                        </form>
-                        <button
-                            x-show="editing"
-                            x-cloak
-                            @click="editing = false"
-                            class="text-gray-600 hover:text-gray-800">
-                            Cancel
+                            @click="$dispatch('open-settings-<?php echo htmlspecialchars($collection['id']); ?>')"
+                            class="text-purple-600 hover:text-purple-800">
+                            Settings
                         </button>
 
                         <!-- Regenerate Index -->
@@ -329,5 +324,123 @@ require __DIR__ . '/includes/header.php';
         </table>
     </div>
 </div>
+
+<!-- Settings Modals for Each Collection -->
+<?php foreach ($collections as $collection): ?>
+<div
+    x-data="{ open: false }"
+    @open-settings-<?php echo htmlspecialchars($collection['id']); ?>.window="open = true"
+    x-show="open"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    @click.self="open = false">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">
+                Settings: <?php echo htmlspecialchars($collection['label']); ?>
+            </h3>
+            <button @click="open = false" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <form method="post" class="p-6 space-y-4">
+            <?php echo CSRF::inputField(); ?>
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="id" value="<?php echo htmlspecialchars($collection['id']); ?>">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Collection Label
+                </label>
+                <input
+                    type="text"
+                    name="label"
+                    value="<?php echo htmlspecialchars($collection['label']); ?>"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Base Path
+                </label>
+                <input
+                    type="text"
+                    name="base_path"
+                    value="<?php echo htmlspecialchars($collection['base_path']); ?>"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Index Page Type
+                </label>
+                <select name="index_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="auto" <?php echo ($collection['index_type'] ?? 'auto') === 'auto' ? 'selected' : ''; ?>>Auto-generated</option>
+                    <option value="dynamic" <?php echo ($collection['index_type'] ?? 'auto') === 'dynamic' ? 'selected' : ''; ?>>Dynamic</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Posts Per Page
+                </label>
+                <input
+                    type="number"
+                    name="posts_per_page"
+                    value="<?php echo htmlspecialchars($collection['posts_per_page'] ?? 10); ?>"
+                    min="1"
+                    max="100"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Maximum number of posts to show per page (1-100)</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Sort By
+                </label>
+                <select name="sort_by" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="date" <?php echo ($collection['sort_by'] ?? 'date') === 'date' ? 'selected' : ''; ?>>Date</option>
+                    <option value="title" <?php echo ($collection['sort_by'] ?? 'date') === 'title' ? 'selected' : ''; ?>>Title</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Sort Order
+                </label>
+                <select name="sort_order" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="desc" <?php echo ($collection['sort_order'] ?? 'desc') === 'desc' ? 'selected' : ''; ?>>Descending (Newest First)</option>
+                    <option value="asc" <?php echo ($collection['sort_order'] ?? 'desc') === 'asc' ? 'selected' : ''; ?>>Ascending (Oldest First)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="flex items-center">
+                    <input
+                        type="checkbox"
+                        name="show_excerpts"
+                        <?php echo ($collection['show_excerpts'] ?? true) ? 'checked' : ''; ?>
+                        class="mr-2 h-4 w-4 text-blue-600 rounded">
+                    <span class="text-sm text-gray-700">Show post excerpts in index page</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-gray-200 flex gap-3">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Save Settings
+                </button>
+                <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endforeach; ?>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

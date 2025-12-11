@@ -17,41 +17,31 @@ $pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['d
 $pageId = $_GET['page_id'] ?? '';
 $showDraft = isset($_GET['draft']) && $_GET['draft'] === '1';
 
-// SSE auto-refresh script (injected before </body>)
-$sseScript = '';
+// Polling auto-refresh script (injected before </body>)
+$refreshScript = '';
 if ($showDraft) {
     $escapedPageId = htmlspecialchars($pageId, ENT_QUOTES, 'UTF-8');
-    $sseScript = <<<HTML
+    $refreshScript = <<<HTML
 <script>
 (function() {
-    var eventSource = null;
-    var reconnectDelay = 1000;
+    var lastMtime = 0;
+    var pollInterval = 3000;
 
-    function connect() {
-        eventSource = new EventSource('/cms/admin/preview-sse.php?page_id={$escapedPageId}');
-
-        eventSource.addEventListener('draft-changed', function(e) {
-            console.log('Draft changed, reloading...');
-            location.reload();
-        });
-
-        eventSource.addEventListener('draft-removed', function(e) {
-            console.log('Draft removed');
-            // Optionally redirect to live page or show message
-        });
-
-        eventSource.addEventListener('timeout', function(e) {
-            eventSource.close();
-            setTimeout(connect, reconnectDelay);
-        });
-
-        eventSource.onerror = function(e) {
-            eventSource.close();
-            setTimeout(connect, reconnectDelay);
-        };
+    function checkDraft() {
+        fetch('/cms/admin/preview-check.php?page_id={$escapedPageId}')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (lastMtime === 0) {
+                    lastMtime = data.mtime;
+                } else if (data.mtime > lastMtime) {
+                    location.reload();
+                }
+            })
+            .catch(function() {});
     }
 
-    connect();
+    setInterval(checkDraft, pollInterval);
+    checkDraft();
 })();
 </script>
 HTML;
@@ -67,11 +57,11 @@ if ($showDraft && $pageManager->hasDraft($pageId)) {
         exit;
     }
 
-    // Inject SSE script before </body>
-    if ($sseScript && stripos($draftContent, '</body>') !== false) {
-        $draftContent = str_ireplace('</body>', $sseScript . '</body>', $draftContent);
-    } else if ($sseScript) {
-        $draftContent .= $sseScript;
+    // Inject refresh script before </body>
+    if ($refreshScript && stripos($draftContent, '</body>') !== false) {
+        $draftContent = str_ireplace('</body>', $refreshScript . '</body>', $draftContent);
+    } else if ($refreshScript) {
+        $draftContent .= $refreshScript;
     }
 
     // Create a temporary file with the draft content

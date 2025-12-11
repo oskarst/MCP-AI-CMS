@@ -8,16 +8,21 @@
  * - Apply templates to generate listing pages
  */
 
+require_once __DIR__ . '/Pagination.php';
+require_once __DIR__ . '/PostMetaParser.php';
+
 class CollectionIndexGenerator
 {
     private string $rootDir;
     private string $templatesFile;
     private array $templates;
+    private PostMetaParser $metaParser;
 
     public function __construct(string $rootDir, string $templatesFile)
     {
         $this->rootDir = rtrim($rootDir, '/');
         $this->templatesFile = $templatesFile;
+        $this->metaParser = new PostMetaParser();
         $this->loadTemplates();
     }
 
@@ -49,7 +54,7 @@ class CollectionIndexGenerator
     }
 
     /**
-     * Generate static index page
+     * Generate static index page with pagination
      */
     private function generateStaticIndex(array $collection, array $posts): void
     {
@@ -59,47 +64,159 @@ class CollectionIndexGenerator
         // Filter only published posts
         $publishedPosts = array_filter($posts, fn($post) => $post['status'] === 'published');
 
-        // Sort posts by date (newest first)
-        usort($publishedPosts, function($a, $b) {
-            $dateA = $this->extractPostMeta($a['path'])['date'] ?? '';
-            $dateB = $this->extractPostMeta($b['path'])['date'] ?? '';
-            return strcmp($dateB, $dateA);
+        // Get collection settings
+        $sortBy = $collection['sort_by'] ?? 'date';
+        $sortOrder = $collection['sort_order'] ?? 'desc';
+        $showExcerpts = $collection['show_excerpts'] ?? true;
+        $postsPerPage = $collection['posts_per_page'] ?? 10;
+
+        // Sort posts
+        usort($publishedPosts, function($a, $b) use ($sortBy, $sortOrder) {
+            $metaA = $this->metaParser->extractMetadata($a['path']);
+            $metaB = $this->metaParser->extractMetadata($b['path']);
+
+            if ($sortBy === 'title') {
+                $titleA = $metaA['content']['title'] ?? '';
+                $titleB = $metaB['content']['title'] ?? '';
+                $result = strcmp($titleA, $titleB);
+            } else {
+                // Default: sort by date
+                $dateA = $metaA['dates']['published'] ?? '';
+                $dateB = $metaB['dates']['published'] ?? '';
+                $result = strcmp($dateA, $dateB);
+            }
+
+            return $sortOrder === 'asc' ? $result : -$result;
         });
 
-        // Generate posts list HTML
-        $postsListHtml = '';
-        foreach ($publishedPosts as $post) {
-            $meta = $this->extractPostMeta($post['path']);
+        // Calculate total pages
+        $totalPosts = count($publishedPosts);
+        $pagination = new Pagination($totalPosts, $postsPerPage);
+        $totalPages = $pagination->getTotalPages();
 
-            $postHtml = $postItemTemplate;
-            $postHtml = str_replace('{TITLE}', htmlspecialchars($meta['title']), $postHtml);
-            $postHtml = str_replace('{DATE}', htmlspecialchars($meta['date']), $postHtml);
-            $postHtml = str_replace('{EXCERPT}', htmlspecialchars($meta['excerpt']), $postHtml);
-            $postHtml = str_replace('{SLUG}', htmlspecialchars($post['slug']), $postHtml);
-            $postHtml = str_replace('{COLLECTION_BASE_PATH}', htmlspecialchars($collection['base_path']), $postHtml);
+        // Clean up old pagination pages first
+        $this->cleanupPaginationPages($collection['base_path']);
 
-            $postsListHtml .= $postHtml . "\n";
+        // Generate each page
+        for ($page = 1; $page <= $totalPages; $page++) {
+            $pagination = new Pagination($totalPosts, $postsPerPage, $page);
+            $offset = $pagination->getOffset();
+            $limit = $pagination->getLimit();
+
+            // Get posts for this page
+            $pagePosts = array_slice($publishedPosts, $offset, $limit);
+
+            // Generate posts list HTML
+            $postsListHtml = '';
+            foreach ($pagePosts as $post) {
+                $meta = $this->metaParser->extractMetadata($post['path']);
+
+                $postHtml = $postItemTemplate;
+
+                // Replace all placeholders with metadata
+                $postHtml = str_replace('{TITLE}', htmlspecialchars($meta['content']['title']), $postHtml);
+                $postHtml = str_replace('{DATE}', htmlspecialchars($meta['dates']['published']), $postHtml);
+                $postHtml = str_replace('{READING_TIME}', $meta['content']['reading_time'], $postHtml);
+                $postHtml = str_replace('{WORD_COUNT}', $meta['content']['word_count'], $postHtml);
+                $postHtml = str_replace('{FEATURED_IMAGE}', htmlspecialchars($meta['media']['featured_image']), $postHtml);
+
+                // Author (show only if exists)
+                $authorHtml = !empty($meta['author']['name'])
+                    ? ' • by ' . htmlspecialchars($meta['author']['name'])
+                    : '';
+                $postHtml = str_replace('{AUTHOR}', $authorHtml, $postHtml);
+
+                // Categories and tags (comma-separated, show only if exist)
+                $categoriesHtml = !empty($meta['taxonomy']['categories'])
+                    ? ' • ' . htmlspecialchars(implode(', ', $meta['taxonomy']['categories']))
+                    : '';
+                $tagsHtml = !empty($meta['taxonomy']['tags'])
+                    ? ' • Tags: ' . htmlspecialchars(implode(', ', $meta['taxonomy']['tags']))
+                    : '';
+                $postHtml = str_replace('{CATEGORIES}', $categoriesHtml, $postHtml);
+                $postHtml = str_replace('{TAGS}', $tagsHtml, $postHtml);
+
+                // Only show excerpt if enabled
+                if ($showExcerpts) {
+                    $postHtml = str_replace('{EXCERPT}', htmlspecialchars($meta['content']['excerpt']), $postHtml);
+                } else {
+                    $postHtml = str_replace('{EXCERPT}', '', $postHtml);
+                }
+
+                $postHtml = str_replace('{SLUG}', htmlspecialchars($post['slug']), $postHtml);
+                $postHtml = str_replace('{COLLECTION_BASE_PATH}', htmlspecialchars($collection['base_path']), $postHtml);
+
+                $postsListHtml .= $postHtml . "\n";
+            }
+
+            // If no posts, show empty message
+            if (empty($postsListHtml)) {
+                $postsListHtml = '<p>No posts yet.</p>';
+            }
+
+            // Generate pagination navigation
+            $paginationHtml = $totalPages > 1 ? $pagination->generateHTML('/' . $collection['base_path']) : '';
+
+            // Generate final index HTML
+            $indexHtml = $listTemplate;
+            $indexHtml = str_replace('{COLLECTION_LABEL}', htmlspecialchars($collection['label']), $indexHtml);
+            $indexHtml = str_replace('{POSTS_LIST}', $postsListHtml, $indexHtml);
+            $indexHtml = str_replace('{PAGINATION}', $paginationHtml, $indexHtml);
+
+            // Write to file
+            if ($page === 1) {
+                // First page goes to /blog/index.php
+                $indexPath = $this->rootDir . '/' . $collection['base_path'] . '/index.php';
+            } else {
+                // Other pages go to /blog/page/2/index.php
+                $indexPath = $this->rootDir . '/' . $collection['base_path'] . '/page/' . $page . '/index.php';
+            }
+
+            $indexDir = dirname($indexPath);
+            if (!is_dir($indexDir)) {
+                mkdir($indexDir, 0755, true);
+            }
+
+            file_put_contents($indexPath, $indexHtml);
+        }
+    }
+
+    /**
+     * Clean up old pagination pages
+     */
+    private function cleanupPaginationPages(string $basePath): void
+    {
+        $pageDir = $this->rootDir . '/' . $basePath . '/page';
+
+        if (is_dir($pageDir)) {
+            $this->deleteDirectory($pageDir);
+        }
+    }
+
+    /**
+     * Delete directory recursively
+     */
+    private function deleteDirectory(string $dir): bool
+    {
+        if (!is_dir($dir)) {
+            return false;
         }
 
-        // If no posts, show empty message
-        if (empty($postsListHtml)) {
-            $postsListHtml = '<p>No posts yet.</p>';
+        $items = scandir($dir);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->deleteDirectory($path);
+            } else {
+                unlink($path);
+            }
         }
 
-        // Generate final index HTML
-        $indexHtml = $listTemplate;
-        $indexHtml = str_replace('{COLLECTION_LABEL}', htmlspecialchars($collection['label']), $indexHtml);
-        $indexHtml = str_replace('{POSTS_LIST}', $postsListHtml, $indexHtml);
-
-        // Write to file
-        $indexPath = $this->rootDir . '/' . $collection['base_path'] . '/index.php';
-        $indexDir = dirname($indexPath);
-
-        if (!is_dir($indexDir)) {
-            mkdir($indexDir, 0755, true);
-        }
-
-        file_put_contents($indexPath, $indexHtml);
+        return rmdir($dir);
     }
 
     /**
@@ -206,39 +323,19 @@ PHP;
     }
 
     /**
-     * Extract metadata from a post
+     * Extract metadata from a post (legacy method for backward compatibility)
+     *
+     * @deprecated Use PostMetaParser->extractMetadata() instead for full metadata
      */
     public function extractPostMeta(string $postPath): array
     {
-        if (!file_exists($postPath)) {
-            return [
-                'title' => '',
-                'date' => '',
-                'excerpt' => '',
-            ];
-        }
+        $metadata = $this->metaParser->extractMetadata($postPath);
 
-        $content = file_get_contents($postPath);
-
-        // Extract title from <title> tag
-        preg_match('/<title>(.*?)<\/title>/i', $content, $titleMatch);
-        $title = $titleMatch[1] ?? '';
-
-        // Remove " - Blog" or similar suffix
-        $title = preg_replace('/\s*-\s*.*$/', '', $title);
-
-        // Extract date from meta tag
-        preg_match('/<meta[^>]+name=["\']date["\'][^>]+content=["\']([^"\']+)/i', $content, $dateMatch);
-        $date = $dateMatch[1] ?? '';
-
-        // Extract excerpt from meta description
-        preg_match('/<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)/i', $content, $excerptMatch);
-        $excerpt = $excerptMatch[1] ?? '';
-
+        // Return in old format for backward compatibility
         return [
-            'title' => $title,
-            'date' => $date,
-            'excerpt' => $excerpt,
+            'title' => $metadata['content']['title'],
+            'date' => $metadata['dates']['published'],
+            'excerpt' => $metadata['content']['excerpt'],
         ];
     }
 
@@ -256,6 +353,22 @@ PHP;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{COLLECTION_LABEL}</title>
     <meta name="description" content="Browse all {COLLECTION_LABEL} posts">
+    <style>
+        /* Simple pagination styles */
+        .pagination { margin: 2rem 0; }
+        .pagination-list { display: flex; list-style: none; gap: 0.5rem; padding: 0; flex-wrap: wrap; }
+        .pagination-link, .pagination-previous, .pagination-next, .pagination-ellipsis {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        .pagination-link:hover, .pagination-previous:hover, .pagination-next:hover { background: #f5f5f5; }
+        .pagination-link.active { background: #007bff; color: white; border-color: #007bff; }
+        .pagination-previous.disabled, .pagination-next.disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination-ellipsis { border: none; }
+    </style>
 <?php /* CMS:BLOCK name=head end */ ?>
 </head>
 <body>
@@ -274,6 +387,7 @@ PHP;
         <div class="posts-list">
             {POSTS_LIST}
         </div>
+        {PAGINATION}
     </main>
 <?php /* CMS:BLOCK name=content end */ ?>
 
@@ -293,12 +407,18 @@ HTML;
     private function getDefaultPostItemTemplate(): string
     {
         return <<<'HTML'
-<article class="post-item">
-    <h2><a href="/{COLLECTION_BASE_PATH}/{SLUG}/">{TITLE}</a></h2>
-    <p class="date">{DATE}</p>
-    <p class="excerpt">{EXCERPT}</p>
-    <a href="/{COLLECTION_BASE_PATH}/{SLUG}/">Read more</a>
+<article class="post-item" style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee;">
+    <h2 style="margin: 0 0 0.5rem 0;"><a href="/{COLLECTION_BASE_PATH}/{SLUG}/" style="color: #333; text-decoration: none;">{TITLE}</a></h2>
+    <div class="post-meta" style="font-size: 0.9rem; color: #666; margin-bottom: 0.75rem;">
+        <span class="date">{DATE}</span>
+        {AUTHOR}
+        {CATEGORIES}
+        <span class="reading-time">{READING_TIME} min read</span>
+    </div>
+    <p class="excerpt" style="margin: 0 0 0.75rem 0; color: #555;">{EXCERPT}</p>
+    <a href="/{COLLECTION_BASE_PATH}/{SLUG}/" style="color: #007bff; text-decoration: none;">Read more →</a>
 </article>
 HTML;
     }
+
 }

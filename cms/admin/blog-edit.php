@@ -9,6 +9,7 @@ require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
 require_once __DIR__ . '/../core/CollectionIndexGenerator.php';
+require_once __DIR__ . '/../core/PostMetaParser.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
@@ -17,6 +18,7 @@ $sitemapGenerator = new SitemapGenerator($config['root_dir'], $config['base_url'
 $indexGenerator = new CollectionIndexGenerator($config['root_dir'], __DIR__ . '/../config/blog-templates.json');
 $blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], $sitemapGenerator, $backupManager, $indexGenerator);
 $blockParser = new BlockParser();
+$metaParser = new PostMetaParser();
 
 $collectionId = $_GET['collection'] ?? 'blog';
 $slug = $_GET['slug'] ?? '';
@@ -66,6 +68,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $editPath = $draftPath ?: $blogManager->getPostPath($collectionId, $slug, $status);
 
             if ($editPath) {
+                // First, update metadata if provided
+                if (isset($_POST['metadata'])) {
+                    $metadata = [];
+
+                    // Author
+                    if (!empty($_POST['meta_author_name'])) {
+                        $metadata['author'] = ['name' => $_POST['meta_author_name']];
+                        if (!empty($_POST['meta_author_email'])) {
+                            $metadata['author']['email'] = $_POST['meta_author_email'];
+                        }
+                    }
+
+                    // Dates
+                    if (!empty($_POST['meta_publish_date'])) {
+                        $metadata['publish_date'] = $_POST['meta_publish_date'];
+                    }
+
+                    // Categories (comma-separated to array)
+                    if (!empty($_POST['meta_categories'])) {
+                        $metadata['categories'] = array_map('trim', explode(',', $_POST['meta_categories']));
+                    }
+
+                    // Tags (comma-separated to array)
+                    if (!empty($_POST['meta_tags'])) {
+                        $metadata['tags'] = array_map('trim', explode(',', $_POST['meta_tags']));
+                    }
+
+                    // Featured image
+                    if (!empty($_POST['meta_featured_image'])) {
+                        $metadata['featured_image'] = $_POST['meta_featured_image'];
+                    }
+
+                    // Custom excerpt
+                    if (!empty($_POST['meta_excerpt'])) {
+                        $metadata['excerpt'] = $_POST['meta_excerpt'];
+                    }
+
+                    // SEO
+                    $seo = [];
+                    if (!empty($_POST['meta_seo_title'])) $seo['title'] = $_POST['meta_seo_title'];
+                    if (!empty($_POST['meta_seo_description'])) $seo['description'] = $_POST['meta_seo_description'];
+                    if (!empty($seo)) $metadata['seo'] = $seo;
+
+                    // Options
+                    $metadata['featured'] = isset($_POST['meta_featured']);
+
+                    // Generate JSON front matter and update file
+                    $content = file_get_contents($editPath);
+
+                    // Remove old front matter if exists
+                    $content = preg_replace('/<\?php\s+\/\*\s+POST_META.*?POST_META\s+\*\/\s+\?>\s*/s', '', $content);
+
+                    // Generate new front matter
+                    $frontMatter = $metaParser->generateFrontMatter($metadata);
+
+                    // Prepend to content
+                    $newContent = $frontMatter . $content;
+                    file_put_contents($editPath, $newContent);
+                }
+
                 // Update each block
                 foreach ($_POST as $key => $value) {
                     if (strpos($key, 'block_') === 0) {
@@ -109,6 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Get post data - always prefer draft if it exists
 $postPath = null;
 $blocks = [];
+$metadata = [];
 $hasDraft = false;
 $actualStatus = $status;
 
@@ -132,7 +195,11 @@ if (!$isNew) {
 
     if ($postPath) {
         $blocks = $blockParser->parseBlocks($postPath);
+        $metadata = $metaParser->extractMetadata($postPath);
     }
+} else {
+    // New post - get default metadata
+    $metadata = $metaParser->extractMetadata('');
 }
 
 $pageTitle = $isNew ? 'Create New Post' : 'Edit Post: ' . htmlspecialchars($slug);
@@ -231,6 +298,133 @@ require __DIR__ . '/includes/header.php';
     <form method="post">
         <?php echo CSRF::inputField(); ?>
         <input type="hidden" name="action" value="save">
+        <input type="hidden" name="metadata" value="1">
+
+        <!-- Metadata Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6" x-data="{
+            seoOpen: false,
+            advancedOpen: false,
+            tags: '<?php echo htmlspecialchars(implode(', ', $metadata['taxonomy']['tags'])); ?>',
+            categories: '<?php echo htmlspecialchars(implode(', ', $metadata['taxonomy']['categories'])); ?>'
+        }">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Post Metadata</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Author Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Author Name</label>
+                    <input type="text" name="meta_author_name"
+                           value="<?php echo htmlspecialchars($metadata['author']['name']); ?>"
+                           placeholder="John Doe"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Author Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Author Email</label>
+                    <input type="email" name="meta_author_email"
+                           value="<?php echo htmlspecialchars($metadata['author']['email']); ?>"
+                           placeholder="john@example.com"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Publish Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Publish Date</label>
+                    <input type="datetime-local" name="meta_publish_date"
+                           value="<?php echo !empty($metadata['dates']['published']) ? date('Y-m-d\TH:i', strtotime($metadata['dates']['published'])) : date('Y-m-d\TH:i'); ?>"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Featured Image -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Featured Image URL</label>
+                    <input type="text" name="meta_featured_image"
+                           value="<?php echo htmlspecialchars($metadata['media']['featured_image']); ?>"
+                           placeholder="/uploads/image.jpg"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <a href="/cms/admin/media.php" target="_blank" class="text-blue-600 hover:text-blue-800">Browse Media Library →</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Categories (Tags Input) -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+                <input type="text"
+                       x-model="categories"
+                       name="meta_categories"
+                       placeholder="Technology, Web Development, Tutorial"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Separate multiple categories with commas</p>
+            </div>
+
+            <!-- Tags (Tags Input) -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <input type="text"
+                       x-model="tags"
+                       name="meta_tags"
+                       placeholder="PHP, CMS, Tutorial, Beginner"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
+            </div>
+
+            <!-- Custom Excerpt -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Custom Excerpt</label>
+                <textarea name="meta_excerpt" rows="3"
+                          placeholder="Optional custom excerpt (leave empty to auto-generate)"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($metadata['content']['excerpt']); ?></textarea>
+            </div>
+
+            <!-- SEO Section (Collapsible) -->
+            <div class="border-t border-gray-200 pt-4 mb-4">
+                <button type="button" @click="seoOpen = !seoOpen" class="w-full flex items-center justify-between text-left">
+                    <span class="text-sm font-medium text-gray-700">SEO Settings (Optional)</span>
+                    <svg class="w-5 h-5 text-gray-500 transition-transform" :class="seoOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="seoOpen" x-cloak x-collapse class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">SEO Title</label>
+                        <input type="text" name="meta_seo_title"
+                               value="<?php echo htmlspecialchars($metadata['seo']['title']); ?>"
+                               placeholder="Custom title for search engines"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">SEO Description</label>
+                        <textarea name="meta_seo_description" rows="2"
+                                  placeholder="Custom description for search engines"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"><?php echo htmlspecialchars($metadata['seo']['description']); ?></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Options (Collapsible) -->
+            <div class="border-t border-gray-200 pt-4">
+                <button type="button" @click="advancedOpen = !advancedOpen" class="w-full flex items-center justify-between text-left">
+                    <span class="text-sm font-medium text-gray-700">Advanced Options</span>
+                    <svg class="w-5 h-5 text-gray-500 transition-transform" :class="advancedOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="advancedOpen" x-cloak x-collapse class="mt-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="meta_featured"
+                               <?php echo ($metadata['options']['featured'] ?? false) ? 'checked' : ''; ?>
+                               class="mr-2 h-4 w-4 text-blue-600 rounded">
+                        <span class="text-sm text-gray-700">Featured Post (pin to top)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
 
         <div class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div class="flex justify-between items-center">

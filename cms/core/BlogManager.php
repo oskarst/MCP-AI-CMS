@@ -194,11 +194,6 @@ class BlogManager
             throw new Exception("Draft not found: {$slug}");
         }
 
-        // Create published directory if it doesn't exist
-        if (!is_dir($publishPath)) {
-            mkdir($publishPath, 0755, true);
-        }
-
         // Create backup of current published post before overwriting (if it exists)
         $publishedIndexPath = $publishPath . '/index.php';
         if (file_exists($publishedIndexPath) && $this->backupManager) {
@@ -210,6 +205,17 @@ class BlogManager
                 // Backup failed, but don't stop publishing
                 error_log("Backup failed during blog publish: " . $e->getMessage());
             }
+        }
+
+        // If published path exists, delete it first (we already created a backup)
+        if (is_dir($publishPath)) {
+            $this->deleteDirectory($publishPath);
+        }
+
+        // Ensure parent directory exists
+        $publishParentDir = dirname($publishPath);
+        if (!is_dir($publishParentDir)) {
+            mkdir($publishParentDir, 0755, true);
         }
 
         // Move draft to published location
@@ -484,12 +490,16 @@ HTML;
             throw new Exception("Collection already exists: {$id}");
         }
 
-        // Create new collection
+        // Create new collection with default settings
         $newCollection = [
             'id' => $id,
             'base_path' => $basePath,
             'label' => $label,
             'index_type' => $indexType,
+            'posts_per_page' => 10,
+            'sort_by' => 'date',
+            'sort_order' => 'desc',
+            'show_excerpts' => true,
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
@@ -512,14 +522,19 @@ HTML;
     /**
      * Update a collection
      */
-    public function updateCollection(string $id, string $label, string $basePath, string $indexType = 'auto'): void
+    public function updateCollection(string $id, array $settings): void
     {
         $found = false;
         foreach ($this->collections as &$collection) {
             if ($collection['id'] === $id) {
-                $collection['label'] = $label;
-                $collection['base_path'] = $basePath;
-                $collection['index_type'] = $indexType;
+                // Update only provided settings
+                if (isset($settings['label'])) $collection['label'] = $settings['label'];
+                if (isset($settings['base_path'])) $collection['base_path'] = $settings['base_path'];
+                if (isset($settings['index_type'])) $collection['index_type'] = $settings['index_type'];
+                if (isset($settings['posts_per_page'])) $collection['posts_per_page'] = (int)$settings['posts_per_page'];
+                if (isset($settings['sort_by'])) $collection['sort_by'] = $settings['sort_by'];
+                if (isset($settings['sort_order'])) $collection['sort_order'] = $settings['sort_order'];
+                if (isset($settings['show_excerpts'])) $collection['show_excerpts'] = (bool)$settings['show_excerpts'];
                 $found = true;
                 break;
             }
