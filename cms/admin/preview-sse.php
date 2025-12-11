@@ -5,6 +5,10 @@
  * Watches draft file modification time and sends event when changed
  */
 
+// Disable execution time limit for long-running SSE connection
+set_time_limit(0);
+ignore_user_abort(false);
+
 $config = require __DIR__ . '/../config/config.php';
 
 // Get page ID from query
