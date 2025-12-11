@@ -2,7 +2,7 @@
 /**
  * Preview Page System
  *
- * Renders a page for preview purposes
+ * Renders a page for preview purposes with auto-refresh via SSE
  */
 
 require_once __DIR__ . '/../core/PageManager.php';
@@ -17,6 +17,46 @@ $pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['d
 $pageId = $_GET['page_id'] ?? '';
 $showDraft = isset($_GET['draft']) && $_GET['draft'] === '1';
 
+// SSE auto-refresh script (injected before </body>)
+$sseScript = '';
+if ($showDraft) {
+    $escapedPageId = htmlspecialchars($pageId, ENT_QUOTES, 'UTF-8');
+    $sseScript = <<<HTML
+<script>
+(function() {
+    var eventSource = null;
+    var reconnectDelay = 1000;
+
+    function connect() {
+        eventSource = new EventSource('/cms/admin/preview-sse.php?page_id={$escapedPageId}');
+
+        eventSource.addEventListener('draft-changed', function(e) {
+            console.log('Draft changed, reloading...');
+            location.reload();
+        });
+
+        eventSource.addEventListener('draft-removed', function(e) {
+            console.log('Draft removed');
+            // Optionally redirect to live page or show message
+        });
+
+        eventSource.addEventListener('timeout', function(e) {
+            eventSource.close();
+            setTimeout(connect, reconnectDelay);
+        });
+
+        eventSource.onerror = function(e) {
+            eventSource.close();
+            setTimeout(connect, reconnectDelay);
+        };
+    }
+
+    connect();
+})();
+</script>
+HTML;
+}
+
 // If showing draft, create temporary file from draft content
 if ($showDraft && $pageManager->hasDraft($pageId)) {
     $draftContent = $pageManager->getDraft($pageId);
@@ -25,6 +65,13 @@ if ($showDraft && $pageManager->hasDraft($pageId)) {
         http_response_code(404);
         echo '<!doctype html><html><head><title>Draft Not Found</title></head><body><h1>404 - Draft Not Found</h1></body></html>';
         exit;
+    }
+
+    // Inject SSE script before </body>
+    if ($sseScript && stripos($draftContent, '</body>') !== false) {
+        $draftContent = str_ireplace('</body>', $sseScript . '</body>', $draftContent);
+    } else if ($sseScript) {
+        $draftContent .= $sseScript;
     }
 
     // Create a temporary file with the draft content
