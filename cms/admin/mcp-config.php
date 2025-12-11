@@ -137,6 +137,29 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
     $host = $_SERVER['HTTP_HOST'];
     $baseUrl = $protocol . '://' . $host . '/cms/mcp/index.php';
 
+    $client = $_GET['client'] ?? 'chatgpt';
+
+    // Claude Code format
+    if ($client === 'claude') {
+        $configJson = [
+            'mcpServers' => [
+                'cms' => [
+                    'type' => 'http',
+                    'url' => $baseUrl,
+                    'headers' => [
+                        'X-CMS-MCP-TOKEN' => $config['mcp_token'],
+                    ],
+                ],
+            ],
+        ];
+
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename=".mcp.json"');
+        echo json_encode($configJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    // ChatGPT Desktop format (default)
     $configJson = [
         'servers' => [
             'mcpcms' => [
@@ -148,7 +171,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                 'tools' => [
                     [
                         'name' => 'list_pages',
-                        'description' => 'List all available page_ids in the CMS. PRIMARY DISCOVERY TOOL: Use this FIRST to identify the correct page_id when the user references a page in natural language (e.g., "about page", "homepage", "contact"). If the page reference is ambiguous, ask the user to clarify which page they mean.',
+                        'description' => 'List all available page_ids in the CMS. PRIMARY DISCOVERY TOOL: Use this FIRST to identify the correct page_id when the user references a page in natural language (e.g., "about page", "homepage", "contact"). If the page reference is ambiguous, ask the user to clarify which page they mean. TIP: If user wants to edit specific text, skip this tool and go directly to search_blocks - it searches across all pages and returns the page_id automatically.',
                         'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -173,7 +196,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'update_block',
-                        'description' => 'Update a single CMS block\'s content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks or list_blocks. This replaces the entire block content. For small text changes within a block, prefer find_and_replace_block_content instead. Always work with CMS blocks when possible rather than raw page regions.',
+                        'description' => 'Update a single CMS block\'s content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks or list_blocks. This replaces the entire block content. For small text changes within a block, prefer find_and_replace_block_content instead. Always work with CMS blocks when possible rather than raw page regions. IMPORTANT: This creates a draft, NOT a live change. After editing, provide the user with a draft preview link: /cms/admin/preview.php?page_id={page_id}&draft=1 and ask if they want to publish using the publish_page tool.',
                         'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -291,7 +314,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'get_usage_tips',
-                        'description' => 'Get helpful tips and best practices for using the CMS MCP tools effectively. READ-ONLY: Returns guidance on tool usage patterns and workflows.',
+                        'description' => 'Get helpful tips and best practices for using the CMS MCP tools effectively. READ-ONLY: Returns guidance on tool usage patterns and workflows. QUICK START WORKFLOW: 1) User asks to change text → use search_blocks to find it immediately. 2) Found? → use find_and_replace_block_content (small edits) or update_block (full replacement). 3) Show draft preview link (/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user if they want to publish using publish_page tool. IMPORTANT: NEVER guess tool names - only use exact tool names from the tools list.',
                         'readOnlyHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -501,7 +524,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'find_and_replace_block_content',
-                        'description' => 'Find and replace text inside a CMS block without sending full block content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks. PREFERRED for small textual edits inside CMS blocks (e.g., fix typo, update name, change phone number). Server handles the replacement - DO NOT fetch/send full block content. Always prefer this over update_block for small text changes. Workflow: 1) search_blocks to find block, 2) call this tool with exact search/replace strings. If no match found, returns replacements=0 without modifying file.',
+                        'description' => 'Find and replace text inside a CMS block without sending full block content. DESTRUCTIVE: Use this ONLY after identifying the exact block via search_blocks. PREFERRED for small textual edits inside CMS blocks (e.g., fix typo, update name, change phone number). Server handles the replacement - DO NOT fetch/send full block content. Always prefer this over update_block for small text changes. Workflow: 1) search_blocks to find block, 2) call this tool with exact search/replace strings. If no match found, returns replacements=0 without modifying file. IMPORTANT: This creates a draft, NOT a live change. After editing, provide the user with a draft preview link: /cms/admin/preview.php?page_id={page_id}&draft=1 and ask if they want to publish using the publish_page tool.',
                         'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -537,7 +560,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'insert_block',
-                        'description' => 'Insert a new CMS block into a page at a specific position. DESTRUCTIVE: Use this to add new content sections to a page. Always prefer this over region-based insertion when adding structured content. Workflow: 1) list_pages to identify page, 2) list_blocks to determine position, 3) insert_block with position (before_block/after_block/at_end), unique block name, role, and HTML content. DO NOT send or reconstruct entire page - only provide the new block content. This creates proper CMS block markers and leaves all other blocks unchanged.',
+                        'description' => 'Insert a new CMS block into a page at a specific position. DESTRUCTIVE: Use this to add new content sections to a page. Always prefer this over region-based insertion when adding structured content. Workflow: 1) list_pages to identify page, 2) list_blocks to determine position, 3) insert_block with position (before_block/after_block/at_end), unique block name, role, and HTML content. DO NOT send or reconstruct entire page - only provide the new block content. This creates proper CMS block markers and leaves all other blocks unchanged. IMPORTANT: This creates a draft, NOT a live change. After editing, provide the user with a draft preview link: /cms/admin/preview.php?page_id={page_id}&draft=1 and ask if they want to publish using the publish_page tool.',
                         'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -638,7 +661,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'update_page_region',
-                        'description' => 'Apply a patch to a page region using optimistic locking. DESTRUCTIVE: Use ONLY after get_page_region. FORBIDDEN: MUST NOT modify or remove CMS:BLOCK or CMS:WRAP markers - those are sacred CMS infrastructure. Keep edits minimal to layout/HTML/CSS/JS only. Optimistic locking means the update ONLY succeeds if old_region still matches current file content. If region changed, the tool fails and you must re-fetch with get_page_region.',
+                        'description' => 'Apply a patch to a page region using optimistic locking. DESTRUCTIVE: Use ONLY after get_page_region. FORBIDDEN: MUST NOT modify or remove CMS:BLOCK or CMS:WRAP markers - those are sacred CMS infrastructure. Keep edits minimal to layout/HTML/CSS/JS only. Optimistic locking means the update ONLY succeeds if old_region still matches current file content. If region changed, the tool fails and you must re-fetch with get_page_region. IMPORTANT: This creates a draft, NOT a live change. After editing, provide the user with a draft preview link: /cms/admin/preview.php?page_id={page_id}&draft=1 and ask if they want to publish using the publish_page tool.',
                         'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -669,7 +692,7 @@ if (isset($_GET['download']) && $_GET['download'] === '1') {
                     ],
                     [
                         'name' => 'publish_page',
-                        'description' => 'Publish a page draft to make it live. DESTRUCTIVE: Moves the draft content to the live page, making it publicly accessible. The page must have a draft saved first (from any edit operation). This action replaces the current live page with the draft version.',
+                        'description' => 'Publish a page draft to make it live (NOTE: tool name is "publish_page", NOT "publish_draft"). DESTRUCTIVE: Moves the draft content to the live page, making it publicly accessible. The page must have a draft saved first (from any edit operation). This action replaces the current live page with the draft version.',
                         'destructiveHint' => true,
                         'input_schema' => [
                             'type' => 'object',
@@ -802,8 +825,16 @@ require __DIR__ . '/includes/header.php';
             <p class="mt-1 text-sm text-gray-500">Token is partially hidden for security. Download the config file to get the complete token.</p>
         </div>
 
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">AI Client:</label>
+            <select id="mcp-client" class="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm">
+                <option value="chatgpt">ChatGPT Desktop</option>
+                <option value="claude">Claude Code</option>
+            </select>
+        </div>
+
         <div class="flex gap-3 pt-2">
-            <a href="?download=1" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Download MCP Config (config.json)</a>
+            <a href="?download=1&client=chatgpt" id="download-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Download MCP Config</a>
 
             <form method="post" class="inline" onsubmit="return confirm('This will invalidate your current MCP configuration. Continue?');">
                 <?php echo CSRF::inputField(); ?>
@@ -811,25 +842,51 @@ require __DIR__ . '/includes/header.php';
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Regenerate Token</button>
             </form>
         </div>
+
+        <script>
+            document.getElementById('mcp-client').addEventListener('change', function() {
+                document.getElementById('download-btn').href = '?download=1&client=' + this.value;
+            });
+        </script>
     </div>
 </div>
 
 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Installation Instructions (ChatGPT Desktop - macOS)</h2>
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Installation Instructions</h2>
 
-    <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>Download the MCP config file using the button above</li>
-        <li>Open Finder and press <code class="bg-gray-100 px-1 py-0.5 rounded">Cmd + Shift + G</code></li>
-        <li>Enter: <code class="bg-gray-100 px-1 py-0.5 rounded">~/Library/Application Support/OpenAI/ChatGPT/mcp</code></li>
-        <li>If the folder doesn't exist, create it manually</li>
-        <li>Copy the downloaded <code class="bg-gray-100 px-1 py-0.5 rounded">cms-mcp-config.json</code> file into this folder</li>
-        <li>Rename it to <code class="bg-gray-100 px-1 py-0.5 rounded">config.json</code> (or merge with existing config)</li>
-        <li>Restart ChatGPT Desktop</li>
-    </ol>
+    <div id="instructions-chatgpt">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">ChatGPT Desktop (macOS)</h3>
+        <ol class="list-decimal list-inside space-y-2 text-gray-700">
+            <li>Select "ChatGPT Desktop" from the dropdown above and download the config</li>
+            <li>Open Finder and press <code class="bg-gray-100 px-1 py-0.5 rounded">Cmd + Shift + G</code></li>
+            <li>Enter: <code class="bg-gray-100 px-1 py-0.5 rounded">~/Library/Application Support/OpenAI/ChatGPT/mcp</code></li>
+            <li>If the folder doesn't exist, create it manually</li>
+            <li>Copy the downloaded <code class="bg-gray-100 px-1 py-0.5 rounded">cms-mcp-config.json</code> file into this folder</li>
+            <li>Rename it to <code class="bg-gray-100 px-1 py-0.5 rounded">config.json</code> (or merge with existing config)</li>
+            <li>Restart ChatGPT Desktop</li>
+        </ol>
+    </div>
+
+    <div id="instructions-claude" class="hidden">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Claude Code</h3>
+        <ol class="list-decimal list-inside space-y-2 text-gray-700">
+            <li>Select "Claude Code" from the dropdown above and download the config</li>
+            <li>Place the downloaded <code class="bg-gray-100 px-1 py-0.5 rounded">.mcp.json</code> file in your project root directory</li>
+            <li>Restart Claude Code (exit and reopen)</li>
+            <li>Claude Code will automatically discover the MCP server</li>
+        </ol>
+    </div>
 
     <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4">
         <p class="text-yellow-700"><strong>Security Warning:</strong> The config file contains your private MCP token. Keep it secure and never share it publicly.</p>
     </div>
+
+    <script>
+        document.getElementById('mcp-client').addEventListener('change', function() {
+            document.getElementById('instructions-chatgpt').classList.toggle('hidden', this.value !== 'chatgpt');
+            document.getElementById('instructions-claude').classList.toggle('hidden', this.value !== 'claude');
+        });
+    </script>
 </div>
 
 <div class="bg-white rounded-lg shadow-md p-6">

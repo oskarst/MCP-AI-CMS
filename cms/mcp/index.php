@@ -2,10 +2,12 @@
 /**
  * MCP HTTP Endpoint - AI-only API for ChatGPT, Claude, etc.
  *
+ * Supports two formats:
+ * 1. REST format (ChatGPT Desktop): POST /cms/mcp/index.php?tool=<tool_name> with JSON body
+ * 2. JSON-RPC 2.0 format (Claude Code): POST with {"jsonrpc":"2.0","method":"tools/call",...}
+ *
  * Authentication: X-CMS-MCP-TOKEN header
- * Request format: POST /cms/mcp/index.php?tool=<tool_name>
- * Request body: JSON with tool arguments
- * Response: JSON with success/error fields
+ * Response: JSON (format depends on request type)
  */
 
 // Load configuration and core classes
@@ -92,27 +94,131 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Get tool name from query parameter
-$tool = $_GET['tool'] ?? '';
-if (!$tool) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Missing tool parameter']);
-    exit;
-}
-
-// Check if tool is allowed based on permissions
-$allowedTools = $config['mcp_allowed_tools'] ?? array_keys(getMCPTools()); // Default: all tools allowed
-if (!in_array($tool, $allowedTools)) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => "Tool '{$tool}' is not allowed. Check MCP permissions in settings."]);
-    exit;
-}
-
 // Parse JSON request body
-$input = json_decode(file_get_contents('php://input'), true);
-if ($input === null && json_last_error() !== JSON_ERROR_NONE) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid JSON in request body']);
+$rawInput = file_get_contents('php://input');
+$jsonInput = json_decode($rawInput, true);
+
+// Detect request format: JSON-RPC 2.0 or REST
+$isJsonRpc = isset($jsonInput['jsonrpc']) && $jsonInput['jsonrpc'] === '2.0';
+$jsonRpcId = $jsonInput['id'] ?? null;
+
+// Helper function for JSON-RPC error responses
+function jsonRpcError($code, $message, $id = null) {
+    echo json_encode([
+        'jsonrpc' => '2.0',
+        'error' => [
+            'code' => $code,
+            'message' => $message
+        ],
+        'id' => $id
+    ]);
+    exit;
+}
+
+// Helper function for JSON-RPC success responses
+function jsonRpcSuccess($result, $id = null) {
+    echo json_encode([
+        'jsonrpc' => '2.0',
+        'result' => $result,
+        'id' => $id
+    ]);
+    exit;
+}
+
+// Handle JSON-RPC 2.0 format
+if ($isJsonRpc) {
+    $method = $jsonInput['method'] ?? '';
+    $params = $jsonInput['params'] ?? [];
+
+    // Handle tools/list method (discovery)
+    if ($method === 'tools/list') {
+        $toolsDefinition = getMCPToolsWithSchema();
+        $tools = [];
+        foreach ($toolsDefinition as $name => $def) {
+            $tools[] = [
+                'name' => $name,
+                'description' => $def['description'],
+                'inputSchema' => $def['inputSchema'] ?? ['type' => 'object', 'properties' => new stdClass()]
+            ];
+        }
+        jsonRpcSuccess(['tools' => $tools], $jsonRpcId);
+    }
+
+    // Handle tools/call method
+    if ($method === 'tools/call') {
+        $tool = $params['name'] ?? '';
+        $input = $params['arguments'] ?? [];
+
+        if (!$tool) {
+            jsonRpcError(-32602, 'Missing tool name in params', $jsonRpcId);
+        }
+
+        // Check if tool is allowed
+        $allowedTools = $config['mcp_allowed_tools'] ?? array_keys(getMCPTools());
+        if (!in_array($tool, $allowedTools)) {
+            jsonRpcError(-32601, "Tool '{$tool}' is not allowed. Check MCP permissions in settings.", $jsonRpcId);
+        }
+
+        // Tool will be executed below with $tool and $input set
+    } else if ($method !== 'tools/call') {
+        jsonRpcError(-32601, "Method not found: {$method}", $jsonRpcId);
+    }
+} else {
+    // REST format (ChatGPT Desktop)
+    $tool = $_GET['tool'] ?? '';
+    if (!$tool) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing tool parameter']);
+        exit;
+    }
+
+    // Check if tool is allowed based on permissions
+    $allowedTools = $config['mcp_allowed_tools'] ?? array_keys(getMCPTools());
+    if (!in_array($tool, $allowedTools)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => "Tool '{$tool}' is not allowed. Check MCP permissions in settings."]);
+        exit;
+    }
+
+    $input = $jsonInput;
+    if ($input === null && json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid JSON in request body']);
+        exit;
+    }
+}
+
+// Output wrapper - handles both REST and JSON-RPC responses
+function outputResult($data, $isJsonRpc, $jsonRpcId) {
+    if ($isJsonRpc) {
+        // Convert REST response to JSON-RPC format
+        if (isset($data['success']) && $data['success'] === false) {
+            echo json_encode([
+                'jsonrpc' => '2.0',
+                'error' => [
+                    'code' => -32000,
+                    'message' => $data['error'] ?? 'Unknown error'
+                ],
+                'id' => $jsonRpcId
+            ]);
+        } else {
+            // Wrap successful response in content array for MCP protocol
+            echo json_encode([
+                'jsonrpc' => '2.0',
+                'result' => [
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => json_encode($data, JSON_PRETTY_PRINT)
+                        ]
+                    ]
+                ],
+                'id' => $jsonRpcId
+            ]);
+        }
+    } else {
+        echo json_encode($data);
+    }
     exit;
 }
 
@@ -143,7 +249,7 @@ function normalizePageId($pageId) {
 }
 
 // Handler for insert_block tool
-function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
+function handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $position = $input['position'] ?? null;
@@ -151,16 +257,12 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
     $content = $input['content'] ?? '';
 
     if ($pageId === null || !$position || !$name || $content === '') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters: page_id, position, name, content']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Missing required parameters: page_id, position, name, content'], $isJsonRpc, $jsonRpcId);
     }
 
     // Validate position structure
     if (!is_array($position) || !isset($position['type'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid position parameter']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid position parameter'], $isJsonRpc, $jsonRpcId);
     }
 
     $positionType = $position['type'];
@@ -169,16 +271,12 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
     // Validate position type
     $validTypes = ['before_block', 'after_block', 'at_end'];
     if (!in_array($positionType, $validTypes)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid position.type; expected before_block, after_block, or at_end']);
-        exit;
+        outputResult(['success' => false, 'error' => 'Invalid position.type; expected before_block, after_block, or at_end'], $isJsonRpc, $jsonRpcId);
     }
 
     // Validate reference block name for before_block/after_block
     if (in_array($positionType, ['before_block', 'after_block']) && !$referenceBlockName) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'position.block_name is required for before_block/after_block']);
-        exit;
+        outputResult(['success' => false, 'error' => 'position.block_name is required for before_block/after_block'], $isJsonRpc, $jsonRpcId);
     }
 
     // Optional parameters
@@ -311,7 +409,7 @@ function handleInsertBlock($input, $pageManager, $blockParser, $backupManager) {
 }
 
 // Handler for search_in_page tool
-function handleSearchInPage($input, $pageManager) {
+function handleSearchInPage($input, $pageManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $search = $input['search'] ?? '';
@@ -390,7 +488,7 @@ function handleSearchInPage($input, $pageManager) {
 }
 
 // Handler for get_page_region tool
-function handleGetPageRegion($input, $pageManager) {
+function handleGetPageRegion($input, $pageManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $startLine = $input['start_line'] ?? null;
@@ -473,7 +571,7 @@ function handleGetPageRegion($input, $pageManager) {
 }
 
 // Handler for update_page_region tool
-function handleUpdatePageRegion($input, $pageManager, $backupManager) {
+function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $startLine = $input['start_line'] ?? null;
@@ -565,7 +663,7 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager) {
 }
 
 // Handler for find_and_replace_block_content tool
-function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager) {
+function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $blockName = $input['name'] ?? '';
@@ -698,10 +796,12 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
 
 // Route to appropriate tool handler
 try {
+    $result = null; // Will hold the result to output
+
     switch ($tool) {
         case 'list_pages':
             $pages = $pageManager->listPages();
-            echo json_encode(['success' => true, 'pages' => $pages]);
+            $result = ['success' => true, 'pages' => $pages];
             break;
 
         case 'list_blocks':
@@ -709,9 +809,8 @@ try {
             $pagePath = $pageManager->getPagePath($pageId);
 
             if (!$pagePath) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Page not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Page not found'];
+                break;
             }
 
             $blocks = $blockParser->parseBlocks($pagePath);
@@ -725,7 +824,7 @@ try {
                 ];
             }, $blocks);
 
-            echo json_encode(['success' => true, 'blocks' => $blockMetadata]);
+            $result = ['success' => true, 'blocks' => $blockMetadata];
             break;
 
         case 'update_block':
@@ -735,16 +834,14 @@ try {
             $custom = $input['custom'] ?? null;
 
             if ($pageId === null || !$blockName || $content === '') {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters'];
+                break;
             }
 
             $pagePath = $pageManager->getPagePath($pageId);
             if (!$pagePath) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Page not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Page not found'];
+                break;
             }
 
             // Get current content (draft if exists, otherwise live page)
@@ -769,7 +866,7 @@ try {
                 // Create backup of live page (not draft)
                 $backupManager->createBackup($pageId, $pagePath);
 
-                echo json_encode(['success' => true, 'message' => 'Block updated and saved as draft']);
+                $result = ['success' => true, 'message' => 'Block updated and saved as draft'];
             } finally {
                 // Clean up temporary file
                 @unlink($tempFile);
@@ -781,22 +878,20 @@ try {
             $newPageId = $input['new_page_id'] ?? '';
 
             if (!$sourcePageId || !$newPageId) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters'];
+                break;
             }
 
             $pageManager->duplicatePage($sourcePageId, $newPageId);
-            echo json_encode(['success' => true]);
+            $result = ['success' => true];
             break;
 
         case 'delete_page':
             $pageId = normalizePageId($input['page_id'] ?? '');
 
             if ($pageId === null) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             $pagePath = $pageManager->getPagePath($pageId);
@@ -806,7 +901,7 @@ try {
             }
 
             $pageManager->deletePage($pageId);
-            echo json_encode(['success' => true]);
+            $result = ['success' => true];
             break;
 
         case 'list_backups':
@@ -814,13 +909,12 @@ try {
 
             // Empty string is valid for homepage
             if (!isset($input['page_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             $backups = $backupManager->listBackups($pageId);
-            echo json_encode(['success' => true, 'backups' => $backups]);
+            $result = ['success' => true, 'backups' => $backups];
             break;
 
         case 'restore_backup':
@@ -828,20 +922,18 @@ try {
             $timestamp = $input['timestamp'] ?? '';
 
             if (!isset($input['page_id']) || !$timestamp) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters'];
+                break;
             }
 
             $pagePath = $pageManager->getPagePath($pageId);
             if (!$pagePath) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Page not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Page not found'];
+                break;
             }
 
             $backupManager->restoreBackup($pageId, $timestamp, $pagePath);
-            echo json_encode(['success' => true]);
+            $result = ['success' => true];
             break;
 
         case 'search_blocks':
@@ -849,17 +941,15 @@ try {
             $searchMode = $input['search_mode'] ?? 'case_insensitive';
 
             if (!$searchText) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing search_text parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing search_text parameter'];
+                break;
             }
 
             // Validate search mode
             $validModes = ['case_insensitive', 'case_sensitive', 'html_insensitive'];
             if (!in_array($searchMode, $validModes)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Invalid search_mode. Must be: case_insensitive, case_sensitive, or html_insensitive']);
-                exit;
+                $result = ['success' => false, 'error' => 'Invalid search_mode. Must be: case_insensitive, case_sensitive, or html_insensitive'];
+                break;
             }
 
             // Search through all pages
@@ -906,7 +996,7 @@ try {
                 }
             }
 
-            echo json_encode([
+            $result = [
                 'success' => true,
                 'matches' => $matches,
                 'count' => count($matches),
@@ -914,11 +1004,11 @@ try {
                 'disambiguation_message' => count($matches) > 1
                     ? 'Multiple blocks contain the same text. Ask the user which page/section is correct.'
                     : null
-            ]);
+            ];
             break;
 
         case 'get_usage_tips':
-            echo json_encode([
+            $result = [
                 'success' => true,
                 'tips' => [
                     'Always use search_blocks before update_block',
@@ -926,7 +1016,7 @@ try {
                     'Homepage page_id: use "" or "/"',
                     'Ask user when multiple matches found'
                 ]
-            ]);
+            ];
             break;
 
         case 'create_page':
@@ -934,57 +1024,52 @@ try {
             $content = $input['content'] ?? '';
 
             if (!$pageId) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             // Create the page
             $pageManager->createPage($pageId, $content);
-            echo json_encode(['success' => true, 'page_id' => $pageId]);
+            $result = ['success' => true, 'page_id' => $pageId];
             break;
 
         case 'read_page':
             $pageId = normalizePageId($input['page_id'] ?? '');
 
             if (!isset($input['page_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             $pagePath = $pageManager->getPagePath($pageId);
             if (!$pagePath) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Page not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Page not found'];
+                break;
             }
 
             // Read the full page content
             $content = file_get_contents($pagePath);
-            echo json_encode([
+            $result = [
                 'success' => true,
                 'page_id' => $pageId,
                 'path' => $pagePath,
                 'content' => $content
-            ]);
+            ];
             break;
 
         case 'publish_page':
             $pageId = normalizePageId($input['page_id'] ?? '');
 
             if (!isset($input['page_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             try {
                 $pageManager->publishDraft($pageId);
-                echo json_encode(['success' => true, 'message' => 'Draft published successfully']);
+                $result = ['success' => true, 'message' => 'Draft published successfully'];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -992,17 +1077,15 @@ try {
             $pageId = normalizePageId($input['page_id'] ?? '');
 
             if (!isset($input['page_id'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing page_id parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing page_id parameter'];
+                break;
             }
 
             try {
                 $pageManager->discardDraft($pageId);
-                echo json_encode(['success' => true, 'message' => 'Draft discarded successfully']);
+                $result = ['success' => true, 'message' => 'Draft discarded successfully'];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1011,16 +1094,14 @@ try {
             $blockName = $input['name'] ?? '';
 
             if (!isset($input['page_id']) || !$blockName) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters'];
+                break;
             }
 
             $pagePath = $pageManager->getPagePath($pageId);
             if (!$pagePath) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Page not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Page not found'];
+                break;
             }
 
             // Parse blocks and find the requested one
@@ -1035,16 +1116,15 @@ try {
             }
 
             if (!$foundBlock) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Block not found']);
-                exit;
+                $result = ['success' => false, 'error' => 'Block not found'];
+                break;
             }
 
-            echo json_encode([
+            $result = [
                 'success' => true,
                 'page_id' => $pageId,
                 'block' => $foundBlock
-            ]);
+            ];
             break;
 
         case 'list_posts':
@@ -1052,15 +1132,14 @@ try {
 
             try {
                 $posts = $blogManager->listPosts($collectionId);
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'posts' => $posts,
                     'count' => count($posts)
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1070,23 +1149,21 @@ try {
             $content = $input['content'] ?? '';
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             try {
                 $postPath = $blogManager->createPost($collectionId, $slug, $content);
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'path' => $postPath,
                     'status' => 'draft'
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1095,22 +1172,20 @@ try {
             $slug = $input['slug'] ?? '';
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             try {
                 $blogManager->publishPost($collectionId, $slug);
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'status' => 'published'
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1119,22 +1194,20 @@ try {
             $slug = $input['slug'] ?? '';
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             try {
                 $blogManager->unpublishPost($collectionId, $slug);
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'status' => 'draft'
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1143,9 +1216,8 @@ try {
             $slug = $input['slug'] ?? '';
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             try {
@@ -1164,16 +1236,15 @@ try {
                 }
 
                 $content = file_get_contents($postPath);
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'status' => $status,
                     'content' => $content
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1183,15 +1254,13 @@ try {
             $blockName = $input['block_name'] ?? '';
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             if (!$blockName) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing block_name parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing block_name parameter'];
+                break;
             }
 
             try {
@@ -1220,21 +1289,19 @@ try {
                 }
 
                 if (!$foundBlock) {
-                    http_response_code(404);
-                    echo json_encode(['success' => false, 'error' => "Block not found: {$blockName}"]);
-                    exit;
+                    $result = ['success' => false, 'error' => "Block not found: {$blockName}"];
+                    break;
                 }
 
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'status' => $status,
                     'block' => $foundBlock
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
@@ -1246,15 +1313,13 @@ try {
             $customFlag = $input['custom'] ?? null;
 
             if (!$slug) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing slug parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing slug parameter'];
+                break;
             }
 
             if (!$blockName) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing block_name parameter']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing block_name parameter'];
+                break;
             }
 
             try {
@@ -1286,38 +1351,37 @@ try {
                 // Update the block
                 $blockParser->updateBlock($editPath, $blockName, $newContent, $customFlag);
 
-                echo json_encode([
+                $result = [
                     'success' => true,
                     'collection_id' => $collectionId,
                     'slug' => $slug,
                     'block_name' => $blockName,
                     'status' => 'draft',
                     'message' => 'Block updated in draft. Use publish_post to make it live.'
-                ]);
+                ];
             } catch (Exception $e) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                $result = ['success' => false, 'error' => $e->getMessage()];
             }
             break;
 
         case 'find_and_replace_block_content':
-            handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager);
+            handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'insert_block':
-            handleInsertBlock($input, $pageManager, $blockParser, $backupManager);
+            handleInsertBlock($input, $pageManager, $blockParser, $backupManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'search_in_page':
-            handleSearchInPage($input, $pageManager);
+            handleSearchInPage($input, $pageManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'get_page_region':
-            handleGetPageRegion($input, $pageManager);
+            handleGetPageRegion($input, $pageManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'update_page_region':
-            handleUpdatePageRegion($input, $pageManager, $backupManager);
+            handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'upload_file':
@@ -1326,19 +1390,11 @@ try {
             $subdir = $input['subdir'] ?? null;
 
             if (!$base64Data || !$filename) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters: data, filename']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters: data, filename'];
+                break;
             }
 
             $result = $uploadManager->uploadFile($base64Data, $filename, $subdir);
-
-            if ($result['success']) {
-                echo json_encode($result);
-            } else {
-                http_response_code(400);
-                echo json_encode($result);
-            }
             break;
 
         case 'upload_image':
@@ -1347,28 +1403,24 @@ try {
             $subdir = $input['subdir'] ?? null;
 
             if (!$base64Data || !$filename) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Missing required parameters: data, filename']);
-                exit;
+                $result = ['success' => false, 'error' => 'Missing required parameters: data, filename'];
+                break;
             }
 
             $result = $uploadManager->uploadImage($base64Data, $filename, $subdir);
-
-            if ($result['success']) {
-                echo json_encode($result);
-            } else {
-                http_response_code(400);
-                echo json_encode($result);
-            }
             break;
 
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Unknown tool: ' . $tool]);
+            $result = ['success' => false, 'error' => 'Unknown tool: ' . $tool];
             break;
     }
 
+    // Output the result in the appropriate format
+    if ($result !== null) {
+        outputResult($result, $isJsonRpc, $jsonRpcId);
+    }
+
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    $errorResult = ['success' => false, 'error' => $e->getMessage()];
+    outputResult($errorResult, $isJsonRpc, $jsonRpcId);
 }
