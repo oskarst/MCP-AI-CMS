@@ -14,7 +14,8 @@ if ($pageId === '') {
     $pageId = 'index';
 }
 
-$draftPath = $config['drafts_dir'] . '/' . ($pageId ?: 'index') . '.draft.php';
+// Draft path matches PageManager format: drafts/pages/{pageId}.php
+$draftPath = $config['drafts_dir'] . '/pages/' . ($pageId ?: 'index') . '.php';
 
 if (file_exists($draftPath)) {
     echo json_encode([

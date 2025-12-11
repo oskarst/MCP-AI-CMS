@@ -84,7 +84,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'update_block' => [
-            'description' => 'Update a single CMS block\'s content. Creates a DRAFT. After editing, provide draft preview link: /cms/admin/preview.php?page_id={page_id}&draft=1 and ask user to publish using publish_page tool.',
+            'description' => 'Update a single CMS block\'s content. Creates a DRAFT. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -97,7 +97,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'find_and_replace_block_content' => [
-            'description' => 'Find and replace text inside a CMS block. PREFERRED for small edits. Creates a DRAFT. After editing, provide draft preview link and ask user to publish using publish_page tool.',
+            'description' => 'Find and replace text inside a CMS block. PREFERRED for small edits. Creates a DRAFT. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -174,7 +174,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'insert_block' => [
-            'description' => 'Insert a new CMS block into a page at a specific position. Creates a DRAFT.',
+            'description' => 'Insert a new CMS block into a page at a specific position. Creates a DRAFT. After inserting, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -222,7 +222,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'update_page_region' => [
-            'description' => 'Apply a patch to a page region using optimistic locking. Creates a DRAFT.',
+            'description' => 'Apply a patch to a page region using optimistic locking. Creates a DRAFT. After updating, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
