@@ -144,7 +144,7 @@ class BlogManager
     /**
      * Create a new draft post
      */
-    public function createPost(string $collectionId, string $slug, string $content = ''): string
+    public function createPost(string $collectionId, string $slug, string $content = '', string $title = ''): string
     {
         $collection = $this->getCollection($collectionId);
         if (!$collection) {
@@ -168,8 +168,8 @@ class BlogManager
         $postPath = $draftDir . '/index.php';
 
         if (empty($content)) {
-            // Default template
-            $content = $this->getDefaultPostTemplate($slug, $collection['label']);
+            // Default template - use provided title or generate from slug
+            $content = $this->getDefaultPostTemplate($slug, $collection['label'], $title);
         }
 
         file_put_contents($postPath, $content);
@@ -408,9 +408,10 @@ class BlogManager
     /**
      * Get default post template
      */
-    private function getDefaultPostTemplate(string $slug, string $collectionLabel): string
+    private function getDefaultPostTemplate(string $slug, string $collectionLabel, string $title = ''): string
     {
-        $title = ucwords(str_replace('-', ' ', $slug));
+        // Use provided title or generate from slug
+        $title = !empty($title) ? $title : ucwords(str_replace('-', ' ', $slug));
         $date = date('Y-m-d');
         $dateFormatted = date('M d, Y');
         $author = $this->templates['defaults']['author'] ?? 'Dev Team';
@@ -424,6 +425,13 @@ class BlogManager
             if (file_exists($templatePath)) {
                 $template = file_get_contents($templatePath);
 
+                // Get default values
+                $readTime = $this->templates['defaults']['read_time'] ?? '5';
+                $readTimeNum = preg_replace('/[^0-9]/', '', $readTime) ?: '5';
+
+                // Default tags HTML (can be edited per post later)
+                $defaultTags = '<a href="#" style="display: inline-block; padding: 0.25rem 0.75rem; font-size: 0.875rem; background: #f3f4f6; color: #374151; border-radius: 9999px; text-decoration: none;">Development</a>';
+
                 // Replace all placeholders
                 $replacements = [
                     '{{POST_TITLE}}' => $title,
@@ -433,6 +441,9 @@ class BlogManager
                     '{{POST_AUTHOR}}' => $author,
                     '{{POST_EXCERPT}}' => $excerpt,
                     '{{COLLECTION_LABEL}}' => $collectionLabel,
+                    '{{POST_CATEGORY}}' => $collectionLabel,
+                    '{{POST_READING_TIME}}' => $readTimeNum,
+                    '{{POST_TAGS}}' => $defaultTags,
                 ];
 
                 return str_replace(array_keys($replacements), array_values($replacements), $template);

@@ -230,14 +230,14 @@
             margin-top: 1rem;
         }
 
-        .article-content a {
+        .article-content a:not(.btn) {
             color: #EE1C25;
             text-decoration: none;
-            border-bottom: 1px solid transparent;
+            border-bottom: 1px solid rgba(238, 28, 37, 0.3);
             transition: border-color 0.2s ease;
         }
 
-        .article-content a:hover {
+        .article-content a:not(.btn):hover {
             border-bottom-color: #EE1C25;
         }
 
@@ -293,26 +293,13 @@
         /* Reading Progress Indicator */
         .reading-progress {
             position: fixed;
-            top: 80px;
+            top: 70px;
             left: 0;
             width: 0%;
             height: 3px;
             background: linear-gradient(90deg, #EE1C25, #f97316);
             z-index: 100;
             transition: width 0.1s ease-out;
-        }
-
-        /* Table of Contents Styling */
-        .toc-link {
-            transition: all 0.2s ease;
-        }
-        .toc-link:hover {
-            color: #EE1C25;
-            padding-left: 0.5rem;
-        }
-        .toc-link.active {
-            color: #EE1C25;
-            font-weight: 600;
         }
     </style>
 </head>
@@ -378,82 +365,77 @@
     </nav>
     <?php /* CMS:BLOCK name=header end */ ?>
 
-    <main class="pt-20">
+    <main style="padding-top: 70px;">
         <?php /* CMS:BLOCK name=article_header custom=1 start */ ?>
         <!-- Article Header -->
-        <section class="py-16 md:py-24 relative overflow-hidden" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);">
-            <!-- Decorative Elements -->
-            <div class="absolute inset-0">
-                <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full" style="background: #93c5fd; filter: blur(120px); opacity: 0.4;"></div>
-                <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full" style="background: #cbd5e1; filter: blur(100px); opacity: 0.5;"></div>
-                <div class="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full" style="background: #a5b4fc; filter: blur(90px); opacity: 0.3;"></div>
-            </div>
-
-            <div class="container mx-auto px-4 relative z-10">
+        <section class="bg-gradient-to-b from-slate-50 to-white">
+            <div class="container mx-auto px-4">
                 <!-- Breadcrumb -->
-                <nav class="mb-8" aria-label="Breadcrumb">
-                    <ol class="flex items-center gap-2 text-sm text-gray-500">
-                        <li><a href="/" class="hover:text-primary transition">Home</a></li>
-                        <li><span class="mx-2">/</span></li>
-                        <li><a href="/blog/" class="hover:text-primary transition">Blog</a></li>
-                        <li><span class="mx-2">/</span></li>
-                        <li class="text-gray-700 truncate max-w-[200px]">{{POST_TITLE}}</li>
+                <nav class="pt-6 pb-6" aria-label="Breadcrumb">
+                    <ol class="flex items-center gap-2 text-sm">
+                        <li><a href="/" class="text-gray-600 hover:text-[#EE1C25] transition-colors">Home</a></li>
+                        <li><span class="text-gray-400">/</span></li>
+                        <li><a href="/blog/" class="text-gray-600 hover:text-[#EE1C25] transition-colors">Blog</a></li>
+                        <li><span class="text-gray-400">/</span></li>
+                        <li class="text-gray-900 font-medium truncate max-w-xs">{{POST_TITLE}}</li>
                     </ol>
                 </nav>
 
-                <div class="max-w-4xl">
-                    <!-- Category Tag -->
+                <div class="max-w-4xl pb-12 md:pb-16">
+                    <!-- Category Badge -->
                     <div class="mb-6">
-                        <span class="inline-flex items-center px-4 py-1.5 text-sm font-semibold rounded-full" style="background: linear-gradient(135deg, #EE1C25, #f87171); color: white;">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                            </svg>
-                            Magento Development
+                        <span class="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full" style="background: rgba(238, 28, 37, 0.1); color: #EE1C25;">
+                            {{POST_CATEGORY}}
                         </span>
                     </div>
 
                     <!-- Title -->
-                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-gray-900" style="font-family: 'Titillium Web', sans-serif; letter-spacing: -0.02em;">
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-gray-900" style="font-family: 'Titillium Web', sans-serif;">
                         {{POST_TITLE}}
                     </h1>
 
                     <!-- Excerpt -->
-                    <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl">
+                    <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
                         {{POST_EXCERPT}}
                     </p>
 
-                    <!-- Meta Info -->
-                    <div class="flex flex-wrap items-center gap-6">
+                    <!-- Meta Bar -->
+                    <div class="flex flex-wrap items-center gap-6 py-6 border-t border-b border-gray-200">
                         <!-- Author -->
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0);">
-                                <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                                 </svg>
                             </div>
                             <div>
-                                <div class="font-semibold text-gray-900">{{POST_AUTHOR}}</div>
-                                <div class="text-sm text-gray-500">Developer Team</div>
+                                <div class="font-semibold text-gray-900 text-sm">{{POST_AUTHOR}}</div>
+                                <div class="text-xs text-gray-500">Author</div>
                             </div>
                         </div>
 
-                        <!-- Divider -->
-                        <div class="hidden sm:block w-px h-10 bg-gray-300"></div>
+                        <span class="hidden sm:block text-gray-300">|</span>
 
                         <!-- Date -->
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <div class="flex items-center gap-2 text-gray-600 text-sm">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
                             </svg>
                             <span>{{POST_DATE_FORMATTED}}</span>
                         </div>
 
+                        <span class="hidden sm:block text-gray-300">|</span>
+
                         <!-- Read Time -->
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <div class="flex items-center gap-2 text-gray-600 text-sm">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span>5 min read</span>
+                            <span>{{POST_READING_TIME}} min read</span>
                         </div>
                     </div>
                 </div>
@@ -469,10 +451,6 @@
                     <div class="lg:col-span-8">
                         <?php /* CMS:BLOCK name=content custom=1 start */ ?>
                         <div class="article-content">
-                            <p class="lead-paragraph">
-                                {{POST_EXCERPT}}
-                            </p>
-
                             <h2>Introduction</h2>
                             <p>
                                 Write your content here. This template supports full HTML formatting including headings, lists, code blocks, images, and more. Start with a compelling introduction that hooks your reader.
@@ -531,101 +509,41 @@ public function execute()
                         <!-- Article Footer -->
                         <div class="mt-12 pt-8 border-t border-gray-200">
                             <!-- Tags -->
-                            <div class="flex flex-wrap items-center gap-3 mb-8">
+                            <div class="flex flex-wrap items-center gap-3 mb-6">
                                 <span class="text-sm font-semibold text-gray-700">Tags:</span>
-                                <a href="#" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition">Magento</a>
-                                <a href="#" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition">Development</a>
-                                <a href="#" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition">E-commerce</a>
+                                {{POST_TAGS}}
                             </div>
 
-                            <!-- Share Buttons -->
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    <span class="font-semibold text-gray-700">Share:</span>
-                                    <div class="flex gap-2">
-                                        <a href="#" class="w-10 h-10 bg-gray-100 hover:bg-[#1DA1F2] hover:text-white rounded-full flex items-center justify-center transition" aria-label="Share on Twitter">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
-                                        </a>
-                                        <a href="#" class="w-10 h-10 bg-gray-100 hover:bg-[#0A66C2] hover:text-white rounded-full flex items-center justify-center transition" aria-label="Share on LinkedIn">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg>
-                                        </a>
-                                        <a href="#" class="w-10 h-10 bg-gray-100 hover:bg-[#1877F2] hover:text-white rounded-full flex items-center justify-center transition" aria-label="Share on Facebook">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
-                                        </a>
-                                        <button onclick="navigator.clipboard.writeText(window.location.href)" class="w-10 h-10 bg-gray-100 hover:bg-gray-700 hover:text-white rounded-full flex items-center justify-center transition" aria-label="Copy link">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <a href="/blog/" class="inline-flex items-center gap-2 text-primary hover:underline font-medium">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                                    </svg>
-                                    Back to Blog
-                                </a>
-                            </div>
+                            <!-- Back Link -->
+                            <a href="/blog/" class="inline-flex items-center gap-2 text-gray-600 hover:text-[#EE1C25] font-medium text-sm transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Back to Articles
+                            </a>
                         </div>
                     </div>
 
                     <!-- Sidebar -->
                     <aside class="lg:col-span-4">
-                        <div class="sticky top-24 space-y-8">
+                        <div class="sticky space-y-6" style="top: 90px;">
                             <!-- Author Box -->
-                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 border border-gray-100">
-                                <h3 class="font-bold text-lg mb-4" style="font-family: 'Titillium Web', sans-serif;">About the Author</h3>
-                                <div class="flex items-center gap-4 mb-4">
-                                    <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #e2e8f0, #cbd5e1);">
-                                        <svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                <h3 class="font-bold text-base mb-4 text-gray-900" style="font-family: 'Titillium Web', sans-serif;">About the Author</h3>
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-gray-900">{{POST_AUTHOR}}</div>
-                                        <div class="text-sm text-gray-500">Magento Developer</div>
+                                        <div class="font-semibold text-gray-900 text-sm">{{POST_AUTHOR}}</div>
+                                        <div class="text-xs text-gray-500">Developer</div>
                                     </div>
                                 </div>
                                 <p class="text-gray-600 text-sm leading-relaxed">
-                                    Part of the Developers Alliance team, specializing in Magento and Adobe Commerce development with a focus on performance and scalability.
+                                    Part of the Developers Alliance team, specializing in e-commerce development.
                                 </p>
-                            </div>
-
-                            <!-- Table of Contents -->
-                            <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                                <h3 class="font-bold text-lg mb-4 flex items-center gap-2" style="font-family: 'Titillium Web', sans-serif;">
-                                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                    </svg>
-                                    In This Article
-                                </h3>
-                                <nav class="space-y-2 text-sm">
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1">Introduction</a>
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1">Main Topic</a>
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1 pl-4 border-l-2 border-gray-200">Key Points</a>
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1 pl-4 border-l-2 border-gray-200">Code Example</a>
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1">Best Practices</a>
-                                    <a href="#" class="toc-link block text-gray-600 hover:text-primary transition py-1">Conclusion</a>
-                                </nav>
-                            </div>
-
-                            <!-- CTA Box -->
-                            <div class="rounded-2xl p-6 text-white overflow-hidden relative" style="background: linear-gradient(135deg, #EE1C25 0%, #dc2626 50%, #b91c1c 100%);">
-                                <!-- Decorative elements -->
-                                <div class="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2"></div>
-                                <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/2"></div>
-
-                                <div class="relative z-10">
-                                    <h3 class="font-bold text-xl mb-3" style="font-family: 'Titillium Web', sans-serif;">Need Expert Help?</h3>
-                                    <p class="text-white/90 mb-5 text-sm leading-relaxed">
-                                        Our certified Magento developers are ready to help with your e-commerce project.
-                                    </p>
-                                    <a href="/#contacts" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition shadow-lg">
-                                        Get a Free Quote
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                                        </svg>
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     </aside>
@@ -633,32 +551,6 @@ public function execute()
             </div>
         </article>
 
-        <?php /* CMS:BLOCK name=related_posts custom=1 start */ ?>
-        <!-- Related Posts -->
-        <section class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold mb-3" style="font-family: 'Titillium Web', sans-serif;">Continue Reading</h2>
-                    <p class="text-gray-600">More insights from our development team</p>
-                </div>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <!-- Placeholder cards - will be populated dynamically -->
-                    <article class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-                        <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </div>
-                        <div class="p-6">
-                            <div class="text-sm text-gray-500 mb-2">Coming Soon</div>
-                            <h3 class="font-bold text-lg mb-2 group-hover:text-primary transition" style="font-family: 'Titillium Web', sans-serif;">
-                                <a href="#">More Articles Coming Soon</a>
-                            </h3>
-                            <p class="text-gray-600 text-sm">Stay tuned for more insights from our developer team.</p>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
-        <?php /* CMS:BLOCK name=related_posts end */ ?>
     </main>
 
     <?php /* CMS:BLOCK name=footer start */ ?>

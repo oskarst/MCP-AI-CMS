@@ -10,6 +10,7 @@ require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/SitemapGenerator.php';
 require_once __DIR__ . '/../core/CollectionIndexGenerator.php';
 require_once __DIR__ . '/../core/PostMetaParser.php';
+require_once __DIR__ . '/../core/PostMetaWriter.php';
 require_once __DIR__ . '/../core/CSRF.php';
 
 $reservedFolders = $config['reserved_folders'] ?? ['cms'];
@@ -33,9 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($action === 'create') {
         $newSlug = $_POST['slug'] ?? '';
+        $newTitle = $_POST['title'] ?? '';
         if (!empty($newSlug)) {
             try {
-                $blogManager->createPost($collectionId, $newSlug);
+                $blogManager->createPost($collectionId, $newSlug, '', $newTitle);
                 header('Location: /cms/admin/blog-edit.php?collection=' . urlencode($collectionId) . '&slug=' . urlencode($newSlug) . '&status=draft');
                 exit;
             } catch (Exception $e) {
@@ -336,16 +338,43 @@ require __DIR__ . '/includes/header.php';
 
 <?php if ($isNew): ?>
     <!-- New post form -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-lg shadow-md p-6" x-data="{
+        title: '',
+        slug: '',
+        slugEdited: false,
+        generateSlug(title) {
+            return title.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        },
+        updateSlug() {
+            if (!this.slugEdited) {
+                this.slug = this.generateSlug(this.title);
+            }
+        }
+    }">
         <form method="post">
             <?php echo CSRF::inputField(); ?>
             <input type="hidden" name="action" value="create">
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Post Slug:</label>
-                <input type="text" name="slug" required placeholder="my-first-post"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="text-sm text-gray-500 mt-1">This will be the URL: /<?php echo htmlspecialchars($collectionId); ?>/<strong>slug</strong>/</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Post Title:</label>
+                <input type="text" name="title" x-model="title" @input="updateSlug()" required placeholder="My First Blog Post"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">URL Slug:</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-500">/<?php echo htmlspecialchars($collectionId); ?>/</span>
+                    <input type="text" name="slug" x-model="slug" @input="slugEdited = true" required placeholder="my-first-blog-post"
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                    <span class="text-gray-500">/</span>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Auto-generated from title. Edit to customize.</p>
             </div>
 
             <div class="flex gap-3">
