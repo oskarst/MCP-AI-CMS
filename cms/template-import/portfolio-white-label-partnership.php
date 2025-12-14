@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8ZT7CKH3ML"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-8ZT7CKH3ML');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <title>White-Label Partnership Case Study | European E-commerce Agency | Developers Alliance</title>
+    <?php /* CMS:BLOCK name=meta_title end */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <meta name="description" content="Discover how we established a successful multi-year white-label partnership with a European e-commerce agency, managing 20+ Magento projects with complex ERP integrations and omnichannel solutions."/>
+    <?php /* CMS:BLOCK name=meta_description end */ ?>
+    <meta name="author" content="Developers Alliance">
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <meta name="keywords" content="white label development, magento partnership, ecommerce agency, ERP integration, SAP integration, Microsoft Dynamics, omnichannel solutions, magento white label">
+    <?php /* CMS:BLOCK name=meta_keywords end */ ?>
+    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 start */ ?>
+    <meta name="robots" content="index, follow">
+    <?php /* CMS:BLOCK name=meta_robots end */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <link rel="canonical" href="/portfolio/white-label-partnership/">
+    <?php /* CMS:BLOCK name=meta_canonical end */ ?>
+    <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
+
+    <!-- AI Categorization Meta Tags -->
+    <meta name="category" content="Case Study">
+    <meta name="subject" content="White Label Partnership">
+    <meta name="classification" content="Technology > E-commerce > Portfolio">
+    <meta property="article:section" content="Portfolio">
+    <meta property="og:type" content="article">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://developers-alliance.com/portfolio-white-label-partnership.html">
+    <meta property="og:title" content="White-Label Partnership Case Study | Developers Alliance">
+    <meta property="og:description" content="A strategic white-label partnership delivering stability, quality, and ecosystem-wide clarity for a European e-commerce agency.">
+    <meta property="og:image" content="https://developers-alliance.com/img/devall-raft-sc.jpg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Tailwind CSS & DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e13d3a',
+                        secondary: '#f5f5f5',
+                    },
+                    fontFamily: {
+                        heading: ['Titillium Web', 'sans-serif'],
+                        body: ['Open Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Titillium Web', sans-serif;
+        }
+
+        /* Hero Section */
+        .portfolio-hero-section {
+            position: relative;
+            height: 70vh;
+            min-height: 500px;
+            overflow: hidden;
+        }
+
+        .portfolio-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .portfolio-hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .portfolio-hero-overlay h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .portfolio-hero-overlay h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Fade Slide Sections */
+        .fade-slide {
+            position: relative;
+            min-height: 600px;
+            overflow: hidden;
+        }
+
+        .fade-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: 0;
+        }
+
+        .fade-slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
+        .stage-overlay-box {
+            position: relative;
+            z-index: 2;
+            padding: 4rem 2rem;
+            display: flex;
+            align-items: center;
+            min-height: 600px;
+        }
+
+        .stage-box-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+
+        .stage-overlay-box-right {
+            justify-content: flex-end;
+        }
+
+        .stage-overlay-box-left {
+            justify-content: flex-start;
+        }
+
+        .stage-overlay-box-center {
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .fade-bg {
+                background-attachment: scroll;
+            }
+
+            .stage-box-content {
+                padding: 2rem;
+            }
+        }
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #e13d3a;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 100;
+            font-weight: bold;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        /* Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+            .fade-bg, [class*="parallax"] {
+                background-attachment: scroll !important;
+            }
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+
+    </style>
+
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s),
+                dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-TLZZN4LZ');
+    </script>
+
+    <!-- JSON-LD Structured Data for Article -->
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "@id": "https://developers-alliance.com/portfolio-white-label-partnership.html#article",
+        "headline": "Strategic White-Label Partnership for European E-commerce Agency",
+        "description": "A multi-year white-label partnership with a prominent European e-commerce agency, managing 20+ complex Magento projects with enterprise-level ERP integrations and omnichannel solutions.",
+        "author": {
+            "@type": "Organization",
+            "@id": "https://developers-alliance.com/#organization"
+        },
+        "publisher": {
+            "@id": "https://developers-alliance.com/#organization"
+        },
+        "articleSection": "Portfolio",
+        "about": {
+            "@type": "CreativeWork",
+            "name": "White Label Partnership",
+            "description": "Strategic partnership delivering stability and quality across entire digital ecosystems for a European e-commerce agency"
+        }
+    }
+    </script>
+    <?php /* CMS:BLOCK name=structured_data end */ ?>
+</head>
+<body class="font-body">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TLZZN4LZ" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+
+    <?php /* CMS:BLOCK name=header start */ ?>
+    <!-- Navigation -->
+    <nav class="navbar bg-white shadow-md fixed top-0 z-50" role="navigation" aria-label="Main navigation">
+        <div class="container mx-auto">
+            <div class="navbar-start">
+                <div class="dropdown">
+                    <button tabindex="0" class="btn btn-ghost lg:hidden" aria-label="Open mobile menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                    </button>
+                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52" role="menu">
+                        <li role="none"><a href="/" role="menuitem">Home</a></li>
+                        <li role="none">
+                            <details>
+                                <summary>Services</summary>
+                                <ul>
+                                    <li><a href="/services/">All Services</a></li>
+                                    <li><a href="/services/magento-development/">Magento Development</a></li>
+                                    <li><a href="/services/seo/">SEO Services</a></li>
+                                    <li><a href="/services/hyva-theme-development/">Hyva Theme</a></li>
+                                    <li><a href="/services/magento-migration/">Magento Migration</a></li>
+                                    <li><a href="/extensions/">Magento Extensions</a></li>
+                                </ul>
+                            </details>
+                        </li>
+                        <li role="none"><a href="/portfolio/" role="menuitem">Portfolio</a></li>
+                        <li role="none"><a href="/team/" role="menuitem">Team</a></li>
+                        <li role="none"><a href="/blog/" role="menuitem">Blog</a></li>
+                        <li role="none"><a href="index.html#contacts" role="menuitem">Contact Us</a></li>
+                    </ul>
+                </div>
+                <a href="/" class="btn btn-ghost normal-case text-xl" aria-label="Developers Alliance Home">
+                    <img src="/assets/img/logo-dark.png" alt="Developers Alliance - Certified Magento Developers" class="h-8 w-auto object-contain">
+                </a>
+            </div>
+            <div class="navbar-end hidden lg:flex">
+                <ul class="menu menu-horizontal px-1 font-medium" role="menubar">
+                    <li role="none"><a href="/" class="hover:text-primary" role="menuitem">Home</a></li>
+                    <li role="none" class="dropdown dropdown-hover">
+                        <label tabindex="0" class="hover:text-primary cursor-pointer">Services</label>
+                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56 z-50">
+                            <li><a href="/services/" class="hover:text-primary">All Services</a></li>
+                            <li><a href="/services/magento-development/" class="hover:text-primary">Magento Development</a></li>
+                            <li><a href="/services/seo/" class="hover:text-primary">SEO Services</a></li>
+                            <li><a href="/services/hyva-theme-development/" class="hover:text-primary">Hyva Theme Development</a></li>
+                            <li><a href="/services/magento-migration/" class="hover:text-primary">Magento Migration</a></li>
+                            <li><a href="/extensions/" class="hover:text-primary">Magento Extensions</a></li>
+                        </ul>
+                    </li>
+                    <li role="none"><a href="/portfolio/" class="hover:text-primary" role="menuitem">Portfolio</a></li>
+                    <li role="none"><a href="/team/" class="hover:text-primary" role="menuitem">Team</a></li>
+                    <li role="none"><a href="/blog/" class="hover:text-primary" role="menuitem">Blog</a></li>
+                    <li role="none"><a href="index.html#contacts" class="hover:text-primary" role="menuitem">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <?php /* CMS:BLOCK name=header end */ ?>
+
+    <?php /* CMS:BLOCK name=content role=content custom=1 start */ ?>
+
+    <!-- Breadcrumbs -->
+    <nav aria-label="Breadcrumb" class="bg-gray-50 border-b border-gray-200 mt-16">
+        <div class="container mx-auto px-4 py-4">
+            <ol class="flex items-center space-x-2 text-sm">
+                <li><a href="/" class="text-gray-600 hover:text-primary">Home</a></li>
+                <li><span class="text-gray-400">/</span></li>
+                <li><a href="/portfolio/" class="text-gray-600 hover:text-primary">Portfolio</a></li>
+                <li><span class="text-gray-400">/</span></li>
+                <li><span class="text-gray-900 font-medium">White-Label Partnership</span></li>
+            </ol>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <!-- Hero Section -->
+    <section class="portfolio-hero-section">
+        <img src="/assets/img/01-project-title-image.jpeg" alt="Strategic White-Label Partnership" class="portfolio-hero-img" />
+        <div class="portfolio-hero-overlay">
+            <h1>A Strategic White-Label Partnership<br>for a European E-commerce Agency</h1>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="bg-white">
+
+        <!-- Introduction Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-4xl font-heading font-bold mb-6">Introduction</h2>
+                        <p class="text-gray-700 text-lg leading-relaxed">
+                            We have established a multi-year white-label partnership with a prominent, mid-sized European e-commerce agency. Their market focus is on developing and maintaining mid-to-large-scale e-commerce stores across the Netherlands, specializing in sophisticated Magento and PWA solutions. These solutions often require complex integrations with enterprise-level ERPs, third-party logistics platforms, and advanced merchandising tools, positioning them a clear tier above standard e-commerce implementations.
+                        </p>
+                    </div>
+                    <div>
+                        <img src="/assets/img/devall-raft-sc.jpg" alt="European E-commerce Partnership" class="rounded-lg shadow-xl w-full" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Challenge Section -->
+        <section class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="order-2 lg:order-1">
+                        <img src="/assets/img/03-ecommerce-meeting.jpeg" alt="E-commerce Challenges" class="rounded-lg shadow-xl w-full" />
+                    </div>
+                    <div class="order-1 lg:order-2">
+                        <h2 class="text-4xl font-heading font-bold mb-4">The Challenge:</h2>
+                        <h3 class="text-2xl font-heading font-semibold mb-6 text-primary">Navigating Instability and Systemic Ambiguity</h3>
+                        <p class="text-gray-700 text-lg leading-relaxed">
+                            The agency faced significant challenges with their previous development team, whose inconsistent quality could not support the scaling complexity of their projects. The issues ran deeper than just technical debt; the agency's end-clients often did not fully understand the intricate workings of their own interconnected systems. This created a critical need for a partner who could do more than simply follow tickets—they required a team that could proactively manage and make sense of the entire digital ecosystem.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h2 class="text-4xl font-heading font-bold mb-4">The Solution:</h2>
+                    <h3 class="text-2xl font-heading font-semibold mb-6 text-primary">A Phased Integration of Certified Expertise</h3>
+                    <p class="text-gray-700 text-lg leading-relaxed">
+                        The agency initiated contact with us to mitigate these risks. The engagement began with the strategic placement of a single, certified Magento developer. The exceptional quality of work and professional diligence served as an immediate proof of concept. This success led the agency to fully transition all development responsibilities to our expanding team, ensuring project continuity and immediately elevating the quality of their development output.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Approach Section with Parallax -->
+        <section class="fade-slide">
+            <div class="fade-bg" style="background-image:url('/img/04-ecommerce-buildings-tall.jpeg');"></div>
+            <div class="stage-overlay-box stage-overlay-box-right">
+                <div class="container mx-auto px-4">
+                    <div class="stage-box-content">
+                        <h3 class="text-2xl font-heading font-bold mb-4">The Approach: From Proactive Partner to System Orchestrator</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            Our initial mandate was to supply reliable development capacity, but our role quickly evolved. We recognized that to deliver true value, we often had to operate outside the strict boundaries of Magento, orchestrating the entire order processing flow, including payments, shipments, and stock management software. We transformed from a development partner into a system orchestrator, taking a proactive role in managing the client's complete operational landscape to ensure all components worked seamlessly through Magento as the central hub.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project Execution Section -->
+        <section class="fade-slide">
+            <div class="fade-bg" style="background-image:url('/img/05-ecommerce-buildings.jpeg');"></div>
+            <div class="stage-overlay-box stage-overlay-box-left">
+                <div class="container mx-auto px-4">
+                    <div class="stage-box-content">
+                        <h3 class="text-2xl font-heading font-bold mb-4">Project Execution & Scope: Advanced Integrations and Omnichannel Solutions</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            Our integrated team assumed responsibility for a broad and complex portfolio. Beyond managing over 20 distinct e-commerce projects, our execution scope included:
+                        </p>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Enterprise-Level Integrations:</strong> We managed and implemented integrations with numerous complex systems, including ERPs like SAP and Microsoft Dynamics 365 Business Central, marketplace tools such as ChannelEngine and Vendiro, and advanced merchandising/search solutions like Tweakwise and Algolia.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Custom Omnichannel Systems:</strong> For several clients, we built systems on top of Magento to manage sales within their physical stores. This included a management portal for store staff and an in-store, customized version of the webshop for customers.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Advanced Subscription Models:</strong> We architected and built a highly specific subscription system for a collector coin store, involving a complete reimagining of the Magento catalog and checkout processes.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="fade-slide">
+            <div class="fade-bg" style="background-image:url('/img/06-magento-buildings.jpeg');"></div>
+            <div class="stage-overlay-box stage-overlay-box-right">
+                <div class="container mx-auto px-4">
+                    <div class="stage-box-content">
+                        <h3 class="text-2xl font-heading font-bold mb-4">The Results: Stability, Quality, and Ecosystem-Wide Clarity</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            The primary value delivered through this collaboration is stability across the entire digital ecosystem. Our proactive orchestration has significantly reduced operational friction for the end-clients. The tangible results include:
+                        </p>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Improved Codebase Quality:</strong> The overall quality of the agency's codebase has improved significantly, reducing bugs and increasing maintainability.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Enhanced Client Relations:</strong> End-clients are highly satisfied with our proactive approach, noting that our team considers underlying business needs to solve core challenges.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-primary mt-1 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                </svg>
+                                <span><strong>Predictable Delivery:</strong> Our partner can now confidently commit to complex client projects, backed by a team that can manage the full spectrum of required technologies.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion Section -->
+        <section class="fade-slide">
+            <div class="fade-bg" style="background-image:url('/img/07-office-room-ecommerce.jpeg');"></div>
+            <div class="stage-overlay-box stage-overlay-box-center">
+                <div class="container mx-auto px-4">
+                    <div class="stage-box-content text-center">
+                        <h3 class="text-2xl font-heading font-bold mb-4">Conclusion: Digital Clarity. Delivered.</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            This ongoing engagement exemplifies a successful strategic partnership where we function as the central technical orchestrator for our client's business. By providing a stable foundation of technical excellence and proactively managing entire digital ecosystems, we have empowered our partner to scale their services and enhance their market reputation. This outcome is a clear demonstration of our motto in action: <strong>Digital Clarity. Delivered.</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-primary/5 to-primary/10">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-4xl font-heading font-bold mb-6">Ready to Build a Strategic Partnership?</h2>
+                <p class="text-xl text-gray-700 mb-8">
+                    If you're an agency looking for a reliable white-label development partner or a business seeking expert Magento development with enterprise-level integration expertise, let's talk.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="index.html#contacts" class="btn btn-lg bg-primary hover:bg-red-600 text-white border-0 px-10">
+                        Start the Conversation
+                    </a>
+                    <a href="/portfolio/" class="btn btn-lg btn-outline border-2 border-primary text-primary hover:bg-primary hover:text-white px-10">
+                        View More Case Studies
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>    </main>
+
+
+
+    <?php /* CMS:BLOCK name=content end */ ?>
+
+    <?php /* CMS:BLOCK name=footer start */ ?>
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-heading font-bold text-xl mb-4">Developers Alliance</h3>
+                    <p class="text-gray-400">Certified Magento & Adobe Commerce Development Services</p>
+                </div>
+                <div>
+                    <h4 class="font-heading font-semibold mb-4">Services</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/services/magento-development/" class="hover:text-primary">Magento Development</a></li>
+                        <li><a href="/services/seo/" class="hover:text-primary">SEO Services</a></li>
+                        <li><a href="/services/hyva-theme-development/" class="hover:text-primary">Hyva Theme</a></li>
+                        <li><a href="/services/magento-migration/" class="hover:text-primary">Migration Services</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-heading font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/" class="hover:text-primary">Home</a></li>
+                        <li><a href="/portfolio/" class="hover:text-primary">Portfolio</a></li>
+                        <li><a href="/blog/" class="hover:text-primary">Blog</a></li>
+                        <li><a href="index.html#contacts" class="hover:text-primary">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-heading font-semibold mb-4">Location</h4>
+                    <p class="text-gray-400">
+                        Tbilisi, Georgia<br>
+                        Made in Georgia 🇬🇪
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 Developers Alliance. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <?php /* CMS:BLOCK name=footer end */ ?>
+
+    <!-- Cross-fade JavaScript for Desktop Only -->
+    
+    <?php /* CMS:BLOCK name=scripts start */ ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.matchMedia('(min-width:1025px)').matches) {
+                const slides = document.querySelectorAll('.fade-slide');
+                const io = new IntersectionObserver(entries => {
+                    entries.forEach(e => {
+                        const bg = e.target.querySelector('.fade-bg');
+                        if (bg) bg.style.opacity = e.intersectionRatio.toFixed(3);
+                    });
+                }, { threshold: Array.from({ length: 101 }, (_, i) => i / 100) });
+                slides.forEach(s => io.observe(s));
+            }
+        });
+    </script>
+
+
+    <?php /* CMS:BLOCK name=scripts end */ ?>
+    </body>
+</html>

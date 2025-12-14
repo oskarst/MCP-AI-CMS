@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8ZT7CKH3ML"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-8ZT7CKH3ML');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Assisted Development Best Practices | Developers Alliance</title>
+    <meta name="description" content="Learn essential best practices for AI-assisted development including framework setup, version control, model selection, and avoiding common pitfalls."/>
+    <meta name="author" content="Developers Alliance">
+    <meta name="keywords" content="ai development, ai coding, chatgpt development, ai best practices, version control, ai frameworks">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://developers-alliance.com/ai.html">
+    <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
+
+    <!-- AI Categorization Meta Tags -->
+    <meta name="category" content="Technical Blog">
+    <meta name="subject" content="AI Development Best Practices">
+    <meta name="classification" content="Technology > Software Development > AI Coding">
+    <meta property="article:section" content="Blog">
+    <meta property="article:tag" content="AI Development, Best Practices, Version Control">
+    <meta property="article:published_time" content="2025-01-01T10:00:00Z">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://developers-alliance.com/ai.html">
+    <meta property="og:title" content="AI-Assisted Development Best Practices | Developers Alliance">
+    <meta property="og:description" content="Essential best practices for AI-assisted development to maximize productivity and code quality.">
+    <meta property="og:image" content="https://developers-alliance.com/img/devall-raft-sc.jpg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Tailwind CSS & DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e13d3a',
+                        secondary: '#f5f5f5',
+                    },
+                    fontFamily: {
+                        heading: ['Titillium Web', 'sans-serif'],
+                        body: ['Open Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Open Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Titillium Web', sans-serif; }
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #e13d3a;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 100;
+            font-weight: bold;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+    </style>
+
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s),
+                dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-TLZZN4LZ');
+    </script>
+
+    <!-- JSON-LD Structured Data for TechArticle -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "@id": "https://developers-alliance.com/ai.html#article",
+        "headline": "AI-Assisted Development Best Practices",
+        "description": "Essential best practices for AI-assisted development including framework setup, version control, model selection, and avoiding common pitfalls",
+        "author": {
+            "@type": "Organization",
+            "@id": "https://developers-alliance.com/#organization"
+        },
+        "publisher": {
+            "@id": "https://developers-alliance.com/#organization"
+        },
+        "datePublished": "2025-01-01",
+        "dateModified": "2025-01-01",
+        "articleSection": "Technical Blog",
+        "keywords": ["AI development", "AI coding", "ChatGPT development", "AI best practices", "version control", "AI frameworks"],
+        "articleBody": "Master the art of working with AI coding assistants. Learn proven strategies to maximize productivity, maintain code quality, and avoid common pitfalls in AI-assisted development."
+    }
+    </script>
+</head>
+<body class="font-body">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TLZZN4LZ" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+
+    <!-- Navigation -->
+    <nav class="navbar bg-white shadow-md fixed top-0 z-50" role="navigation" aria-label="Main navigation">
+        <div class="container mx-auto">
+            <div class="navbar-start">
+                <div class="dropdown">
+                    <button tabindex="0" class="btn btn-ghost lg:hidden" aria-label="Open mobile menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                    </button>
+                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52" role="menu">
+                        <li role="none"><a href="index.html" role="menuitem">Home</a></li>
+                        <li role="none">
+                            <details>
+                                <summary>Services</summary>
+                                <ul>
+                                    <li><a href="services.html">All Services</a></li>
+                                    <li><a href="services-magento-development.html">Magento Development</a></li>
+                                    <li><a href="services-seo.html">SEO Services</a></li>
+                                    <li><a href="services-hyva-theme-development.html">Hyva Theme</a></li>
+                                    <li><a href="services-magento-migration.html">Magento Migration</a></li>
+                                    <li><a href="extensions.html">Magento Extensions</a></li>
+                                </ul>
+                            </details>
+                        </li>
+                        <li role="none"><a href="portfolio.html" role="menuitem">Portfolio</a></li>
+                        <li role="none"><a href="team.html" role="menuitem">Team</a></li>
+                        <li role="none"><a href="blog.html" role="menuitem">Blog</a></li>
+                        <li role="none"><a href="index.html#contacts" role="menuitem">Contact Us</a></li>
+                    </ul>
+                </div>
+                <a href="index.html" class="btn btn-ghost normal-case text-xl">
+                    <img src="https://developers-alliance.com/img/logo-dark.png" alt="Developers Alliance - Certified Magento Developers" class="h-8 w-auto object-contain">
+                </a>
+            </div>
+            <div class="navbar-end hidden lg:flex">
+                <ul class="menu menu-horizontal px-1 font-medium" role="menubar">
+                    <li role="none"><a href="index.html" class="hover:text-primary" role="menuitem">Home</a></li>
+                    <li role="none" class="dropdown dropdown-hover">
+                        <label tabindex="0" class="hover:text-primary cursor-pointer">Services</label>
+                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56 z-50">
+                            <li><a href="services.html" class="hover:text-primary">All Services</a></li>
+                            <li><a href="services-magento-development.html" class="hover:text-primary">Magento Development</a></li>
+                            <li><a href="services-seo.html" class="hover:text-primary">SEO Services</a></li>
+                            <li><a href="services-hyva-theme-development.html" class="hover:text-primary">Hyva Theme Development</a></li>
+                            <li><a href="services-magento-migration.html" class="hover:text-primary">Magento Migration</a></li>
+                            <li><a href="extensions.html" class="hover:text-primary">Magento Extensions</a></li>
+                        </ul>
+                    </li>
+                    <li role="none"><a href="portfolio.html" class="hover:text-primary" role="menuitem">Portfolio</a></li>
+                    <li role="none"><a href="team.html" class="hover:text-primary" role="menuitem">Team</a></li>
+                    <li role="none"><a href="blog.html" class="hover:text-primary" role="menuitem">Blog</a></li>
+                    <li role="none"><a href="index.html#contacts" class="hover:text-primary" role="menuitem">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumbs -->
+    <nav aria-label="Breadcrumb" class="bg-gray-50 border-b border-gray-200 mt-16">
+        <div class="container mx-auto px-4 py-4">
+            <ol class="flex items-center space-x-2 text-sm">
+                <li><a href="/" class="text-gray-600 hover:text-primary">Home</a></li>
+                <li class="text-gray-400">/</li>
+                <li class="text-gray-900 font-medium">AI Development Best Practices</li>
+            </ol>
+        </div>
+    </nav>
+
+    <main id="main-content">
+    <section class="py-20 bg-gradient-to-br from-gray-50 to-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-5xl md:text-6xl font-heading font-bold mb-6">
+                    <span class="text-primary">AI-Assisted Development</span> Best Practices
+                </h1>
+                <p class="text-xl text-gray-700 mb-8 leading-relaxed">
+                    Master the art of working with AI coding assistants. Learn proven strategies to maximize productivity, maintain code quality, and avoid common pitfalls in AI-assisted development.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <a href="index.html#contacts" class="btn btn-lg bg-primary hover:bg-red-600 text-white border-0">Discuss Your Project</a>
+                    <a href="#ai-framework" class="btn btn-lg btn-outline border-primary text-primary hover:bg-primary hover:text-white">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- AI Framework -->
+    <section id="ai-framework" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4">Foundation</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Establish Your AI Framework</h2>
+                    <p class="text-xl text-gray-700">
+                        Set up a robust framework with priming prompts to guide AI in the right direction from the start
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gradient-to-br from-primary/5 to-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-xl font-heading font-bold mb-4 text-primary">Why It Matters</h3>
+                        <p class="text-gray-700 mb-4">
+                            AI models don't inherently know your project's architecture, security requirements, or coding standards. Without proper priming, you'll get generic solutions that may introduce vulnerabilities or anti-patterns.
+                        </p>
+                        <p class="text-gray-700">
+                            A well-structured framework acts as a constant guide, ensuring every AI-generated suggestion aligns with your project's best practices and security requirements.
+                        </p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-50 to-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-xl font-heading font-bold mb-4">Key Components</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-primary flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Security protocols and requirements</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-primary flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Architecture patterns and structure</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-primary flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Coding standards and conventions</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-primary flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Framework-specific best practices</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-heading font-bold mb-4 text-white">Example Framework Prompts</h3>
+                    <div class="space-y-4 text-sm font-mono">
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// Security & Forms</p>
+                            <p>"Always implement CSRF protection for all forms. Use the framework's built-in CSRF token generation and validation."</p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// Input Validation</p>
+                            <p>"Sanitize and validate all user inputs. Never trust client-side data. Use parameterized queries for database operations."</p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// API Design</p>
+                            <p>"Follow RESTful conventions. Use proper HTTP status codes. Implement rate limiting and authentication middleware."</p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// Error Handling</p>
+                            <p>"Never expose stack traces to users. Log detailed errors server-side. Return user-friendly error messages."</p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// Code Structure</p>
+                            <p>"Follow the MVC pattern. Keep controllers thin. Use service layer for business logic. Repository pattern for data access."</p>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded">
+                            <p class="text-green-400 mb-2">// Dependencies</p>
+                            <p>"Use dependency injection. Avoid global state. Follow SOLID principles. Write testable, loosely-coupled code."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- Understanding Changes -->
+    <section class="py-20 bg-secondary">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4">Code Review</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Always Understand What Changed</h2>
+                    <p class="text-xl text-gray-700">
+                        Never blindly accept AI suggestions. Review every change to maintain code quality and knowledge
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <div class="bg-white p-8 rounded-lg shadow-lg hover-lift mb-6">
+                            <div class="flex items-start mb-4">
+                                <div class="bg-red-100 text-red-600 rounded-full p-3 mr-4">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-2 text-red-600">The Dangers</h3>
+                                    <ul class="space-y-2 text-gray-700">
+                                        <li>• Hidden security vulnerabilities</li>
+                                        <li>• Performance regressions</li>
+                                        <li>• Breaking changes to APIs</li>
+                                        <li>• Technical debt accumulation</li>
+                                        <li>• Loss of code understanding</li>
+                                        <li>• Debugging nightmares later</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold mb-4">Real-World Example</h3>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-sm">
+                                <p class="text-gray-700 mb-2">
+                                    <strong>Scenario:</strong> AI suggests replacing a loop with a database query inside another loop (N+1 query problem).
+                                </p>
+                                <p class="text-gray-700">
+                                    <strong>Impact:</strong> Works fine with 10 records in development. In production with 10,000 records, the app becomes unusable.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="bg-white p-8 rounded-lg shadow-lg hover-lift mb-6">
+                            <div class="flex items-start mb-4">
+                                <div class="bg-green-100 text-green-600 rounded-full p-3 mr-4">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-2 text-green-600">Best Practices</h3>
+                                    <ul class="space-y-2 text-gray-700">
+                                        <li>• Read every line of generated code</li>
+                                        <li>• Ask "why" for architectural decisions</li>
+                                        <li>• Test edge cases and error scenarios</li>
+                                        <li>• Verify security implications</li>
+                                        <li>• Check performance impact</li>
+                                        <li>• Ensure maintainability</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-primary/10 to-white p-6 rounded-lg border-2 border-primary">
+                            <h3 class="text-xl font-bold mb-3 text-primary">Golden Rule</h3>
+                            <p class="text-gray-700 text-lg font-medium">
+                                "If you can't explain what the code does and why it's written that way, don't commit it."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-heading font-bold mb-4">Review Checklist</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="font-bold mb-3 text-primary">Functionality</h4>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li>✓ Does it solve the problem?</li>
+                                <li>✓ Are edge cases handled?</li>
+                                <li>✓ Is error handling proper?</li>
+                                <li>✓ Are inputs validated?</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-3 text-primary">Quality</h4>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li>✓ Is code readable?</li>
+                                <li>✓ Follows style guide?</li>
+                                <li>✓ DRY principle applied?</li>
+                                <li>✓ Properly documented?</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-3 text-primary">Security & Performance</h4>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li>✓ No security vulnerabilities?</li>
+                                <li>✓ Performance acceptable?</li>
+                                <li>✓ Resources properly managed?</li>
+                                <li>✓ Scalability considered?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- Version Control -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4">Safety Net</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Commit After Every Update</h2>
+                    <p class="text-xl text-gray-700">
+                        Frequent commits are your insurance policy against AI error loops and unwanted changes
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-gradient-to-br from-red-50 to-white p-8 rounded-lg border-2 border-red-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-red-100 text-red-600 rounded-full p-3 mr-4">
+                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-red-600">The AI Error Loop</h3>
+                        </div>
+                        <p class="text-gray-700 mb-4">
+                            Without version control checkpoints, you can quickly spiral into an AI error loop:
+                        </p>
+                        <ol class="space-y-3 text-gray-700 list-decimal list-inside">
+                            <li>AI makes a change that introduces a subtle bug</li>
+                            <li>You ask AI to add a new feature</li>
+                            <li>New feature fails due to the bug</li>
+                            <li>AI tries to fix it, creating more issues</li>
+                            <li>Codebase becomes increasingly broken</li>
+                            <li>No clean point to revert to</li>
+                        </ol>
+                        <div class="mt-6 p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm font-semibold text-red-800">
+                                Result: Hours wasted debugging or starting over from scratch
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-green-50 to-white p-8 rounded-lg border-2 border-green-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-100 text-green-600 rounded-full p-3 mr-4">
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-green-600">The Solution</h3>
+                        </div>
+                        <p class="text-gray-700 mb-4">
+                            Commit after every logical change:
+                        </p>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span><strong>After each feature:</strong> Commit when something new works</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span><strong>After each fix:</strong> Commit when a bug is resolved</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span><strong>After refactoring:</strong> Commit when code is improved</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-600 mr-2">✓</span>
+                                <span><strong>Before AI sessions:</strong> Commit before major changes</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm font-semibold text-green-800">
+                                Benefit: Always have a working state to return to in seconds
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 text-white p-8 rounded-lg">
+                    <h3 class="text-2xl font-heading font-bold mb-4">Recommended Git Workflow</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold mb-3 text-primary">Commit Messages</h4>
+                            <div class="bg-gray-800 p-4 rounded text-sm font-mono space-y-2">
+                                <p class="text-green-400">git commit -m "Add user authentication"</p>
+                                <p class="text-green-400">git commit -m "Fix validation bug in login"</p>
+                                <p class="text-green-400">git commit -m "Refactor auth service"</p>
+                                <p class="text-green-400">git commit -m "Add password reset feature"</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-3 text-primary">Branching Strategy</h4>
+                            <div class="space-y-3 text-sm">
+                                <p>• Create feature branch for new work</p>
+                                <p>• Commit frequently on feature branch</p>
+                                <p>• Test thoroughly before merging</p>
+                                <p>• Keep main branch stable</p>
+                                <p>• Use tags for releases</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- Model Combinations -->
+    <section class="py-20 bg-secondary">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4">Strategy</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Combine Multiple AI Models</h2>
+                    <p class="text-xl text-gray-700">
+                        Different models excel at different tasks. Use the right tool for each job
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Model Strengths Comparison</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b-2 border-primary">
+                                    <th class="pb-3 pr-4 font-bold">Task Type</th>
+                                    <th class="pb-3 pr-4 font-bold text-center">GPT-4</th>
+                                    <th class="pb-3 pr-4 font-bold text-center">Claude</th>
+                                    <th class="pb-3 pr-4 font-bold text-center">Gemini</th>
+                                    <th class="pb-3 font-bold text-center">Copilot</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Complex Architecture</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Code Generation</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐⭐⭐</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Code Completion</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐⭐⭐</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Debugging</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Documentation</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 pr-4">Refactoring</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 pr-4">Speed/Latency</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐</td>
+                                    <td class="py-3 pr-4 text-center">⭐⭐⭐⭐⭐</td>
+                                    <td class="py-3 text-center">⭐⭐⭐⭐⭐</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-primary/10 text-primary rounded-full p-3 mr-3">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold">Planning & Architecture</h3>
+                        </div>
+                        <p class="text-gray-700 mb-3">
+                            <strong>Best: GPT-4 or Claude</strong>
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            Use for system design, architecture decisions, database schema design, and complex problem-solving. These models excel at reasoning through tradeoffs and suggesting optimal solutions.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-primary/10 text-primary rounded-full p-3 mr-3">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold">Code Implementation</h3>
+                        </div>
+                        <p class="text-gray-700 mb-3">
+                            <strong>Best: GitHub Copilot or Claude</strong>
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            Use for writing boilerplate, implementing features, and inline code completion. Copilot excels at context-aware suggestions within your IDE.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-primary/10 text-primary rounded-full p-3 mr-3">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold">Debugging & Analysis</h3>
+                        </div>
+                        <p class="text-gray-700 mb-3">
+                            <strong>Best: Claude or GPT-4</strong>
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            Use for analyzing error messages, understanding complex bugs, and code review. These models provide detailed explanations and multiple solutions.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-primary/10 text-primary rounded-full p-3 mr-3">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold">Quick Tasks</h3>
+                        </div>
+                        <p class="text-gray-700 mb-3">
+                            <strong>Best: Gemini or Smaller Models</strong>
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            Use for simple code generation, format conversion, regex patterns, and quick refactoring. Faster response times for straightforward tasks.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-br from-primary/10 to-white p-8 rounded-lg border-2 border-primary">
+                    <h3 class="text-2xl font-bold mb-4 text-primary">Pro Tip: The Handoff Strategy</h3>
+                    <p class="text-gray-700 mb-4">
+                        Start with a powerful model (GPT-4/Claude) for planning and architecture. Once you have a clear direction, switch to faster models for implementation. Return to the powerful model for code review and optimization.
+                    </p>
+                    <div class="bg-white p-4 rounded text-sm font-mono">
+                        <p class="text-green-600">1. GPT-4: "Design a user authentication system"</p>
+                        <p class="text-blue-600 mt-2">2. Copilot: Implement the planned components</p>
+                        <p class="text-purple-600 mt-2">3. Claude: "Review this auth implementation for security issues"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- AI Bug Loops -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">Warning</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Avoiding AI Bug Loops</h2>
+                    <p class="text-xl text-gray-700">
+                        Understand how developers can end up with hard-to-debug issues when AI assistance goes wrong
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-red-50 to-orange-50 p-8 rounded-lg border-2 border-red-200 mb-8">
+                    <h3 class="text-2xl font-bold mb-6 text-red-700">The AI Bug Loop Cycle</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 font-bold">1</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">Initial Bug Introduction</h4>
+                                <p class="text-gray-700">AI suggests code that works but has a subtle flaw (race condition, memory leak, edge case bug)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 font-bold">2</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">Symptom Appears</h4>
+                                <p class="text-gray-700">Bug manifests in unexpected way. You report symptoms to AI, not root cause (because you don't know it yet)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 font-bold">3</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">Wrong Fix Applied</h4>
+                                <p class="text-gray-700">AI treats symptoms, not disease. Adds workaround that creates new issues or technical debt</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 font-bold">4</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">Cascade of Problems</h4>
+                                <p class="text-gray-700">Workaround causes issues elsewhere. Each fix makes the codebase more fragile and harder to debug</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mr-4 font-bold">5</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">Debug Hell</h4>
+                                <p class="text-gray-700">Multiple layers of workarounds make root cause impossible to find. AI can't help because context is too complex</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-red-500">
+                        <h3 class="text-xl font-bold mb-4 text-red-600">Real Example: The Race Condition Loop</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="font-semibold mb-1">Step 1:</p>
+                                <p class="text-gray-700">AI creates async function without proper locks</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="font-semibold mb-1">Step 2:</p>
+                                <p class="text-gray-700">"Sometimes data doesn't save" - intermittent issue</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="font-semibold mb-1">Step 3:</p>
+                                <p class="text-gray-700">AI adds retry logic, masking the race condition</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="font-semibold mb-1">Step 4:</p>
+                                <p class="text-gray-700">Retries cause duplicate entries in database</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="font-semibold mb-1">Step 5:</p>
+                                <p class="text-gray-700">AI adds deduplication logic, slowing everything down</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded border border-red-300">
+                                <p class="font-bold text-red-700">Result:</p>
+                                <p class="text-gray-800">Complex, slow code. Original race condition still exists. Should have used proper locking from the start.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-green-500">
+                        <h3 class="text-xl font-bold mb-4 text-green-600">How to Avoid Bug Loops</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Test thoroughly upfront</strong>
+                                    <p class="text-sm text-gray-600">Test edge cases, concurrent operations, and failure scenarios before moving forward</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Stop and investigate</strong>
+                                    <p class="text-sm text-gray-600">When something seems off, don't just ask AI to fix it. Investigate root cause yourself first</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Revert early and often</strong>
+                                    <p class="text-sm text-gray-600">If fixes aren't working, revert to last known good state. Don't keep building on broken foundation</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Ask why, not just how</strong>
+                                    <p class="text-sm text-gray-600">Ask AI to explain WHY something is happening, not just provide a fix</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Simplify, don't complicate</strong>
+                                    <p class="text-sm text-gray-600">If code becomes too complex, it's a sign to step back and redesign, not add more fixes</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 text-yellow-600 flex-shrink-0 mr-3 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div>
+                            <h4 class="text-lg font-bold text-yellow-800 mb-2">Warning Sign: You're in a Bug Loop</h4>
+                            <p class="text-gray-700 mb-2">If you find yourself:</p>
+                            <ul class="text-gray-700 space-y-1 list-disc list-inside">
+                                <li>Making 5+ attempts to fix the same issue</li>
+                                <li>Adding workarounds on top of workarounds</li>
+                                <li>Code is getting more complex, not simpler</li>
+                                <li>New issues appear faster than you fix them</li>
+                            </ul>
+                            <p class="text-gray-800 font-semibold mt-3">STOP. Revert to last working version and reassess the approach.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- Freedom and Unexpected Behavior -->
+    <section class="py-20 bg-secondary">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-purple-100 text-purple-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">Control</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Freedom Leads to Unexpected Results</h2>
+                    <p class="text-xl text-gray-700">
+                        When you give AI too much autonomy, expect surprising and potentially problematic changes
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
+                    <div class="flex items-start mb-6">
+                        <div class="bg-purple-100 text-purple-600 rounded-full p-4 mr-4 flex-shrink-0">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-3">Real Case Study: The GPT-5 Problem</h3>
+                            <p class="text-gray-700 mb-4">
+                                A developer was building an application that used GPT-5 (via API). They gave the AI assistant broad permissions to "optimize and fix issues in the codebase."
+                            </p>
+                            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                                <h4 class="font-bold text-red-800 mb-2">What Happened:</h4>
+                                <p class="text-gray-700 mb-2">
+                                    The AI assistant, not having up-to-date knowledge of GPT-5's existence in its training data, "corrected" all references to GPT-5 to GPT-4o, believing it was fixing an error.
+                                </p>
+                                <p class="text-gray-700 font-semibold">
+                                    Result: Application broke in production. All API calls failed. Hours of debugging to figure out why GPT-5 had been changed to GPT-4o.
+                                </p>
+                            </div>
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">The Lesson:</h4>
+                                <p class="text-gray-700">
+                                    AI models have knowledge cutoff dates and don't know about features or APIs released after their training. They will "correct" things they don't recognize, even if those things are valid.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <h3 class="text-xl font-bold mb-4 text-red-600">Common Unexpected Changes</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>Version "corrections"</strong>
+                                    <p class="text-gray-600">Changing library versions to ones AI "knows about"</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>API rewrites</strong>
+                                    <p class="text-gray-600">Replacing new APIs with older alternatives</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>Pattern "improvements"</strong>
+                                    <p class="text-gray-600">Refactoring intentional design patterns it doesn't recognize</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>Configuration changes</strong>
+                                    <p class="text-gray-600">Modifying config values it thinks are "wrong"</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>Dependency "fixes"</strong>
+                                    <p class="text-gray-600">Removing or replacing dependencies it doesn't recognize</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2 font-bold">•</span>
+                                <div>
+                                    <strong>Style "corrections"</strong>
+                                    <p class="text-gray-600">Changing intentional naming or structure to "standard" patterns</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover-lift">
+                        <h3 class="text-xl font-bold mb-4 text-green-600">How to Maintain Control</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Be specific in requests</strong>
+                                    <p class="text-gray-600">Instead of "fix issues", say "fix the authentication bug in UserService.ts"</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Set explicit boundaries</strong>
+                                    <p class="text-gray-600">"Don't modify anything in the config/ directory or package versions"</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Review all changes</strong>
+                                    <p class="text-gray-600">Use diff tools to see exactly what changed before accepting</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Document non-standard choices</strong>
+                                    <p class="text-gray-600">Add comments explaining why you're using newer/different approaches</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>One task at a time</strong>
+                                    <p class="text-gray-600">Give focused tasks rather than broad mandates</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <strong>Test immediately</strong>
+                                    <p class="text-gray-600">Run tests after each AI change to catch issues quickly</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-blue-50 p-8 rounded-lg border-2 border-purple-300">
+                    <div class="flex items-start">
+                        <svg class="w-12 h-12 text-purple-600 flex-shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-3 text-purple-800">Remember: AI Doesn't Know What It Doesn't Know</h3>
+                            <p class="text-gray-700 mb-3">
+                                AI models are confident even when wrong. They'll "fix" things they don't understand or recognize. Just because code is new, bleeding-edge, or domain-specific doesn't mean it's wrong—but AI might treat it that way.
+                            </p>
+                            <p class="text-gray-800 font-semibold">
+                                Always maintain human oversight. You're the architect, AI is the assistant.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>
+
+    <!-- Planning Still Matters -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-4">Foundation</div>
+                    <h2 class="text-4xl font-heading font-bold mb-6">Planning Remains Critical</h2>
+                    <p class="text-xl text-gray-700">
+                        AI accelerates development, but proper planning and architecture are more important than ever
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-primary/10 to-white p-8 rounded-lg border-2 border-primary mb-8">
+                    <h3 class="text-2xl font-bold mb-4">The Planning Paradox</h3>
+                    <p class="text-gray-700 text-lg mb-4">
+                        It's tempting to think: "AI can write code so fast, why spend time planning?" This is backwards thinking.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg">
+                        <p class="text-gray-800 font-semibold mb-2">Reality:</p>
+                        <p class="text-gray-700">
+                            <span class="text-primary font-bold">Fast code generation = fast technical debt generation</span> if you don't have a solid plan. AI will happily write thousands of lines of code in the wrong direction if you let it.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-red-500 hover-lift">
+                        <h3 class="text-xl font-bold mb-4 text-red-600">Without Planning</h3>
+                        <ul class="space-y-3 text-sm text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Inconsistent architecture across features</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Tight coupling makes changes expensive</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Duplicate functionality in different places</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Database schema that requires major refactoring</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Performance problems discovered in production</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Security vulnerabilities built into structure</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Impossible to test properly</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">✗</span>
+                                <span>Expensive rewrites every few months</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-green-500 hover-lift">
+                        <h3 class="text-xl font-bold mb-4 text-green-600">With Planning</h3>
+                        <ul class="space-y-3 text-sm text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Consistent patterns AI can follow</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Modular design allows easy changes</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Clear separation of concerns</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Scalable database design from start</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Performance considered upfront</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Security baked into architecture</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Testable, maintainable code</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Sustainable long-term development</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-lg mb-8">
+                    <h3 class="text-2xl font-bold mb-6 text-center">What to Plan Before Coding</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                <h4 class="font-bold">System Architecture</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Overall structure</li>
+                                <li>• Technology stack</li>
+                                <li>• Service boundaries</li>
+                                <li>• Data flow patterns</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                                </svg>
+                                <h4 class="font-bold">Data Models</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Database schema</li>
+                                <li>• Relationships</li>
+                                <li>• Indexing strategy</li>
+                                <li>• Migration plan</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                                <h4 class="font-bold">Security Design</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Auth/authz strategy</li>
+                                <li>• Data protection</li>
+                                <li>• API security</li>
+                                <li>• Compliance needs</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <h4 class="font-bold">API Design</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Endpoint structure</li>
+                                <li>• Request/response formats</li>
+                                <li>• Error handling</li>
+                                <li>• Versioning strategy</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                                </svg>
+                                <h4 class="font-bold">Component Structure</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• UI component hierarchy</li>
+                                <li>• State management</li>
+                                <li>• Reusable patterns</li>
+                                <li>• Style system</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-primary/10 text-primary rounded-lg p-4 mb-3 text-center">
+                                <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                <h4 class="font-bold">Performance Plan</h4>
+                            </div>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Caching strategy</li>
+                                <li>• Load handling</li>
+                                <li>• Optimization points</li>
+                                <li>• Monitoring plan</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-8 rounded-lg border-2 border-blue-300">
+                    <h3 class="text-2xl font-bold mb-4">The Modular Mindset</h3>
+                    <p class="text-gray-700 mb-4">
+                        Even if you can't plan everything upfront, design your application to be <strong>modular from day one</strong>. This allows you to:
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-white p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-2">✓ Swap implementations</h4>
+                            <p class="text-sm text-gray-600">Replace parts without rewriting everything</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-2">✓ Test independently</h4>
+                            <p class="text-sm text-gray-600">Isolate and test each module separately</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-2">✓ Scale selectively</h4>
+                            <p class="text-sm text-gray-600">Optimize only the modules that need it</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-2">✓ Evolve gradually</h4>
+                            <p class="text-sm text-gray-600">Improve one module at a time</p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-100 p-4 rounded-lg">
+                        <p class="text-blue-900 font-semibold text-center">
+                            "Plan for change by making change easy" - The Golden Rule of AI-Assisted Development
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-primary text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-heading font-bold mb-6">Ready to Build Smarter with AI?</h2>
+            <p class="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+                Let's discuss how AI-assisted development can accelerate your next project while maintaining quality and security
+            </p>
+            <a href="index.html#contacts" class="btn btn-lg bg-white text-primary hover:bg-gray-100 border-0">Start a Conversation</a>
+        </div>
+    </section>
+    </main>
+
+
+
+    <!-- Footer -->
+    <footer class="bg-black text-white py-12">
+        <div class="container mx-auto px-4">
+            <nav class="hidden md:flex justify-center mb-8">
+                <ul class="menu menu-horizontal">
+                    <li><a href="/privacy" class="hover:text-primary">Privacy Policy</a></li>
+                    <li><a href="/terms" class="hover:text-primary">Terms & Conditions</a></li>
+                    <li><a href="index.html#contacts" class="hover:text-primary">Contact Us</a></li>
+                </ul>
+            </nav>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="text-center md:text-left">
+                    <img src="https://developers-alliance.com/img/logo-light.png" alt="Developers Alliance" class="h-8 w-auto object-contain opacity-50 mx-auto md:mx-0">
+                </div>
+                <div class="text-center">
+                    <p class="opacity-75">© Copyright 2025 Developers Alliance LLC. All Rights Reserved.</p>
+                </div>
+                <div class="flex justify-center md:justify-end gap-4">
+                    <a href="https://twitter.com/developersall" class="hover:text-primary" aria-label="Twitter">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+                    </a>
+                    <a href="https://www.facebook.com/devalliance" class="hover:text-primary" aria-label="Facebook">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+                    </a>
+                    <a href="https://www.instagram.com/developersall/" class="hover:text-primary" aria-label="Instagram">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01M6.5 3h11A3.5 3.5 0 0121 6.5v11a3.5 3.5 0 01-3.5 3.5h-11A3.5 3.5 0 013 17.5v-11A3.5 3.5 0 016.5 3z" stroke="currentColor" stroke-width="2" fill="none"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    function initApollo() {
+        var n = Math.random().toString(36).substring(7),
+            o = document.createElement("script");
+        o.src = "https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=" + n;
+        o.async = true;
+        o.defer = true;
+        o.onload = function() {
+            window.trackingFunctions.onLoad({
+                appId: "672e5e93d214c701b0ca0c34"
+            });
+        };
+        document.head.appendChild(o);
+    }
+    initApollo();
+    </script>
+</body>
+</html>

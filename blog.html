@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8ZT7CKH3ML"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-8ZT7CKH3ML');
+    </script>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magento Development Blog - Tips, Tutorials & Insights | Developers Alliance</title>
+    <meta name="description" content="Expert insights on Magento development, Adobe Commerce, Hyva themes, e-commerce best practices, and web development tutorials from certified Magento developers."/>
+    <meta name="author" content="Developers Alliance">
+    <meta name="keywords" content="magento blog, magento tutorials, adobe commerce blog, magento development tips, hyva theme tutorials, magento 2 guides, ecommerce development blog, magento best practices, magento performance tips, magento migration guides">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://developers-alliance.com/blog.html">
+    <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://developers-alliance.com/blog.html">
+    <meta property="og:title" content="Magento Development Blog - Tips, Tutorials & Insights | Developers Alliance">
+    <meta property="og:description" content="Expert insights on Magento development, Adobe Commerce, Hyva themes, e-commerce best practices, and web development tutorials from certified Magento developers.">
+    <meta property="og:image" content="https://developers-alliance.com/img/devall-raft-sc.jpg">
+    <meta property="og:site_name" content="Developers Alliance">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://developers-alliance.com/blog.html">
+    <meta name="twitter:title" content="Magento Development Blog - Tips, Tutorials & Insights | Developers Alliance">
+    <meta name="twitter:description" content="Expert insights on Magento development, Adobe Commerce, Hyva themes, e-commerce best practices, and web development tutorials from certified Magento developers.">
+    <meta name="twitter:image" content="https://developers-alliance.com/img/devall-raft-sc.jpg">
+    <meta name="twitter:site" content="@developersall">
+    <meta name="twitter:creator" content="@developersall">
+
+    <!-- Additional SEO Meta Tags -->
+    <meta name="geo.region" content="GE-TB">
+    <meta name="geo.placename" content="Tbilisi">
+    <meta name="geo.position" content="41.7151;44.8271">
+    <meta name="ICBM" content="41.7151, 44.8271">
+    <meta name="language" content="English">
+    <meta name="rating" content="general">
+    <meta name="revisit-after" content="7 days">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- AI Categorization Meta Tags -->
+    <meta name="category" content="E-commerce Development Blog">
+    <meta name="subject" content="Magento Development Tutorials and Insights">
+    <meta name="classification" content="Technology > E-commerce > Development Blog">
+    <meta property="article:section" content="Blog">    <!-- Google Tag Manager -->
+    <script>
+        (function(w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start': new Date().getTime(),
+                event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s),
+                dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-TLZZN4LZ');
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Fonts - Optimized for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Tailwind CSS & DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e13d3a',
+                        secondary: '#f5f5f5',
+                    },
+                    fontFamily: {
+                        heading: ['Titillium Web', 'Raleway', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                        body: ['Open Sans', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Titillium Web', 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        #shadow-host-companion {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #e13d3a;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            z-index: 100;
+            font-weight: bold;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+        *:focus-visible {
+            outline: 3px solid #e13d3a;
+            outline-offset: 2px;
+        }
+        a:focus-visible, button:focus-visible {
+            outline: 3px solid #e13d3a;
+            outline-offset: 2px;
+        }
+        .btn:focus-visible {
+            box-shadow: 0 0 0 3px rgba(225, 61, 58, 0.5);
+        }
+        .text-gray-600 {
+            color: #4b5563;
+        }
+        .text-gray-700 {
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="font-body">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TLZZN4LZ" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->    <!-- Navigation -->
+    <nav class="navbar bg-white shadow-md fixed top-0 z-50" role="navigation" aria-label="Main navigation">
+        <div class="container mx-auto">
+            <div class="navbar-start">
+                <div class="dropdown">
+                    <button tabindex="0" class="btn btn-ghost lg:hidden" aria-label="Open mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                    </button>
+                    <ul id="mobile-menu" tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52" role="menu">
+                        <li role="none"><a href="index.html" role="menuitem">Home</a></li>
+                        <li role="none">
+                            <details>
+                                <summary>Services</summary>
+                                <ul>
+                                    <li><a href="services.html">All Services</a></li>
+                                    <li><a href="services-magento-development.html">Magento Development</a></li>
+                                    <li><a href="services-seo.html">SEO Services</a></li>
+                                    <li><a href="services-hyva-theme-development.html">Hyva Theme</a></li>
+                                    <li><a href="services-magento-migration.html">Magento Migration</a></li>
+                                    <li><a href="extensions.html">Magento Extensions</a></li>
+                                </ul>
+                            </details>
+                        </li>
+                        <li role="none"><a href="portfolio.html" role="menuitem">Portfolio</a></li>
+                        <li role="none"><a href="team.html" role="menuitem">Team</a></li>
+                        <li role="none"><a href="blog.html" role="menuitem">Blog</a></li>
+                        <li role="none"><a href="index.html#contacts" role="menuitem">Contact Us</a></li>
+                    </ul>
+                </div>
+                <a href="index.html" class="btn btn-ghost normal-case text-xl" aria-label="Developers Alliance Home">
+                    <img src="https://developers-alliance.com/img/logo-dark.png" alt="Developers Alliance - Certified Magento Developers" class="h-8 w-auto object-contain">
+                </a>
+            </div>
+            <div class="navbar-end hidden lg:flex">
+                <ul class="menu menu-horizontal px-1 font-medium" role="menubar">
+                    <li role="none"><a href="index.html" class="hover:text-primary" role="menuitem">Home</a></li>
+                    <li role="none" class="dropdown dropdown-hover">
+                        <label tabindex="0" class="hover:text-primary cursor-pointer">Services</label>
+                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56 z-50">
+                            <li><a href="services.html" class="hover:text-primary">All Services</a></li>
+                            <li><a href="services-magento-development.html" class="hover:text-primary">Magento Development</a></li>
+                            <li><a href="services-seo.html" class="hover:text-primary">SEO Services</a></li>
+                            <li><a href="services-hyva-theme-development.html" class="hover:text-primary">Hyva Theme Development</a></li>
+                            <li><a href="services-magento-migration.html" class="hover:text-primary">Magento Migration</a></li>
+                            <li><a href="extensions.html" class="hover:text-primary">Magento Extensions</a></li>
+                        </ul>
+                    </li>
+                    <li role="none"><a href="portfolio.html" class="hover:text-primary" role="menuitem">Portfolio</a></li>
+                    <li role="none"><a href="team.html" class="hover:text-primary" role="menuitem">Team</a></li>
+                    <li role="none"><a href="blog.html" class="hover:text-primary" role="menuitem">Blog</a></li>
+                    <li role="none"><a href="index.html#contacts" class="hover:text-primary" role="menuitem">Contact Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>    <!-- Hero Section -->
+    <main id="main-content">    <section class="min-h-[40vh] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white relative py-20 md:py-24" aria-labelledby="blog-hero-title">
+        <div class="container mx-auto px-4 text-center z-10">
+            <h1 id="blog-hero-title" class="text-5xl md:text-6xl font-bold font-heading mb-6 animate-fade-in">
+                Developers Alliance <span class="text-primary" aria-hidden="true">/</span>
+            </h1>
+            <p class="text-3xl md:text-4xl font-heading font-semibold mb-4 text-gray-700">
+                Blog
+            </p>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                Expert insights on Magento development, Adobe Commerce, Hyva themes, and e-commerce best practices
+            </p>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>    <!-- Blog Posts Section -->
+    <section class="py-20 bg-white" aria-labelledby="blog-posts-heading">
+        <div class="container mx-auto px-4">
+            <h2 id="blog-posts-heading" class="sr-only">Latest Blog Posts</h2>
+            
+            <!-- Blog Posts Grid - The shortcode will inject posts here -->
+            <div class="max-w-7xl mx-auto">
+                
+                <div class="blog-pagination-container">
+                    <ul class="blog-latest" id="blog-latest-list"><div class="blog-latest-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; margin: 2rem 0;">
+  <article class="blog-latest-item" style="background: linear-gradient(to bottom right, #ffffff, #f9fafb); border-radius: 0.5rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 100%;">
+    <style>
+      .blog-latest-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .blog-latest-item .featured-image {
+        position: relative;
+        overflow: hidden;
+        height: 240px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .blog-latest-item .featured-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      .blog-latest-item:hover .featured-image img {
+        transform: scale(1.05);
+      }
+      .blog-latest-item .blog-content {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .blog-latest-item .blog-title {
+        font-family: 'Titillium Web', 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+        text-decoration: none;
+        display: block;
+        transition: color 0.2s ease;
+      }
+      .blog-latest-item .blog-title:hover {
+        color: #e13d3a;
+      }
+      .blog-latest-item .meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+      .blog-latest-item .meta .author {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #4b5563;
+      }
+      .blog-latest-item .meta .author:before {
+        content: "👤";
+        font-size: 1rem;
+      }
+      .blog-latest-item .meta .date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .blog-latest-item .meta .date:before {
+        content: "📅";
+        font-size: 1rem;
+      }
+      .blog-latest-item .excerpt {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        flex: 1;
+        font-size: 1rem;
+      }
+      .blog-latest-item .read-more-btn {
+        display: inline-block;
+        background-color: #e13d3a;
+        color: #ffffff;
+        padding: 0.75rem 2rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-weight: 600;
+        text-align: center;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+      .blog-latest-item .read-more-btn:hover {
+        background-color: #dc2626;
+        transform: translateY(-1px);
+      }
+      .blog-latest-item .read-more-btn:active {
+        transform: translateY(0);
+      }
+      @media (max-width: 768px) {
+        .blog-latest-container {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+        .blog-latest-item .featured-image {
+          height: 200px;
+        }
+        .blog-latest-item .blog-title {
+          font-size: 1.25rem;
+        }
+      }
+    </style>
+
+    <div class="featured-image">
+      <img src="https://developers-alliance.com/blog/content/featured-43349bf7d5.png" alt="Performance Degradation in Adobe Commerce: How Communication and Practical Solutions Saved the Day" class="blog-featured-image" style="max-width: 200px; height: auto; margin-bottom: 8px;">
+    </div>
+
+    <div class="blog-content">
+      <a href="https://developers-alliance.com/blog/performance-degradation-in-adobe-commerce-how-communication-and-practical-solutions-saved-the-day.html" class="blog-title">Performance Degradation in Adobe Commerce: How Communication and Practical Solutions Saved the Day</a>
+
+      <div class="meta">
+        <span class="author">admin</span>
+        <span class="date">2025-10-14</span>
+      </div>
+
+      <div class="excerpt">Recently, I encountered a challenging performance issue with one of my Adobe Commerce (Magento) clients. They were experiencing significant slowdowns due to a third-party extension for their megamenu, which came with a variety of fancy features like specific content per customer group and per page. While these features were great in theory, they turned out to be more of a hindrance than a help in this particular case.</div>
+
+      <a class="read-more-btn" href="https://developers-alliance.com/blog/performance-degradation-in-adobe-commerce-how-communication-and-practical-solutions-saved-the-day.html">Read More</a>
+    </div>
+  </article>
+</div>
+</ul>
+                    <nav aria-label="Blog pagination" class="mt-4">
+                        <ul class="pagination justify-content-center" id="blog-pagination">
+                            <li class="page-item disabled" id="prev-btn">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                            </li>
+                            <li class="page-item disabled" id="next-btn">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                        <div class="text-center mt-2">
+                            <small class="text-muted" id="pagination-info">Page 1 of 1 (1 articles)</small>
+                        </div>
+                    </nav>
+                </div>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const itemsPerPage = 20;
+                    const totalItems = 1;
+                    const totalPages = 1;
+                    let currentPage = 1;
+                    
+                    const blogList = document.getElementById('blog-latest-list');
+                    const prevBtn = document.getElementById('prev-btn');
+                    const nextBtn = document.getElementById('next-btn');
+                    const paginationInfo = document.getElementById('pagination-info');
+                    
+                    if (!blogList || totalPages <= 1) {
+                        // Hide pagination if not needed
+                        document.querySelector('.blog-pagination-container nav').style.display = 'none';
+                        return;
+                    }
+                    
+                    const allItems = Array.from(blogList.children);
+                    
+                    function showPage(page) {
+                        const startIndex = (page - 1) * itemsPerPage;
+                        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+                        
+                        // Hide all items
+                        allItems.forEach(item => item.style.display = 'none');
+                        
+                        // Show items for current page
+                        for (let i = startIndex; i < endIndex; i++) {
+                            if (allItems[i]) allItems[i].style.display = 'block';
+                        }
+                        
+                        // Update pagination buttons
+                        prevBtn.classList.toggle('disabled', page === 1);
+                        nextBtn.classList.toggle('disabled', page === totalPages);
+                        
+                        // Update pagination info
+                        paginationInfo.textContent = `Page ${page} of ${totalPages} (${totalItems} articles)`;
+                        
+                        currentPage = page;
+                    }
+                    
+                    // Event listeners
+                    prevBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (currentPage > 1) showPage(currentPage - 1);
+                    });
+                    
+                    nextBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (currentPage < totalPages) showPage(currentPage + 1);
+                    });
+                    
+                    // Initialize
+                    showPage(1);
+                });
+                </script>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>    <!-- Newsletter Section -->
+    <section class="py-16 bg-secondary">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h3 class="text-3xl font-heading font-bold mb-4">Stay Updated with Latest Insights</h3>
+                <p class="text-gray-700 text-lg mb-8">
+                    Get expert Magento development tips, tutorials, and industry insights delivered to your inbox.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-xl mx-auto">
+                    <input type="email" placeholder="Enter your email" class="input input-bordered flex-1" aria-label="Email address">
+                    <button class="btn bg-primary hover:bg-red-600 text-white border-0 px-8">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="h-1 w-full bg-primary"></div>    </main>    <!-- Footer -->
+    <footer class="bg-black text-white py-12" role="contentinfo">
+        <div class="container mx-auto px-4">
+            <nav class="hidden md:flex justify-center mb-8" aria-label="Footer navigation">
+                <ul class="menu menu-horizontal">
+                    <li><a href="/privacy" class="hover:text-primary">Privacy Policy</a></li>
+                    <li><a href="/terms" class="hover:text-primary">Terms & Conditions</a></li>
+                    <li><a href="#contacts" class="hover:text-primary">Contact Us</a></li>
+                </ul>
+            </nav>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="text-center md:text-left">
+                    <img src="https://developers-alliance.com/img/logo-light.png" alt="Developers Alliance - Magento Development Company" class="h-8 w-auto object-contain opacity-50 mx-auto md:mx-0" loading="lazy">
+                </div>
+                <div class="text-center">
+                    <p class="opacity-75">© Copyright 2025 Developers Alliance LLC. All Rights Reserved.</p>
+                </div>
+                <div class="flex justify-center md:justify-end gap-4">
+                    <a href="https://twitter.com/developersall" class="hover:text-primary" aria-label="Follow Developers Alliance on Twitter" rel="noopener">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+                    </a>
+                    <a href="https://www.facebook.com/devalliance" class="hover:text-primary" aria-label="Follow Developers Alliance on Facebook" rel="noopener">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+                    </a>
+                    <a href="https://www.instagram.com/developersall/" class="hover:text-primary" aria-label="Follow Developers Alliance on Instagram" rel="noopener">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01M6.5 3h11A3.5 3.5 0 0121 6.5v11a3.5 3.5 0 01-3.5 3.5h-11A3.5 3.5 0 013 17.5v-11A3.5 3.5 0 016.5 3z" stroke="currentColor" stroke-width="2" fill="none"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Consent Banner -->
+    <div id="consent-banner" class="fixed bottom-0 left-0 right-0 bg-black text-white p-4 z-50 hidden" role="alertdialog" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-desc">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p id="cookie-consent-desc">This site uses cookies to deliver services and to show you relevant ads. By using our site, you consent to the use of cookies.</p>
+            <button onclick="acceptCookies()" class="btn btn-sm bg-primary hover:bg-red-600 text-white border-0" aria-label="Accept cookies and close this banner">I Accept</button>
+        </div>
+    </div>
+    </main><script>
+        // Cookie consent
+        function checkConsent() {
+            if (localStorage.getItem('googleConsent') !== 'true') {
+                const banner = document.getElementById('consent-banner');
+                banner.classList.remove('hidden');
+                setTimeout(() => {
+                    const acceptButton = banner.querySelector('button');
+                    acceptButton.focus();
+                }, 100);
+            } else {
+                loadGoogleScripts();
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('googleConsent', 'true');
+            const banner = document.getElementById('consent-banner');
+            banner.classList.add('hidden');
+            announceToScreenReader('Cookie preferences saved');
+            loadGoogleScripts();
+        }
+
+        function loadGoogleScripts() {
+            // Google Analytics already loaded in head
+        }
+
+        function announceToScreenReader(message) {
+            const announcement = document.createElement('div');
+            announcement.setAttribute('role', 'status');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = message;
+            document.body.appendChild(announcement);
+            setTimeout(() => {
+                document.body.removeChild(announcement);
+            }, 1000);
+        }
+
+        // Testimonial Carousel
+        let currentSlide = 1;
+        const totalSlides = 7;
+        let autoRotateInterval;
+
+        function goToSlide(slideNumber) {
+            currentSlide = slideNumber;
+            const carousel = document.getElementById('testimonial-carousel');
+            const slide = document.getElementById('slide' + slideNumber);
+            if (carousel && slide) {
+                const slideWidth = slide.offsetWidth;
+                carousel.scrollTo({
+                    left: slideWidth * (slideNumber - 1),
+                    behavior: 'smooth'
+                });
+            }
+            updateDots();
+            resetAutoRotate();
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide % totalSlides) + 1;
+            const carousel = document.getElementById('testimonial-carousel');
+            const slide = document.getElementById('slide' + currentSlide);
+            if (carousel && slide) {
+                const slideWidth = slide.offsetWidth;
+                carousel.scrollTo({
+                    left: slideWidth * (currentSlide - 1),
+                    behavior: 'smooth'
+                });
+            }
+            updateDots();
+        }
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.testimonial-dot');
+            dots.forEach((dot, index) => {
+                if (index + 1 === currentSlide) {
+                    dot.classList.remove('bg-gray-400');
+                    dot.classList.add('bg-primary');
+                } else {
+                    dot.classList.remove('bg-primary');
+                    dot.classList.add('bg-gray-400');
+                }
+            });
+        }
+
+        function startAutoRotate() {
+            autoRotateInterval = setInterval(nextSlide, 5000);
+        }
+
+        function resetAutoRotate() {
+            clearInterval(autoRotateInterval);
+            startAutoRotate();
+        }
+
+        // Contact Form
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = document.getElementById('contact-form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const messageDiv = document.getElementById('form-message');
+            const formData = new FormData(form);
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+
+            fetch('mailer.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.classList.remove('hidden');
+                if (data.success) {
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.textContent = data.message;
+                    form.reset();
+                } else {
+                    messageDiv.className = 'alert alert-error';
+                    messageDiv.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                messageDiv.classList.remove('hidden');
+                messageDiv.className = 'alert alert-error';
+                messageDiv.textContent = 'An error occurred. Please try again or email us directly.';
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Message';
+                setTimeout(() => {
+                    messageDiv.classList.add('hidden');
+                }, 5000);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleFormSubmit);
+            }
+
+            updateDots();
+            startAutoRotate();
+
+            const mobileMenuButton = document.querySelector('[aria-controls="mobile-menu"]');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', !isExpanded);
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileMenuButton.getAttribute('aria-expanded') === 'true') {
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                        mobileMenuButton.focus();
+                    }
+                });
+            }
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+
+                    e.preventDefault();
+                    const target = document.querySelector(targetId);
+
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+
+                        setTimeout(() => {
+                            target.setAttribute('tabindex', '-1');
+                            target.focus();
+                            target.addEventListener('blur', function() {
+                                target.removeAttribute('tabindex');
+                            }, { once: true });
+                        }, 500);
+                    }
+                });
+            });
+
+            announceToScreenReader('Page loaded successfully');
+        });
+
+        checkConsent();
+    </script>
+</body>
+</html>
