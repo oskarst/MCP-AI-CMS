@@ -14,20 +14,20 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 system=1 start */ ?>
     <title>Hyva Theme Development Services | Launch Your Magento Store in 2 Weeks</title>
     <?php /* CMS:BLOCK name=meta_title end */ ?>
-    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 system=1 start */ ?>
     <meta name="description" content="Expert Hyva theme development for Magento 2 & Adobe Commerce. Fast, performant, mobile-optimized stores. Launch in 2 weeks with our Hyva Express service. Certified Hyva developers."/>
     <?php /* CMS:BLOCK name=meta_description end */ ?>
     <meta name="author" content="Developers Alliance">
-    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 system=1 start */ ?>
     <meta name="keywords" content="hyva theme development, hyva magento, hyva theme, magento hyva, hyva developers, hyva agency, fast magento theme, magento performance, hyva express, hyva migration, hyva customization, hyva checkout">
     <?php /* CMS:BLOCK name=meta_keywords end */ ?>
-    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 system=1 start */ ?>
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <?php /* CMS:BLOCK name=meta_robots end */ ?>
-    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 system=1 start */ ?>
     <link rel="canonical" href="/services/hyva-theme-development/">
     <?php /* CMS:BLOCK name=meta_canonical end */ ?>
     <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
@@ -94,7 +94,7 @@
     </style>
 
     <!-- Schema -->
-    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",

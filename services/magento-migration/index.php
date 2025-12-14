@@ -12,19 +12,19 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 system=1 start */ ?>
     <title>Magento Migration Services | Magento 1 to 2 Migration | Adobe Commerce</title>
     <?php /* CMS:BLOCK name=meta_title end */ ?>
-    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 system=1 start */ ?>
     <meta name="description" content="Expert Magento migration services. Seamlessly migrate from Magento 1 to Magento 2, upgrade to Adobe Commerce, or migrate from other platforms. Zero downtime, data integrity guaranteed."/>
     <?php /* CMS:BLOCK name=meta_description end */ ?>
-    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 system=1 start */ ?>
     <meta name="keywords" content="magento migration, magento 1 to 2 migration, magento upgrade, adobe commerce migration, magento 2 migration, platform migration, ecommerce migration, magento data migration, shopify to magento, woocommerce to magento">
     <?php /* CMS:BLOCK name=meta_keywords end */ ?>
-    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 system=1 start */ ?>
     <meta name="robots" content="index, follow">
     <?php /* CMS:BLOCK name=meta_robots end */ ?>
-    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 system=1 start */ ?>
     <link rel="canonical" href="/services/magento-migration/">
     <?php /* CMS:BLOCK name=meta_canonical end */ ?>
     <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
@@ -88,7 +88,7 @@
     </style>
 
     <!-- Schema -->
-    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",

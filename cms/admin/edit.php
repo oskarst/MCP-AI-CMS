@@ -121,15 +121,25 @@ $activePage = 'pages';
 require __DIR__ . '/includes/header.php';
 ?>
 
-<!-- CodeMirror CSS and JS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+<!-- Ace Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-chrome.min.js"></script>
+<style>
+    .ace-editor-wrapper {
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    .dark .ace-editor-wrapper {
+        border-color: #2a2e33;
+    }
+    .ace_editor {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+    }
+</style>
 
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -293,16 +303,14 @@ require __DIR__ . '/includes/header.php';
                 </label>
 
                 <!-- Code View -->
-                <div x-show="view === 'code'" x-cloak>
-                    <label class="block mb-4">
+                <div x-show="view === 'code'">
+                    <div class="mb-4">
                         <span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Block Content:</span>
-                        <textarea
-                            x-ref="textarea"
-                            name="block_content"
-                            rows="10"
-                            class="w-full px-4 py-3 bg-surface-50 dark:bg-dark-300 border-2 border-surface-200 dark:border-dark-200 rounded-xl text-gray-900 dark:text-white focus:border-accent-500 focus:ring-4 focus:ring-accent-500/10 transition-all font-mono text-sm"
-                        ><?php echo htmlspecialchars($block['content']); ?></textarea>
-                    </label>
+                        <div class="ace-editor-wrapper">
+                            <div x-ref="editor" class="w-full" style="height: 400px;"><?php echo htmlspecialchars($block['content']); ?></div>
+                        </div>
+                        <textarea x-ref="textarea" name="block_content" class="hidden"><?php echo htmlspecialchars($block['content']); ?></textarea>
+                    </div>
                 </div>
 
                 <!-- Preview View (hide for system blocks) -->
@@ -342,60 +350,48 @@ const pageSettings = {
 function blockEditor(index) {
     return {
         view: 'code',
-        editor: null,
         cssLoaded: false,
+        aceEditor: null,
 
         init() {
-            // Wait for next tick to ensure DOM is ready
             this.$nextTick(() => {
-                const textarea = this.$refs.textarea;
-
-                if (!textarea) {
-                    console.error('Textarea not found for block', index);
-                    return;
-                }
-
-                try {
-                    // Initialize CodeMirror for code view
-                    this.editor = CodeMirror.fromTextArea(textarea, {
-                        mode: 'application/x-httpd-php',
-                        theme: 'material-darker',
-                        lineNumbers: true,
-                        lineWrapping: true,
-                        indentUnit: 4,
-                        indentWithTabs: false,
-                        matchBrackets: true,
-                        viewportMargin: Infinity
-                    });
-
-                    console.log('CodeMirror initialized for block', index);
-
-                    // Refresh CodeMirror to ensure proper display
-                    setTimeout(() => {
-                        if (this.editor) {
-                            this.editor.refresh();
-                        }
-                    }, 100);
-
-                } catch (error) {
-                    console.error('Failed to initialize CodeMirror:', error);
-                }
+                this.initAce();
             });
 
-            // Save CodeMirror content to textarea before form submit
-            this.$refs.form.addEventListener('submit', (e) => {
-                if (this.editor) {
-                    this.editor.save();
-                } else {
-                    console.warn('CodeMirror not initialized, using textarea value');
+            // Sync Ace content to textarea on form submit
+            if (this.$refs.form) {
+                this.$refs.form.addEventListener('submit', () => {
+                    if (this.aceEditor && this.$refs.textarea) {
+                        this.$refs.textarea.value = this.aceEditor.getValue();
+                    }
+                });
+            }
+        },
+
+        initAce() {
+            const editorEl = this.$refs.editor;
+            if (!editorEl || this.aceEditor) return;
+
+            this.aceEditor = ace.edit(editorEl);
+            this.aceEditor.setTheme('ace/theme/chrome');
+            this.aceEditor.session.setMode('ace/mode/php');
+            this.aceEditor.setOptions({
+                showPrintMargin: false,
+                wrap: true,
+                tabSize: 4,
+                useSoftTabs: true
+            });
+
+            // Sync to hidden textarea on change
+            this.aceEditor.session.on('change', () => {
+                if (this.$refs.textarea) {
+                    this.$refs.textarea.value = this.aceEditor.getValue();
                 }
             });
         },
 
         updatePreview() {
-            // Inject custom CSS from page settings (only once)
             if (!this.cssLoaded) {
-                this.injectCustomCSS();
                 this.cssLoaded = true;
             }
             this.renderPreview();
@@ -407,18 +403,15 @@ function blockEditor(index) {
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-            // Inject custom styles into iframe
             if (pageSettings.customStyles) {
                 const styleEl = iframeDoc.createElement('style');
                 styleEl.textContent = pageSettings.customStyles;
                 iframeDoc.head.appendChild(styleEl);
             }
 
-            // Inject custom stylesheets into iframe
             if (pageSettings.customStylesheets && pageSettings.customStylesheets.length > 0) {
                 pageSettings.customStylesheets.forEach(url => {
                     if (!url || url.trim() === '') return;
-
                     const linkEl = iframeDoc.createElement('link');
                     linkEl.rel = 'stylesheet';
                     linkEl.href = url.trim();
@@ -428,16 +421,13 @@ function blockEditor(index) {
         },
 
         renderPreview() {
-            // Get content from CodeMirror or textarea
-            const content = this.editor ? this.editor.getValue() : this.$refs.textarea.value;
+            const content = this.aceEditor ? this.aceEditor.getValue() : (this.$refs.textarea ? this.$refs.textarea.value : '');
 
-            // Write to iframe document
             const iframe = this.$refs.preview;
             if (!iframe) return;
 
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-            // Create a basic HTML structure in iframe
             iframeDoc.open();
             iframeDoc.write(`
                 <!DOCTYPE html>
@@ -453,16 +443,14 @@ function blockEditor(index) {
             `);
             iframeDoc.close();
 
-            // Inject custom CSS after document is written
             this.injectCustomCSS();
         },
 
-        // Make sure CodeMirror is visible when switching to code view
         switchToCode() {
             this.view = 'code';
             this.$nextTick(() => {
-                if (this.editor) {
-                    this.editor.refresh();
+                if (this.aceEditor) {
+                    this.aceEditor.resize();
                 }
             });
         }

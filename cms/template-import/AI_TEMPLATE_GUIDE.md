@@ -19,45 +19,48 @@ Use PHP comment style for blocks:
 | `name` | Yes | Unique identifier for the block |
 | `role` | No | Block category: `meta`, `content`, `navigation` |
 | `custom` | No | Set `custom=1` for page-specific blocks |
-| `system` | No | Set `system=1` for system-managed blocks |
+| `system` | No | Set `system=1` for non-visual blocks (hides preview toggle) |
 
 ## Block Types
 
+### System Blocks (No Visual Preview)
+
+System blocks contain non-visual content like meta tags, scripts, and structured data. They should have `system=1` to hide the preview toggle in the editor since there's nothing visual to preview.
+
+| Block Name | Attributes | Purpose |
+|------------|------------|---------|
+| `meta_title` | `role=meta custom=1 system=1` | `<title>` tag content |
+| `meta_description` | `role=meta custom=1 system=1` | Meta description tag |
+| `meta_keywords` | `role=meta custom=1 system=1` | Meta keywords tag |
+| `meta_og` | `role=meta custom=1 system=1` | Open Graph tags |
+| `meta_twitter` | `role=meta custom=1 system=1` | Twitter Card tags |
+| `meta_canonical` | `role=meta custom=1 system=1` | Canonical URL |
+| `meta_robots` | `role=meta custom=1 system=1` | Robots directives |
+| `structured_data` | `role=meta custom=1 system=1` | JSON-LD schema markup |
+| `scripts` | `system=1` | Global JavaScript includes |
+| `head` | `role=meta system=1` | Combined head meta tags |
+
 ### Global Blocks (Shared Across Pages)
 
-These blocks contain content that is typically the same across all pages. They should NOT have `custom=1`.
+These blocks contain visible content that is typically the same across all pages. They should NOT have `custom=1`.
 
-| Block Name | Purpose |
-|------------|---------|
-| `header` | Site header, logo, main navigation |
-| `footer` | Site footer, copyright, footer links |
-| `navigation` | Main menu structure |
-| `scripts` | Global JavaScript includes |
-| `styles` | Global CSS includes |
+| Block Name | Attributes | Purpose |
+|------------|------------|---------|
+| `header` | (none) | Site header, logo, main navigation |
+| `footer` | (none) | Site footer, copyright, footer links |
+| `navigation` | (none) | Main menu structure |
+| `styles` | (none) | Global CSS includes |
 
-### Custom Blocks (Page-Specific)
+### Custom Blocks (Page-Specific Visible Content)
 
-These blocks contain content unique to each page. They MUST have `custom=1`.
+These blocks contain visible content unique to each page. They MUST have `custom=1`.
 
-| Block Name | Purpose |
-|------------|---------|
-| `content` | Main page content area |
-| `hero` | Page-specific hero section |
-| `sidebar` | Page-specific sidebar content |
-| `cta` | Page-specific call-to-action |
-
-### Meta Blocks (Page-Specific SEO)
-
-Meta blocks should have `role=meta` and `custom=1` for per-page customization.
-
-| Block Name | Purpose |
-|------------|---------|
-| `meta_title` | `<title>` tag content |
-| `meta_description` | Meta description tag |
-| `meta_keywords` | Meta keywords tag |
-| `meta_og` | Open Graph tags (og:title, og:description, og:image) |
-| `meta_canonical` | Canonical URL |
-| `meta_robots` | Robots directives |
+| Block Name | Attributes | Purpose |
+|------------|------------|---------|
+| `content` | `role=content custom=1` | Main page content area |
+| `hero` | `custom=1` | Page-specific hero section |
+| `sidebar` | `custom=1` | Page-specific sidebar content |
+| `cta` | `custom=1` | Page-specific call-to-action |
 
 ## Template Structure Example
 
@@ -65,28 +68,38 @@ Meta blocks should have `role=meta` and `custom=1` for per-page customization.
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 system=1 start */ ?>
     <title>Page Title</title>
     <?php /* CMS:BLOCK name=meta_title end */ ?>
 
-    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 system=1 start */ ?>
     <meta name="description" content="Page description">
     <?php /* CMS:BLOCK name=meta_description end */ ?>
 
-    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 system=1 start */ ?>
     <meta name="keywords" content="keyword1, keyword2">
     <?php /* CMS:BLOCK name=meta_keywords end */ ?>
 
-    <?php /* CMS:BLOCK name=meta_og role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_og role=meta custom=1 system=1 start */ ?>
     <meta property="og:title" content="Page Title">
     <meta property="og:description" content="Page description">
     <meta property="og:image" content="/images/og-image.jpg">
     <meta property="og:type" content="website">
     <?php /* CMS:BLOCK name=meta_og end */ ?>
 
-    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 system=1 start */ ?>
     <link rel="canonical" href="https://example.com/page">
     <?php /* CMS:BLOCK name=meta_canonical end */ ?>
+
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Page Title"
+    }
+    </script>
+    <?php /* CMS:BLOCK name=structured_data end */ ?>
 
     <?php /* CMS:BLOCK name=styles start */ ?>
     <link rel="stylesheet" href="/css/main.css">
@@ -113,7 +126,7 @@ Meta blocks should have `role=meta` and `custom=1` for per-page customization.
     </footer>
     <?php /* CMS:BLOCK name=footer end */ ?>
 
-    <?php /* CMS:BLOCK name=scripts start */ ?>
+    <?php /* CMS:BLOCK name=scripts system=1 start */ ?>
     <script src="/js/main.js"></script>
     <?php /* CMS:BLOCK name=scripts end */ ?>
 </body>

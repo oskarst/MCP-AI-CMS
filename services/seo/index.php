@@ -14,20 +14,20 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 system=1 start */ ?>
     <title>SEO Services | Free SEO Audit & Optimization | Developers Alliance</title>
     <?php /* CMS:BLOCK name=meta_title end */ ?>
-    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 system=1 start */ ?>
     <meta name="description" content="Professional SEO services including free SEO audit, tracking, conversion optimization, technical SEO, and content strategy. Improve your search rankings and drive organic traffic."/>
     <?php /* CMS:BLOCK name=meta_description end */ ?>
     <meta name="author" content="Developers Alliance">
-    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 system=1 start */ ?>
     <meta name="keywords" content="seo services, seo audit, seo optimization, conversion optimization, technical seo, keyword research, local seo, ecommerce seo, magento seo">
     <?php /* CMS:BLOCK name=meta_keywords end */ ?>
-    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 system=1 start */ ?>
     <meta name="robots" content="index, follow">
     <?php /* CMS:BLOCK name=meta_robots end */ ?>
-    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 system=1 start */ ?>
     <link rel="canonical" href="/services/seo/">
     <?php /* CMS:BLOCK name=meta_canonical end */ ?>
     <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
@@ -118,7 +118,7 @@
     </script>
 
     <!-- JSON-LD Structured Data -->
-    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",

@@ -14,26 +14,26 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_title role=meta custom=1 system=1 start */ ?>
     <title>Certified Magento Developers & Adobe Commerce Services | Developers Alliance</title>
     <?php /* CMS:BLOCK name=meta_title end */ ?>
-    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_description role=meta custom=1 system=1 start */ ?>
     <meta name="description" content="Expert certified Magento & Adobe Commerce developers for agencies and merchants. Hyva themes, migrations, development services. 20+ certified developers. Get a free quote today."/>
     <?php /* CMS:BLOCK name=meta_description end */ ?>
     <meta name="author" content="Developers Alliance">
-    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_keywords role=meta custom=1 system=1 start */ ?>
     <meta name="keywords" content="magento developers, adobe commerce developers, certified magento developers, magento 2 development, ecommerce development, hyva theme development, magento migration services, magento support, magento agency, shopify developers, ecommerce agency, hire magento developer, magento expert, magento consulting, magento outsourcing, magento developer team, magento development company, magento 2 migration, magento performance optimization, headless magento, magento PWA, adobe commerce cloud">
     <?php /* CMS:BLOCK name=meta_keywords end */ ?>
-    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_robots role=meta custom=1 system=1 start */ ?>
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <?php /* CMS:BLOCK name=meta_robots end */ ?>
     <meta name="googlebot" content="index, follow">
-    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_canonical role=meta custom=1 system=1 start */ ?>
     <link rel="canonical" href="https://developers-alliance.com/">
     <?php /* CMS:BLOCK name=meta_canonical end */ ?>
     <link rel="icon" type="image/png" href="https://developers-alliance.com/img/favicon.png">
 
-    <?php /* CMS:BLOCK name=meta_og role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_og role=meta custom=1 system=1 start */ ?>
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://developers-alliance.com/">
@@ -44,7 +44,7 @@
     <meta property="og:locale" content="en_US">
 
     <?php /* CMS:BLOCK name=meta_og end */ ?>
-    <?php /* CMS:BLOCK name=meta_twitter role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=meta_twitter role=meta custom=1 system=1 start */ ?>
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://developers-alliance.com/">
@@ -192,7 +192,7 @@
     </style>
 
     <!-- JSON-LD Structured Data for Organization -->
-    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>
+    <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -1717,7 +1717,7 @@
     </main>
 
     
-    <?php /* CMS:BLOCK name=scripts start */ ?>
+    <?php /* CMS:BLOCK name=scripts system=1 start */ ?>
     <script>
         // Parallax effect
         window.addEventListener('scroll', function() {
