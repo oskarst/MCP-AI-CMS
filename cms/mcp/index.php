@@ -17,6 +17,7 @@ require_once __DIR__ . '/../core/BlockParser.php';
 require_once __DIR__ . '/../core/PageManager.php';
 require_once __DIR__ . '/../core/PageSettings.php';
 require_once __DIR__ . '/../core/BackupManager.php';
+require_once __DIR__ . '/../core/GlobalBackupManager.php';
 require_once __DIR__ . '/../core/BlogManager.php';
 require_once __DIR__ . '/../core/UploadManager.php';
 
@@ -247,6 +248,7 @@ $pageSettings = new PageSettings($config['cms_dir'] . '/settings');
 $pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['drafts_dir'] ?? null, null, null, $pageSettings);
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
+$globalBackupManager = new GlobalBackupManager($config['backups_dir']);
 $blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
 $uploadManager = new UploadManager(
     $config['root_dir'],
@@ -640,7 +642,7 @@ function handleUpdatePageRegion($input, $pageManager, $backupManager, $isJsonRpc
 }
 
 // Handler for find_and_replace_block_content tool
-function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $isJsonRpc = false, $jsonRpcId = null) {
+function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $globalBackupManager, $isJsonRpc = false, $jsonRpcId = null) {
     // Validate required parameters
     $pageId = isset($input['page_id']) ? normalizePageId($input['page_id']) : null;
     $blockName = $input['name'] ?? '';
@@ -750,11 +752,104 @@ function handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $b
         // Create backup of live page (not draft)
         $backupManager->createBackup($pageId, $pagePath);
 
+        $syncMessage = '';
+
+        // If block is NOT custom, perform same find/replace on all other pages
+        if (!$targetBlock['custom']) {
+            $allPages = $pageManager->listPages();
+
+            // Build list of pages to backup (those that have this block and it's not custom)
+            $pagesToBackup = [];
+            foreach ($allPages as $page) {
+                if ($page['id'] === $pageId) continue; // Skip source page
+
+                try {
+                    $pageBlocks = $blockParser->parseBlocks($page['path']);
+                    foreach ($pageBlocks as $block) {
+                        if ($block['name'] === $blockName && !$block['custom']) {
+                            $pagesToBackup[$page['id']] = $page['path'];
+                            break;
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Skip pages that can't be parsed
+                }
+            }
+
+            // Create global backup and sync
+            if (!empty($pagesToBackup)) {
+                $globalBackupManager->createGlobalBackup(
+                    $pagesToBackup,
+                    $blockName,
+                    "Global find/replace in block '{$blockName}' via MCP"
+                );
+
+                // Perform same find/replace on other pages
+                $syncCount = 0;
+                $skipCount = 0;
+
+                foreach ($allPages as $page) {
+                    if ($page['id'] === $pageId) continue;
+
+                    try {
+                        $pageBlocks = $blockParser->parseBlocks($page['path']);
+                        foreach ($pageBlocks as $block) {
+                            if ($block['name'] === $blockName) {
+                                if ($block['custom']) {
+                                    $skipCount++;
+                                } else {
+                                    // Perform same find/replace
+                                    $blockContent = $block['content'];
+                                    $updatedBlockContent = $blockContent;
+
+                                    if ($mode === 'first') {
+                                        if ($caseSensitive) {
+                                            $pos = strpos($updatedBlockContent, $search);
+                                            if ($pos !== false) {
+                                                $updatedBlockContent = substr_replace($updatedBlockContent, $replace, $pos, strlen($search));
+                                            }
+                                        } else {
+                                            $pos = stripos($updatedBlockContent, $search);
+                                            if ($pos !== false) {
+                                                $updatedBlockContent = substr_replace($updatedBlockContent, $replace, $pos, strlen($search));
+                                            }
+                                        }
+                                    } else {
+                                        if ($caseSensitive) {
+                                            $updatedBlockContent = str_replace($search, $replace, $blockContent);
+                                        } else {
+                                            $updatedBlockContent = str_ireplace($search, $replace, $blockContent);
+                                        }
+                                    }
+
+                                    // Only update if content changed
+                                    if ($updatedBlockContent !== $blockContent) {
+                                        $blockParser->updateBlock($page['path'], $blockName, $updatedBlockContent, false);
+                                        $syncCount++;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    } catch (Exception $e) {
+                        // Skip pages that fail
+                    }
+                }
+
+                if ($syncCount > 0) {
+                    $syncMessage = " Applied to {$syncCount} other page(s).";
+                }
+                if ($skipCount > 0) {
+                    $syncMessage .= " Skipped {$skipCount} custom page(s).";
+                }
+            }
+        }
+
         // Return success with replacement count
         outputResult([
             'success' => true,
             'replacements' => $replacements,
-            'message' => 'Content replaced and saved as draft'
+            'message' => 'Content replaced and saved as draft.' . $syncMessage
         ], $isJsonRpc, $jsonRpcId);
     } finally {
         // Clean up temporary file
@@ -822,6 +917,16 @@ try {
             file_put_contents($tempFile, $currentContent);
 
             try {
+                // Parse existing blocks to check if block is custom
+                $existingBlocks = $blockParser->parseBlocks($tempFile);
+                $isBlockCustom = false;
+                foreach ($existingBlocks as $block) {
+                    if ($block['name'] === $blockName) {
+                        $isBlockCustom = $block['custom'] || ($custom === true);
+                        break;
+                    }
+                }
+
                 // Update the block in the temporary file
                 $blockParser->updateBlock($tempFile, $blockName, $content, $custom);
 
@@ -834,7 +939,59 @@ try {
                 // Create backup of live page (not draft)
                 $backupManager->createBackup($pageId, $pagePath);
 
-                $result = ['success' => true, 'message' => 'Block updated and saved as draft'];
+                $syncMessage = '';
+
+                // If block is NOT custom, sync to all other pages (global block update)
+                if (!$isBlockCustom) {
+                    $allPages = $pageManager->listPages();
+
+                    // Build list of pages to backup (those that have this block and it's not custom)
+                    $pagesToBackup = [];
+                    foreach ($allPages as $page) {
+                        if ($page['id'] === $pageId) continue; // Skip source page
+
+                        try {
+                            $pageBlocks = $blockParser->parseBlocks($page['path']);
+                            foreach ($pageBlocks as $block) {
+                                if ($block['name'] === $blockName && !$block['custom']) {
+                                    $pagesToBackup[$page['id']] = $page['path'];
+                                    break;
+                                }
+                            }
+                        } catch (Exception $e) {
+                            // Skip pages that can't be parsed
+                        }
+                    }
+
+                    // Create global backup before syncing
+                    if (!empty($pagesToBackup)) {
+                        $globalBackupManager->createGlobalBackup(
+                            $pagesToBackup,
+                            $blockName,
+                            "Global update of block '{$blockName}' via MCP"
+                        );
+
+                        // Sync the block to other pages
+                        $syncResults = $blockParser->updateBlockGlobally(
+                            $allPages,
+                            $blockName,
+                            $content,
+                            $pageId
+                        );
+
+                        $syncCount = count($syncResults['updated']);
+                        $skipCount = count($syncResults['skipped']);
+
+                        if ($syncCount > 0) {
+                            $syncMessage .= " Global block synced to {$syncCount} other page(s).";
+                        }
+                        if ($skipCount > 0) {
+                            $syncMessage .= " Skipped {$skipCount} page(s) with custom override.";
+                        }
+                    }
+                }
+
+                $result = ['success' => true, 'message' => 'Block updated and saved as draft.' . $syncMessage];
             } finally {
                 // Clean up temporary file
                 @unlink($tempFile);
@@ -902,6 +1059,49 @@ try {
 
             $backupManager->restoreBackup($pageId, $timestamp, $pagePath);
             $result = ['success' => true];
+            break;
+
+        case 'list_global_backups':
+            $backups = $globalBackupManager->listGlobalBackups();
+            $formattedBackups = array_map(function($b) {
+                return [
+                    'timestamp' => $b['timestamp'],
+                    'date' => $b['date'],
+                    'block_name' => $b['block_name'],
+                    'description' => $b['description'] ?? '',
+                    'pages_count' => count($b['pages'] ?? []),
+                    'pages' => $b['pages'] ?? []
+                ];
+            }, $backups);
+            $result = ['success' => true, 'backups' => $formattedBackups];
+            break;
+
+        case 'restore_global_backup':
+            $timestamp = $input['timestamp'] ?? '';
+
+            if (!$timestamp) {
+                $result = ['success' => false, 'error' => 'Missing timestamp parameter'];
+                break;
+            }
+
+            try {
+                $restoreResults = $globalBackupManager->restoreGlobalBackup($timestamp, $pageManager);
+                $restoredCount = count($restoreResults['restored']);
+                $failedCount = count($restoreResults['failed']);
+
+                $result = [
+                    'success' => true,
+                    'message' => "Restored {$restoredCount} page(s) from global backup.",
+                    'restored' => $restoreResults['restored'],
+                    'failed' => $restoreResults['failed']
+                ];
+
+                if ($failedCount > 0) {
+                    $result['message'] .= " Failed to restore {$failedCount} page(s).";
+                }
+            } catch (Exception $e) {
+                $result = ['success' => false, 'error' => $e->getMessage()];
+            }
             break;
 
         case 'search_blocks':
@@ -1333,7 +1533,7 @@ try {
             break;
 
         case 'find_and_replace_block_content':
-            handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $isJsonRpc, $jsonRpcId);
+            handleFindAndReplaceBlockContent($input, $pageManager, $blockParser, $backupManager, $globalBackupManager, $isJsonRpc, $jsonRpcId);
             break;
 
         case 'insert_block':

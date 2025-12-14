@@ -16,15 +16,17 @@ function getMCPTools() {
         'discard_draft' => 'Discard a draft and revert to live version',
         'list_blocks' => 'List all blocks in a specific page',
         'read_block' => 'Read the content of a specific block',
-        'update_block' => 'Update the content of a block',
+        'update_block' => 'Update a block (global blocks sync to all pages)',
         'insert_block' => 'Insert a new block into a page',
         'search_blocks' => 'Search for text across all blocks',
-        'find_and_replace_block_content' => 'Find and replace text in block content',
+        'find_and_replace_block_content' => 'Find and replace text (global blocks sync to all pages)',
         'search_in_page' => 'Search for text within a specific page',
         'get_page_region' => 'Get a region of page content between markers',
         'update_page_region' => 'Update a region of page content',
-        'list_backups' => 'List all backups for a page',
-        'restore_backup' => 'Restore a page from a backup',
+        'list_backups' => 'List page-specific backups',
+        'restore_backup' => 'Restore a single page from backup',
+        'list_global_backups' => 'List global block backups (affects multiple pages)',
+        'restore_global_backup' => 'Restore all pages from a global backup',
         'list_posts' => 'List all blog posts in a collection',
         'create_post' => 'Create a new blog post',
         'read_post' => 'Read a blog post',
@@ -84,7 +86,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'update_block' => [
-            'description' => 'Update a single CMS block\'s content. Creates a DRAFT. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
+            'description' => 'Update a CMS block\'s content. IMPORTANT: If block does NOT have custom=1 (global blocks like header, footer), this will automatically sync changes to ALL pages that have this block (skipping pages where block is marked custom). A global backup is created before syncing. Creates a DRAFT for the source page. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -97,7 +99,7 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'find_and_replace_block_content' => [
-            'description' => 'Find and replace text inside a CMS block. PREFERRED for small edits. Creates a DRAFT. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
+            'description' => 'Find and replace text inside a CMS block. PREFERRED for small edits. IMPORTANT: If block does NOT have custom=1 (global blocks like header, footer), the find/replace will automatically be applied to ALL pages that have this block (skipping pages where block is marked custom). A global backup is created before syncing. Creates a DRAFT for source page. After editing, provide a CLICKABLE markdown link for preview: [Preview Draft](http://localhost:2222/cms/admin/preview.php?page_id={page_id}&draft=1) and ask user to publish using publish_page tool.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -236,17 +238,17 @@ function getMCPToolsWithSchema() {
             ]
         ],
         'list_backups' => [
-            'description' => 'List all available backups for a page with timestamps.',
+            'description' => 'List PAGE-SPECIFIC backups for a single page. These are created when publishing custom blocks. Use list_global_backups for backups created by global block updates (header, footer, etc.).',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
-                    'page_id' => ['type' => 'string', 'description' => 'Page ID']
+                    'page_id' => ['type' => 'string', 'description' => 'Page ID. For homepage use: "" or "/"']
                 ],
                 'required' => ['page_id']
             ]
         ],
         'restore_backup' => [
-            'description' => 'Restore a page from a previous backup.',
+            'description' => 'Restore a SINGLE page from a page-specific backup. Only affects the specified page. For restoring multiple pages from a global block update, use restore_global_backup instead.',
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
@@ -254,6 +256,24 @@ function getMCPToolsWithSchema() {
                     'timestamp' => ['type' => 'string', 'description' => 'Backup timestamp (YmdHis format)']
                 ],
                 'required' => ['page_id', 'timestamp']
+            ]
+        ],
+        'list_global_backups' => [
+            'description' => 'List GLOBAL backups created when editing blocks without custom=1 (header, footer, etc.). Each global backup contains snapshots of ALL pages affected by the global block update. Use this to see grouped backups that can restore multiple pages at once.',
+            'inputSchema' => [
+                'type' => 'object',
+                'properties' => new stdClass(),
+                'required' => []
+            ]
+        ],
+        'restore_global_backup' => [
+            'description' => 'Restore a global backup, reverting ALL pages that were affected by that global block update to their previous state. Use list_global_backups first to see available backups with their timestamps and affected page counts.',
+            'inputSchema' => [
+                'type' => 'object',
+                'properties' => [
+                    'timestamp' => ['type' => 'string', 'description' => 'Backup timestamp (YmdHis format) from list_global_backups']
+                ],
+                'required' => ['timestamp']
             ]
         ],
         'list_posts' => [

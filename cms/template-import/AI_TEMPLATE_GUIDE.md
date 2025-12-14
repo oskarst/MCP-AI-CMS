@@ -133,6 +133,47 @@ These blocks contain visible content unique to each page. They MUST have `custom
 </html>
 ```
 
+## Global vs Custom Blocks Behavior
+
+### Global Blocks (Automatic Sync)
+
+Blocks **WITHOUT** `custom=1` are **global blocks**. When you edit a global block:
+
+1. The change is saved as a draft on the source page
+2. **All other pages** with the same block (that don't have `custom=1`) are **automatically updated**
+3. A **global backup** is created containing snapshots of all affected pages
+4. Pages where the block is marked as `custom=1` are **skipped**
+
+**Example:** Editing the `header` block on the homepage will automatically update the header on all other pages.
+
+### Custom Blocks (Page-Specific)
+
+Blocks **WITH** `custom=1` are **page-specific**. When you edit a custom block:
+
+1. Only that specific page is affected
+2. A page-specific backup is created
+3. Other pages are never touched
+
+**Example:** Each page has its own `content` block with `custom=1`, so editing content on one page doesn't affect others.
+
+### Two Types of Backups
+
+| Backup Type | Created When | Restores |
+|-------------|--------------|----------|
+| **Page Backup** | Editing custom blocks | Single page only |
+| **Global Backup** | Editing global blocks | All affected pages at once |
+
+### When to Use `custom=1`
+
+| Content Type | Use `custom=1`? | Reason |
+|--------------|----------------|--------|
+| Header/Footer | No | Same on all pages |
+| Main Navigation | No | Same on all pages |
+| Page Content | Yes | Unique per page |
+| Hero Sections | Yes | Different per page |
+| Meta Tags | Yes | Different per page |
+| Page-specific CTAs | Yes | Different per page |
+
 ## Rules
 
 1. **Wrap ALL editable content** - Any content the user might want to edit must be inside a block
@@ -143,6 +184,7 @@ These blocks contain visible content unique to each page. They MUST have `custom
 6. **Matching tags** - Start and end tags must have the same `name` value
 7. **No nested blocks** - Blocks cannot be nested inside other blocks
 8. **Unique names** - Each block name must be unique within a template
+9. **Think about sync** - If content should be the same everywhere, don't use `custom=1`. If it should be unique per page, use `custom=1`
 
 ## Common Meta Tags to Include
 

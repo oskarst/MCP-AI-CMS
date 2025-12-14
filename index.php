@@ -95,101 +95,8 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Tailwind CSS & DaisyUI -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#c01d18',
-                        secondary: '#f5f5f5',
-                    },
-                    fontFamily: {
-                        heading: ['Titillium Web', 'Raleway', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-                        body: ['Open Sans', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        * {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Titillium Web', 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-        #shadow-host-companion {
-            display: none;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 1s ease-out;
-        }
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0,0,0,0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-        /* Skip to content link */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: #c01d18;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            z-index: 100;
-            font-weight: bold;
-        }
-        .skip-link:focus {
-            top: 0;
-        }
-        /* Enhanced focus styles for accessibility */
-        *:focus-visible {
-            outline: 3px solid #c01d18;
-            outline-offset: 2px;
-        }
-        a:focus-visible, button:focus-visible {
-            outline: 3px solid #c01d18;
-            outline-offset: 2px;
-        }
-        /* High contrast focus for keyboard navigation */
-        .btn:focus-visible {
-            box-shadow: 0 0 0 3px rgba(192, 29, 24, 0.5);
-        }
-        /* Ensure sufficient color contrast */
-        .text-gray-600 {
-            color: #4b5563;
-        }
-        .text-gray-700 {
-            color: #374151;
-        }
-    </style>
+    <!-- Tailwind CSS & DaisyUI (compiled) -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
 
     <!-- JSON-LD Structured Data for Organization -->
     <?php /* CMS:BLOCK name=structured_data role=meta custom=1 system=1 start */ ?>
@@ -548,8 +455,7 @@
     </nav>
     <?php /* CMS:BLOCK name=header end */ ?>
 
-    <?php /* CMS:BLOCK name=content role=content custom=1 start */ ?>
-
+    <?php /* CMS:BLOCK name=hero role=content custom=1 start */ ?>
     <!-- Hero Section -->
     <main id="main-content">
     <section id="home" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white relative py-20 md:py-32" aria-labelledby="hero-title">
@@ -607,7 +513,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=hero end */ ?>
 
+    <?php /* CMS:BLOCK name=ai_solutions role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -758,7 +666,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=ai_solutions end */ ?>
 
+    <?php /* CMS:BLOCK name=services role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -962,7 +872,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=services end */ ?>
 
+    <?php /* CMS:BLOCK name=problem_solution role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -1045,7 +957,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=problem_solution end */ ?>
 
+    <?php /* CMS:BLOCK name=developer_products role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -1175,7 +1089,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=developer_products end */ ?>
 
+    <?php /* CMS:BLOCK name=why_us role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -1244,11 +1160,13 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=why_us end */ ?>
 
+    <?php /* CMS:BLOCK name=reviews role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
-    <!-- Reviews Section - Moved Earlier -->
+    <!-- Reviews Section -->
     <section class="py-20 bg-white" aria-labelledby="reviews-heading">
         <div class="container mx-auto px-4">
             <h2 id="reviews-heading" class="text-4xl font-heading font-bold mb-4 text-center">Trusted by Leading Agencies and Merchants</h2>
@@ -1263,7 +1181,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=reviews end */ ?>
 
+    <?php /* CMS:BLOCK name=made_in_georgia role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -1274,7 +1194,9 @@
             <p class="font-heading font-semibold text-xl">Made in Georgia</p>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=made_in_georgia end */ ?>
 
+    <?php /* CMS:BLOCK name=community role=content custom=1 start */ ?>
     <!-- Community Member Section -->
     <section class="py-20 bg-white">
         <div class="container mx-auto px-4">
@@ -1301,7 +1223,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=community end */ ?>
 
+    <?php /* CMS:BLOCK name=partners role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-0.5 w-full bg-primary"></div>
 
@@ -1324,7 +1248,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=partners end */ ?>
 
+    <?php /* CMS:BLOCK name=tech_stack role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-0.5 w-full bg-primary"></div>
 
@@ -1358,7 +1284,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=tech_stack end */ ?>
 
+    <?php /* CMS:BLOCK name=faq role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-0.5 w-full bg-primary"></div>
 
@@ -1463,7 +1391,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=faq end */ ?>
 
+    <?php /* CMS:BLOCK name=contact role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-1 w-full bg-primary"></div>
 
@@ -1578,7 +1508,9 @@
             </div>
         </div>
     </section>
+    <?php /* CMS:BLOCK name=contact end */ ?>
 
+    <?php /* CMS:BLOCK name=testimonials role=content custom=1 start */ ?>
     <!-- Divider -->
     <div class="h-0.5 w-full bg-primary"></div>
 
@@ -1670,8 +1602,7 @@
             </div>
         </div>
     </section>
-
-    <?php /* CMS:BLOCK name=content end */ ?>
+    <?php /* CMS:BLOCK name=testimonials end */ ?>
 
     <?php /* CMS:BLOCK name=footer start */ ?>
     <!-- Footer -->

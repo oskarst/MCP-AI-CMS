@@ -156,6 +156,82 @@ class BlockParser
     }
 
     /**
+     * Update a block across all pages (for global blocks without custom=1).
+     *
+     * Skips pages where the block is marked as custom=1.
+     *
+     * @param array $pages Array of pages with ['id' => '', 'path' => '']
+     * @param string $blockName Name of the block to update
+     * @param string $newContent New content for the block
+     * @param string $sourcePageId Page ID where the edit originated (will be skipped)
+     * @return array Results with 'updated', 'skipped', and 'failed' arrays
+     */
+    public function updateBlockGlobally(
+        array $pages,
+        string $blockName,
+        string $newContent,
+        string $sourcePageId
+    ): array {
+        $results = [
+            'updated' => [],
+            'skipped' => [],
+            'failed' => [],
+            'not_found' => []
+        ];
+
+        foreach ($pages as $page) {
+            $pageId = $page['id'] ?? '';
+            $pagePath = $page['path'] ?? '';
+
+            // Skip source page (already updated via draft)
+            if ($pageId === $sourcePageId) {
+                continue;
+            }
+
+            // Skip if file doesn't exist
+            if (!file_exists($pagePath)) {
+                $results['failed'][] = ['page_id' => $pageId, 'reason' => 'File not found'];
+                continue;
+            }
+
+            try {
+                // Parse blocks on target page
+                $blocks = $this->parseBlocks($pagePath);
+
+                // Find the target block
+                $targetBlock = null;
+                foreach ($blocks as $block) {
+                    if ($block['name'] === $blockName) {
+                        $targetBlock = $block;
+                        break;
+                    }
+                }
+
+                // Skip if block doesn't exist on this page
+                if (!$targetBlock) {
+                    $results['not_found'][] = $pageId;
+                    continue;
+                }
+
+                // Skip if block is marked as custom on this page
+                if ($targetBlock['custom']) {
+                    $results['skipped'][] = $pageId;
+                    continue;
+                }
+
+                // Update the block (keep custom=false)
+                $this->updateBlock($pagePath, $blockName, $newContent, false);
+                $results['updated'][] = $pageId;
+
+            } catch (Exception $e) {
+                $results['failed'][] = ['page_id' => $pageId, 'reason' => $e->getMessage()];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Parse attributes from a block start tag attribute string.
      *
      * @param string $attrString e.g., "name=header role=meta custom=1"

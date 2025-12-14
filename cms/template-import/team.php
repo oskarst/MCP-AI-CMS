@@ -51,47 +51,8 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Tailwind CSS & DaisyUI -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#e13d3a',
-                        secondary: '#f5f5f5',
-                    },
-                    fontFamily: {
-                        heading: ['Titillium Web', 'sans-serif'],
-                        body: ['Open Sans', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body { font-family: 'Open Sans', sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Titillium Web', sans-serif; }
-        /* Skip to content link */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: #e13d3a;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            z-index: 100;
-            font-weight: bold;
-        }
-        .skip-link:focus {
-            top: 0;
-        }
-
-    </style>
+        <!-- Tailwind CSS & DaisyUI (compiled) -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
 
     <!-- Google Tag Manager -->
     <script>

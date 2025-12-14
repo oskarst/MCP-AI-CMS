@@ -51,61 +51,8 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&family=Raleway:wght@300;400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Tailwind CSS & DaisyUI -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#e13d3a',
-                        secondary: '#f5f5f5',
-                    },
-                    fontFamily: {
-                        heading: ['Titillium Web', 'Raleway', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-                        body: ['Open Sans', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        * {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Titillium Web', 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        /* Skip to content link */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: #e13d3a;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            z-index: 100;
-            font-weight: bold;
-        }
-        .skip-link:focus {
-            top: 0;
-        }
-    </style>
+        <!-- Tailwind CSS & DaisyUI (compiled) -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
 
     <!-- Schema -->
     <?php /* CMS:BLOCK name=structured_data role=meta custom=1 start */ ?>

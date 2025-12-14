@@ -430,9 +430,6 @@
                         <a href="/cms/admin/create.php" class="submenu-item block pl-7 pr-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 rounded-r-lg <?php echo ($activePage ?? '') === 'create' ? 'text-accent-600 dark:text-accent-400 font-medium bg-accent-50 dark:bg-accent-900/20' : ''; ?>">
                             Create Page
                         </a>
-                        <a href="/cms/admin/sync-blocks.php" class="submenu-item block pl-7 pr-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 rounded-r-lg <?php echo ($activePage ?? '') === 'sync' ? 'text-accent-600 dark:text-accent-400 font-medium bg-accent-50 dark:bg-accent-900/20' : ''; ?>">
-                            Sync Blocks
-                        </a>
                     </div>
                 </div>
 
