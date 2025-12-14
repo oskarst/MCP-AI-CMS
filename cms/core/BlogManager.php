@@ -412,12 +412,37 @@ class BlogManager
     {
         $title = ucwords(str_replace('-', ' ', $slug));
         $date = date('Y-m-d');
+        $dateFormatted = date('M d, Y');
+        $author = $this->templates['defaults']['author'] ?? 'Dev Team';
+        $excerpt = $this->templates['defaults']['excerpt'] ?? "Read this article about {$title}.";
 
-        // Use template from configuration if available
+        // Try to load template from file
+        if (!empty($this->templates['post_template_file'])) {
+            $cmsDir = dirname($this->draftsDir);
+            $templatePath = $cmsDir . '/' . $this->templates['post_template_file'];
+
+            if (file_exists($templatePath)) {
+                $template = file_get_contents($templatePath);
+
+                // Replace all placeholders
+                $replacements = [
+                    '{{POST_TITLE}}' => $title,
+                    '{{POST_SLUG}}' => $slug,
+                    '{{POST_DATE}}' => $date,
+                    '{{POST_DATE_FORMATTED}}' => $dateFormatted,
+                    '{{POST_AUTHOR}}' => $author,
+                    '{{POST_EXCERPT}}' => $excerpt,
+                    '{{COLLECTION_LABEL}}' => $collectionLabel,
+                ];
+
+                return str_replace(array_keys($replacements), array_values($replacements), $template);
+            }
+        }
+
+        // Legacy support: inline template string
         if (!empty($this->templates['post_template'])) {
             $template = $this->templates['post_template'];
 
-            // Replace placeholders
             $template = str_replace('{TITLE}', $title, $template);
             $template = str_replace('{DATE}', $date, $template);
             $template = str_replace('{COLLECTION_LABEL}', $collectionLabel, $template);
@@ -425,7 +450,7 @@ class BlogManager
             return $template;
         }
 
-        // Fallback to default template
+        // Fallback to minimal default template
         return <<<HTML
 <!DOCTYPE html>
 <html lang="en">
@@ -435,7 +460,7 @@ class BlogManager
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{$title} - {$collectionLabel}</title>
     <meta name="description" content="{$title}">
-    <meta name="author" content="">
+    <meta name="author" content="{$author}">
     <meta name="date" content="{$date}">
 <?php /* CMS:BLOCK name=head end */ ?>
 </head>
@@ -454,7 +479,6 @@ class BlogManager
         <article>
             <h1>{$title}</h1>
             <p class="date">{$date}</p>
-
             <p>Write your content here...</p>
         </article>
     </main>
