@@ -58,8 +58,8 @@ class CollectionIndexGenerator
      */
     private function generateStaticIndex(array $collection, array $posts): void
     {
-        $listTemplate = $this->templates['list_template'] ?? $this->getDefaultListTemplate();
-        $postItemTemplate = $this->templates['post_item_template'] ?? $this->getDefaultPostItemTemplate();
+        $listTemplate = $this->loadListTemplate();
+        $postItemTemplate = $this->loadPostItemTemplate();
 
         // Filter only published posts
         $publishedPosts = array_filter($posts, fn($post) => $post['status'] === 'published');
@@ -70,11 +70,19 @@ class CollectionIndexGenerator
         $showExcerpts = $collection['show_excerpts'] ?? true;
         $postsPerPage = $collection['posts_per_page'] ?? 10;
 
-        // Sort posts
+        // Sort posts (featured first, then by date/title)
         usort($publishedPosts, function($a, $b) use ($sortBy, $sortOrder) {
             $metaA = $this->metaParser->extractMetadata($a['path']);
             $metaB = $this->metaParser->extractMetadata($b['path']);
 
+            // Featured posts always come first
+            $featuredA = $metaA['options']['featured'] ?? false;
+            $featuredB = $metaB['options']['featured'] ?? false;
+
+            if ($featuredA && !$featuredB) return -1;
+            if (!$featuredA && $featuredB) return 1;
+
+            // Then sort by title or date
             if ($sortBy === 'title') {
                 $titleA = $metaA['content']['title'] ?? '';
                 $titleB = $metaB['content']['title'] ?? '';
@@ -116,6 +124,16 @@ class CollectionIndexGenerator
                 // Replace all placeholders with metadata
                 $postHtml = str_replace('{TITLE}', htmlspecialchars($meta['content']['title']), $postHtml);
                 $postHtml = str_replace('{DATE}', htmlspecialchars($meta['dates']['published']), $postHtml);
+
+                // Formatted date (December 14, 2025)
+                $dateFormatted = '';
+                if (!empty($meta['dates']['published'])) {
+                    $timestamp = strtotime($meta['dates']['published']);
+                    if ($timestamp) {
+                        $dateFormatted = date('F j, Y', $timestamp);
+                    }
+                }
+                $postHtml = str_replace('{DATE_FORMATTED}', htmlspecialchars($dateFormatted), $postHtml);
                 $postHtml = str_replace('{READING_TIME}', $meta['content']['reading_time'], $postHtml);
                 $postHtml = str_replace('{WORD_COUNT}', $meta['content']['word_count'], $postHtml);
                 $postHtml = str_replace('{FEATURED_IMAGE}', htmlspecialchars($meta['media']['featured_image']), $postHtml);
@@ -125,6 +143,10 @@ class CollectionIndexGenerator
                     ? ' • by ' . htmlspecialchars($meta['author']['name'])
                     : '';
                 $postHtml = str_replace('{AUTHOR}', $authorHtml, $postHtml);
+
+                // Author name (plain, defaults to Dev Team)
+                $authorName = !empty($meta['author']['name']) ? $meta['author']['name'] : 'Dev Team';
+                $postHtml = str_replace('{AUTHOR_NAME}', htmlspecialchars($authorName), $postHtml);
 
                 // Categories and tags (comma-separated, show only if exist)
                 $categoriesHtml = !empty($meta['taxonomy']['categories'])
@@ -145,6 +167,13 @@ class CollectionIndexGenerator
 
                 $postHtml = str_replace('{SLUG}', htmlspecialchars($post['slug']), $postHtml);
                 $postHtml = str_replace('{COLLECTION_BASE_PATH}', htmlspecialchars($collection['base_path']), $postHtml);
+
+                // Featured badge (shows only if post is featured)
+                $isFeatured = $meta['options']['featured'] ?? false;
+                $featuredBadge = $isFeatured
+                    ? '<span class="px-3 py-1 bg-primary/10 text-primary text-sm font-semibold rounded-full">Featured</span>'
+                    : '';
+                $postHtml = str_replace('{FEATURED_BADGE}', $featuredBadge, $postHtml);
 
                 $postsListHtml .= $postHtml . "\n";
             }
@@ -337,6 +366,54 @@ PHP;
             'date' => $metadata['dates']['published'],
             'excerpt' => $metadata['content']['excerpt'],
         ];
+    }
+
+    /**
+     * Load list template from file or fallback to default
+     */
+    private function loadListTemplate(): string
+    {
+        // Try to load from file first
+        if (!empty($this->templates['list_template_file'])) {
+            $cmsDir = dirname(dirname($this->templatesFile));
+            $templatePath = $cmsDir . '/' . $this->templates['list_template_file'];
+
+            if (file_exists($templatePath)) {
+                return file_get_contents($templatePath);
+            }
+        }
+
+        // Legacy support: inline template string
+        if (!empty($this->templates['list_template'])) {
+            return $this->templates['list_template'];
+        }
+
+        // Fallback to default
+        return $this->getDefaultListTemplate();
+    }
+
+    /**
+     * Load post item template from file or fallback to default
+     */
+    private function loadPostItemTemplate(): string
+    {
+        // Try to load from file first
+        if (!empty($this->templates['post_item_template_file'])) {
+            $cmsDir = dirname(dirname($this->templatesFile));
+            $templatePath = $cmsDir . '/' . $this->templates['post_item_template_file'];
+
+            if (file_exists($templatePath)) {
+                return file_get_contents($templatePath);
+            }
+        }
+
+        // Legacy support: inline template string
+        if (!empty($this->templates['post_item_template'])) {
+            return $this->templates['post_item_template'];
+        }
+
+        // Fallback to default
+        return $this->getDefaultPostItemTemplate();
     }
 
     /**

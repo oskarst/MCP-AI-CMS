@@ -165,6 +165,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } catch (Exception $e) {
             $errorMessage = $e->getMessage();
         }
+    } elseif ($action === 'save_and_publish') {
+        // Save and publish in one action
+        try {
+            // First save (same logic as 'save' action)
+            $draftPath = $blogManager->getPostPath($collectionId, $slug, 'draft');
+            if (!$draftPath) {
+                $publishedPath = $blogManager->getPostPath($collectionId, $slug, 'published');
+                if ($publishedPath) {
+                    $draftDir = dirname(dirname($publishedPath)) . '/../../cms/drafts/' . $collectionId . '/' . $slug;
+                    if (!is_dir($draftDir)) {
+                        mkdir($draftDir, 0755, true);
+                    }
+                    copy($publishedPath, $draftDir . '/index.php');
+                    $draftPath = $draftDir . '/index.php';
+                }
+            }
+
+            if ($draftPath) {
+                // Update blocks
+                foreach ($_POST as $key => $value) {
+                    if (strpos($key, 'block_') === 0) {
+                        $blockName = substr($key, 6);
+                        $isCustom = isset($_POST['custom_' . $blockName]);
+                        $blockParser->updateBlock($draftPath, $blockName, $value, $isCustom);
+                    }
+                }
+
+                // Update metadata
+                if (isset($_POST['metadata'])) {
+                    $metadata = [];
+                    if (!empty($_POST['meta_author_name'])) {
+                        $metadata['author_name'] = $_POST['meta_author_name'];
+                    }
+                    if (!empty($_POST['meta_excerpt'])) {
+                        $metadata['excerpt'] = $_POST['meta_excerpt'];
+                    }
+                    if (!empty($_POST['meta_featured_image'])) {
+                        $metadata['featured_image'] = $_POST['meta_featured_image'];
+                    }
+                    if (!empty($_POST['meta_publish_date'])) {
+                        $metadata['publish_date'] = $_POST['meta_publish_date'];
+                    }
+                    if (!empty($_POST['meta_tags'])) {
+                        $metadata['tags'] = $_POST['meta_tags'];
+                    }
+                    if (!empty($_POST['meta_categories'])) {
+                        $metadata['categories'] = $_POST['meta_categories'];
+                    }
+                    $metadata['featured'] = isset($_POST['meta_featured']);
+
+                    $metaWriter = new PostMetaWriter($draftPath);
+                    $metaWriter->updateFrontMatter($metadata);
+                }
+
+                // Now publish
+                $blogManager->publishPost($collectionId, $slug);
+                $successMessage = 'Post saved and published successfully.';
+                header('Location: /cms/admin/blog-edit.php?collection=' . urlencode($collectionId) . '&slug=' . urlencode($slug) . '&status=published');
+                exit;
+            } else {
+                throw new Exception('No post to save');
+            }
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+        }
     }
 }
 
@@ -243,7 +308,7 @@ require __DIR__ . '/includes/header.php';
                 <span class="text-gray-400">|</span>
                 <a href="/cms/admin/blog-preview.php?collection=<?php echo urlencode($collectionId); ?>&slug=<?php echo urlencode($slug); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800">Preview Draft</a>
                 <span class="text-gray-400">|</span>
-                <form method="post" class="inline" onsubmit="return confirm('Publish this post?');">
+                <form method="post" class="inline">
                     <?php echo CSRF::inputField(); ?>
                     <input type="hidden" name="action" value="publish">
                     <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Publish</button>
@@ -484,6 +549,9 @@ require __DIR__ . '/includes/header.php';
                 <div class="flex gap-3">
                     <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                         Save Changes
+                    </button>
+                    <button type="submit" name="action" value="save_and_publish" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                        Save & Publish
                     </button>
                     <a href="/cms/admin/blog.php?collection=<?php echo urlencode($collectionId); ?>" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition inline-block">
                         Cancel

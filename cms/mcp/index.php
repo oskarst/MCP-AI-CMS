@@ -19,6 +19,7 @@ require_once __DIR__ . '/../core/PageSettings.php';
 require_once __DIR__ . '/../core/BackupManager.php';
 require_once __DIR__ . '/../core/GlobalBackupManager.php';
 require_once __DIR__ . '/../core/BlogManager.php';
+require_once __DIR__ . '/../core/CollectionIndexGenerator.php';
 require_once __DIR__ . '/../core/UploadManager.php';
 
 // Set JSON response header
@@ -249,7 +250,8 @@ $pageManager = new PageManager($config['root_dir'], $reservedFolders, $config['d
 $blockParser = new BlockParser();
 $backupManager = new BackupManager($config['backups_dir'], $config['max_backups_per_page']);
 $globalBackupManager = new GlobalBackupManager($config['backups_dir']);
-$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir']);
+$indexGenerator = new CollectionIndexGenerator($config['root_dir'], __DIR__ . '/../config/blog-templates.json');
+$blogManager = new BlogManager($config['root_dir'], $config['drafts_dir'], null, null, $indexGenerator);
 $uploadManager = new UploadManager(
     $config['root_dir'],
     $config['uploads_dir'] ?? 'assets/content/',

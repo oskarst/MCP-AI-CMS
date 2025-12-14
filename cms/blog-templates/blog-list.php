@@ -143,51 +143,14 @@
         <!-- Blog Posts Grid -->
         <section class="py-16 md:py-24 bg-gray-50">
             <div class="container mx-auto px-4">
-                <!-- Featured Post (First Post) -->
-                <div class="mb-16">
-                    <article class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-                        <div class="grid md:grid-cols-2">
-                            <div class="aspect-video md:aspect-auto bg-gradient-to-br from-gray-200 to-gray-300 relative">
-                                <img src="/assets/img/blog-placeholder.jpg" alt="Featured post" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent md:hidden"></div>
-                            </div>
-                            <div class="p-8 md:p-12 flex flex-col justify-center">
-                                <div class="flex items-center gap-3 mb-4">
-                                    <span class="px-3 py-1 bg-primary/10 text-primary text-sm font-semibold rounded-full">Featured</span>
-                                    <span class="text-gray-500 text-sm">5 min read</span>
-                                </div>
-                                <h2 class="text-2xl md:text-3xl font-heading font-bold mb-4 hover:text-primary transition">
-                                    <a href="#">Getting Started with Hyva Theme Development</a>
-                                </h2>
-                                <p class="text-gray-600 mb-6 leading-relaxed">
-                                    Learn how to build lightning-fast Magento stores with Hyva theme. This comprehensive guide covers everything from setup to advanced customization techniques.
-                                </p>
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
-                                        <div>
-                                            <div class="font-semibold text-gray-900">Dev Team</div>
-                                            <div class="text-sm text-gray-500">Jan 15, 2025</div>
-                                        </div>
-                                    </div>
-                                    <a href="#" class="btn btn-ghost text-primary hover:bg-primary/10">
-                                        Read More →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <!-- Posts Grid -->
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Post Card Template -->
-                    {{POSTS_LOOP}}
+                <!-- Posts List -->
+                <div class="space-y-8">
+                    {POSTS_LIST}
                 </div>
 
                 <!-- Pagination -->
                 <div class="mt-16 flex justify-center">
-                    {{PAGINATION}}
+                    {PAGINATION}
                 </div>
             </div>
         </section>
