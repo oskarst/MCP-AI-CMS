@@ -132,54 +132,67 @@ require __DIR__ . '/includes/header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
 
 <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        Edit Page: <code class="text-blue-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        Edit Page: <code class="text-accent-600"><?php echo htmlspecialchars($pageId ?: '/'); ?></code>
         <?php if ($hasDraft): ?>
-            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Has Draft</span>
+            <span class="ml-3 px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Has Draft</span>
         <?php endif; ?>
     </h1>
     <div class="flex items-center gap-3 text-sm">
-        <a href="/cms/admin/pages.php" class="text-blue-600 hover:text-blue-800">&larr; Back to Pages</a>
-        <span class="text-gray-400">|</span>
-        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>" target="_blank" class="text-green-600 hover:text-green-800">Preview Live</a>
+        <a href="/cms/admin/pages.php" class="text-accent-600 hover:text-accent-700">&larr; Back to Pages</a>
+        <span class="text-gray-400 dark:text-gray-600">|</span>
+        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>" target="_blank" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700">Preview Live</a>
 
         <?php if ($hasDraft): ?>
-            <span class="text-gray-400">|</span>
-            <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800">Preview Draft</a>
-            <span class="text-gray-400">|</span>
+            <span class="text-gray-400 dark:text-gray-600">|</span>
+            <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($pageId); ?>&draft=1" target="_blank" class="text-amber-600 dark:text-amber-400 hover:text-amber-700">Preview Draft</a>
+            <span class="text-gray-400 dark:text-gray-600">|</span>
             <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
                 <?php echo CSRF::inputField(); ?>
                 <input type="hidden" name="action" value="publish">
-                <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Publish</button>
+                <button type="submit" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium">Publish</button>
             </form>
         <?php endif; ?>
     </div>
 </div>
 
 <?php if (isset($successMessage)): ?>
-    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-        <p class="text-green-700"><?php echo htmlspecialchars($successMessage); ?></p>
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-6 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <p class="text-emerald-800 dark:text-emerald-300 font-medium"><?php echo htmlspecialchars($successMessage); ?></p>
     </div>
 <?php endif; ?>
 
 <?php if (isset($errorMessage)): ?>
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-        <p class="text-red-700"><?php echo htmlspecialchars($errorMessage); ?></p>
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </div>
+        <p class="text-red-800 dark:text-red-300 font-medium"><?php echo htmlspecialchars($errorMessage); ?></p>
     </div>
 <?php endif; ?>
 
 <!-- Page Settings Accordion -->
-<div class="bg-white rounded-lg shadow-md mb-6" x-data="{ settingsOpen: false }">
+<div class="bg-white dark:bg-dark-400 rounded-2xl shadow-soft border border-surface-200 dark:border-dark-200 mb-6" x-data="{ settingsOpen: false }">
     <button
         type="button"
         @click="settingsOpen = !settingsOpen"
-        class="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition">
-        <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <span>⚙️</span>
+        class="w-full flex items-center justify-between p-6 text-left hover:bg-surface-50 dark:hover:bg-dark-300 rounded-2xl transition">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
             <span>Page Settings</span>
         </h2>
         <svg
-            class="w-5 h-5 text-gray-500 transition-transform"
+            class="w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform"
             :class="settingsOpen ? 'rotate-180' : ''"
             fill="none"
             stroke="currentColor"
@@ -188,32 +201,32 @@ require __DIR__ . '/includes/header.php';
         </svg>
     </button>
 
-    <div x-show="settingsOpen" x-cloak class="border-t border-gray-200">
+    <div x-show="settingsOpen" x-cloak class="border-t border-surface-200 dark:border-dark-200">
         <form method="post" class="p-6">
             <?php echo CSRF::inputField(); ?>
             <input type="hidden" name="action" value="save_settings">
 
             <div class="mb-4">
                 <label class="block mb-2">
-                    <span class="text-sm font-medium text-gray-700">Custom CSS & Stylesheets</span>
-                    <span class="text-xs text-gray-500 block mt-1">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Custom CSS & Stylesheets</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 block mt-1">
                         Paste stylesheet URLs, &lt;link&gt; tags, or &lt;style&gt; tags. All will be loaded in preview mode.
                     </span>
                 </label>
                 <textarea
                     name="custom_css"
                     rows="15"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    class="w-full px-4 py-3 bg-surface-50 dark:bg-dark-300 border-2 border-surface-200 dark:border-dark-200 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/10 transition-all font-mono text-sm"
                     placeholder="Examples:&#10;&#10;https://cdn.example.com/styles.css&#10;/assets/custom.css&#10;&#10;<link rel=&quot;stylesheet&quot; href=&quot;https://example.com/theme.css&quot;>&#10;&#10;<style>&#10;  .my-class { color: red; }&#10;</style>"
                 ><?php echo htmlspecialchars($currentSettings['custom_css'] ?? ''); ?></textarea>
             </div>
 
-            <div class="flex gap-3">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+            <div class="flex gap-3 items-center">
+                <button type="submit" class="btn-primary px-5 py-2.5 text-white rounded-xl font-medium shadow-lg shadow-accent-500/25">
                     Save Settings
                 </button>
                 <?php if ($pageManager->hasPageSettings($pageId)): ?>
-                    <span class="text-xs text-gray-500 self-center">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
                         Last updated: <?php echo htmlspecialchars($currentSettings['updated_at'] ?? 'Never'); ?>
                     </span>
                 <?php endif; ?>
@@ -223,47 +236,47 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <?php if (empty($blocks)): ?>
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <p class="text-gray-600">No blocks found in this page.</p>
+    <div class="bg-white dark:bg-dark-400 rounded-2xl shadow-soft border border-surface-200 dark:border-dark-200 p-6">
+        <p class="text-gray-600 dark:text-gray-400">No blocks found in this page.</p>
     </div>
 <?php else: ?>
     <?php foreach ($blocks as $index => $block): ?>
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6" x-data="blockEditor(<?php echo $index; ?>)">
+        <div class="bg-white dark:bg-dark-400 rounded-2xl shadow-soft border border-surface-200 dark:border-dark-200 p-6 mb-6" x-data="blockEditor(<?php echo $index; ?>)">
             <div class="flex items-center justify-between mb-3">
-                <h2 class="text-2xl font-semibold text-gray-900">Block: <?php echo htmlspecialchars($block['name']); ?></h2>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Block: <code class="text-accent-600"><?php echo htmlspecialchars($block['name']); ?></code></h2>
 
                 <!-- View Toggle (hide for system blocks) -->
                 <?php if (!($block['system'] ?? false)): ?>
-                <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                <div class="flex bg-surface-100 dark:bg-dark-300 rounded-lg p-1">
                     <button
                         type="button"
                         @click="switchToCode()"
-                        :class="view === 'code' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                        class="px-4 py-2 text-sm font-medium transition">
-                        Code View
+                        :class="view === 'code' ? 'bg-white dark:bg-dark-400 shadow-sm text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all">
+                        Code
                     </button>
                     <button
                         type="button"
                         @click="view = 'preview'; updatePreview()"
-                        :class="view === 'preview' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                        class="px-4 py-2 text-sm font-medium border-l border-gray-300 transition">
-                        Preview View
+                        :class="view === 'preview' ? 'bg-white dark:bg-dark-400 shadow-sm text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+                        class="px-4 py-2 text-sm font-medium rounded-md transition-all">
+                        Preview
                     </button>
                 </div>
                 <?php endif; ?>
             </div>
 
-            <div class="mb-4 text-sm text-gray-600">
+            <div class="mb-4 flex flex-wrap gap-2">
                 <?php if ($block['role']): ?>
-                    <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
                         Role: <?php echo htmlspecialchars($block['role']); ?>
                     </span>
                 <?php endif; ?>
-                <span class="inline-block <?php echo $block['custom'] ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'; ?> px-2 py-1 rounded">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold <?php echo $block['custom'] ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'; ?>">
                     <?php echo $block['custom'] ? 'Custom' : 'Global'; ?>
                 </span>
                 <?php if ($block['system'] ?? false): ?>
-                    <span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded ml-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                         System
                     </span>
                 <?php endif; ?>
@@ -274,20 +287,20 @@ require __DIR__ . '/includes/header.php';
                 <input type="hidden" name="action" value="update_block">
                 <input type="hidden" name="block_name" value="<?php echo htmlspecialchars($block['name']); ?>">
 
-                <label class="flex items-center mb-4">
-                    <input type="checkbox" name="block_custom" <?php echo $block['custom'] ? 'checked' : ''; ?> class="mr-2 h-4 w-4 text-blue-600 rounded">
-                    <span class="text-sm text-gray-700">Mark as custom (per-page override)</span>
+                <label class="flex items-center mb-4 cursor-pointer">
+                    <input type="checkbox" name="block_custom" <?php echo $block['custom'] ? 'checked' : ''; ?> class="mr-2 h-4 w-4 text-accent-600 rounded border-gray-300 dark:border-gray-600 focus:ring-accent-500">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Mark as custom (per-page override)</span>
                 </label>
 
                 <!-- Code View -->
                 <div x-show="view === 'code'" x-cloak>
                     <label class="block mb-4">
-                        <span class="text-sm font-medium text-gray-700 mb-2 block">Block Content:</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Block Content:</span>
                         <textarea
                             x-ref="textarea"
                             name="block_content"
                             rows="10"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                            class="w-full px-4 py-3 bg-surface-50 dark:bg-dark-300 border-2 border-surface-200 dark:border-dark-200 rounded-xl text-gray-900 dark:text-white focus:border-accent-500 focus:ring-4 focus:ring-accent-500/10 transition-all font-mono text-sm"
                         ><?php echo htmlspecialchars($block['content']); ?></textarea>
                     </label>
                 </div>
@@ -295,22 +308,22 @@ require __DIR__ . '/includes/header.php';
                 <!-- Preview View (hide for system blocks) -->
                 <?php if (!($block['system'] ?? false)): ?>
                 <div x-show="view === 'preview'" x-cloak class="mb-4">
-                    <div class="border border-gray-300 rounded-md p-4 bg-gray-50 mb-2">
-                        <p class="text-xs text-gray-500 mb-2">Preview with custom styling (isolated from admin CSS):</p>
-                        <div class="preview-wrapper bg-white border border-gray-200 rounded p-4" style="max-height: 500px; overflow-y: auto;">
+                    <div class="border-2 border-surface-200 dark:border-dark-200 rounded-xl p-4 bg-surface-50 dark:bg-dark-300 mb-2">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview with custom styling (isolated from admin CSS):</p>
+                        <div class="preview-wrapper bg-white dark:bg-white border border-surface-200 dark:border-dark-200 rounded-lg p-4" style="max-height: 500px; overflow-y: auto;">
                             <iframe
                                 x-ref="preview"
                                 class="w-full border-0 min-h-[200px]"
                                 style="height: 400px;"
                             ></iframe>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Preview is completely isolated from admin styles. Edit in Code View, then switch back to see changes.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Preview is completely isolated from admin styles. Edit in Code View, then switch back to see changes.</p>
                     </div>
                 </div>
                 <?php endif; ?>
 
                 <div class="flex gap-3">
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Save Block</button>
+                    <button type="submit" class="btn-primary px-5 py-2.5 text-white rounded-xl font-medium shadow-lg shadow-accent-500/25">Save Block</button>
                 </div>
             </form>
         </div>

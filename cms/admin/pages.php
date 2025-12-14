@@ -47,95 +47,279 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pages = $pageManager->listPages();
 
+// Build a tree structure for hierarchical display
+function buildPageTree($pages) {
+    $tree = [];
+    $lookup = [];
+
+    // First pass: create lookup and identify top-level pages
+    foreach ($pages as $page) {
+        $id = $page['id'] ?: '';
+        $lookup[$id] = array_merge($page, ['children' => []]);
+    }
+
+    // Second pass: build tree
+    foreach ($lookup as $id => &$page) {
+        if ($id === '' || $id === 'index') {
+            // Root/index page - always top level
+            $tree[] = &$page;
+        } else {
+            $parentId = dirname($id);
+            if ($parentId === '.') $parentId = '';
+
+            // Check if parent exists
+            if (isset($lookup[$parentId])) {
+                $lookup[$parentId]['children'][] = &$page;
+            } else {
+                // No parent exists, treat as top-level
+                $tree[] = &$page;
+            }
+        }
+    }
+    unset($page);
+
+    // Sort function for pages
+    $sortPages = function(&$pages) use (&$sortPages) {
+        usort($pages, function($a, $b) {
+            $nameA = basename($a['id'] ?: 'index');
+            $nameB = basename($b['id'] ?: 'index');
+            // Index/root always first
+            if ($a['id'] === '' || $a['id'] === 'index') return -1;
+            if ($b['id'] === '' || $b['id'] === 'index') return 1;
+            return strcasecmp($nameA, $nameB);
+        });
+        foreach ($pages as &$page) {
+            if (!empty($page['children'])) {
+                $sortPages($page['children']);
+            }
+        }
+    };
+    $sortPages($tree);
+
+    return $tree;
+}
+
+$pageTree = buildPageTree($pages);
+
 $pageTitle = 'Pages';
 $activePage = 'pages';
 
 require __DIR__ . '/includes/header.php';
 ?>
 
-<h1 class="text-3xl font-bold text-gray-900 mb-6">All Pages</h1>
+<!-- Page Header -->
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">All Pages</h1>
+            <p class="mt-2 text-gray-500 dark:text-gray-400">Manage your website pages and content.</p>
+        </div>
+        <a href="/cms/admin/create.php" class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-medium text-sm shadow-lg shadow-accent-500/25">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            New Page
+        </a>
+    </div>
+</div>
 
 <?php if (isset($successMessage)): ?>
-    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-        <p class="text-green-700"><?php echo htmlspecialchars($successMessage); ?></p>
+    <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-3 animate-fade-in">
+        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <p class="text-emerald-800 dark:text-emerald-300 font-medium"><?php echo htmlspecialchars($successMessage); ?></p>
     </div>
 <?php endif; ?>
 
 <?php if (isset($errorMessage)): ?>
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-        <p class="text-red-700"><?php echo htmlspecialchars($errorMessage); ?></p>
+    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 animate-fade-in">
+        <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </div>
+        <p class="text-red-800 dark:text-red-300 font-medium"><?php echo htmlspecialchars($errorMessage); ?></p>
     </div>
 <?php endif; ?>
 
-<div class="bg-white rounded-lg shadow-md p-6">
-    <div class="mb-4">
-        <a href="/cms/admin/create.php" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Create New Page</a>
-    </div>
-
+<!-- Pages List -->
+<div class="bg-white dark:bg-dark-400 rounded-2xl shadow-soft border border-surface-200 dark:border-dark-200 overflow-hidden">
     <?php if (empty($pages)): ?>
-        <p class="text-gray-600">No pages found.</p>
+        <div class="p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-surface-100 dark:bg-dark-300 flex items-center justify-center">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No pages found</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">Get started by creating your first page.</p>
+            <a href="/cms/admin/create.php" class="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-medium text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Your First Page
+            </a>
+        </div>
     <?php else: ?>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <?php foreach ($pages as $page): ?>
-                        <?php $hasDraft = $pageManager->hasDraft($page['id']); ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <code class="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($page['id'] ?: '/'); ?></code>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php if ($hasDraft): ?>
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Has Draft</span>
-                                <?php else: ?>
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Live</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="/cms/admin/edit.php?page_id=<?php echo urlencode($page['id']); ?>" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
+        <!-- Table Header -->
+        <div class="px-6 py-4 bg-surface-50 dark:bg-dark-300 border-b border-surface-200 dark:border-dark-200 grid grid-cols-12 gap-4">
+            <div class="col-span-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Page</div>
+            <div class="col-span-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</div>
+            <div class="col-span-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</div>
+        </div>
 
-                                <!-- Always show Preview Live -->
-                                <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="text-green-600 hover:text-green-800 mr-3">Preview Live</a>
+        <!-- Table Body -->
+        <?php
+        // Recursive function to render page rows
+        function renderPageRow($page, $pageManager, $depth = 0) {
+            $hasDraft = $pageManager->hasDraft($page['id']);
+            $pageName = $page['id'] ? basename($page['id']) : '/';
+            $hasChildren = !empty($page['children']);
+            $uniqueId = 'page_' . md5($page['id']);
+            ?>
+            <div class="border-b border-surface-100 dark:border-dark-200 last:border-b-0"
+                 <?php if ($hasChildren): ?>x-data="{ expanded: false }"<?php endif; ?>>
+                <div class="px-6 py-3 grid grid-cols-12 gap-4 items-center hover:bg-surface-50 dark:hover:bg-dark-300 transition-colors group">
+                    <!-- Page Info -->
+                    <div class="col-span-5 flex items-center gap-2">
+                        <?php if ($depth > 0): ?>
+                            <div style="width: <?php echo ($depth - 1) * 24 + 8; ?>px;"></div>
+                            <svg class="w-3 h-3 text-gray-300 dark:text-gray-600 flex-shrink-0" viewBox="0 0 12 12" fill="none">
+                                <path d="M3 0v6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        <?php endif; ?>
+                        <?php if ($hasChildren): ?>
+                            <button @click="expanded = !expanded" class="w-6 h-6 rounded flex items-center justify-center hover:bg-surface-200 dark:hover:bg-dark-200 transition-colors flex-shrink-0">
+                                <svg class="w-4 h-4 text-gray-400 transition-transform" :class="expanded ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        <?php else: ?>
+                            <div class="w-6 flex-shrink-0"></div>
+                        <?php endif; ?>
+                        <div class="w-8 h-8 rounded-lg <?php echo $hasChildren ? 'bg-accent-100 dark:bg-accent-900/30' : 'bg-surface-100 dark:bg-dark-300'; ?> group-hover:bg-accent-100 dark:group-hover:bg-accent-900/30 transition-colors flex items-center justify-center flex-shrink-0">
+                            <?php if ($hasChildren): ?>
+                                <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                </svg>
+                            <?php else: ?>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-accent-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            <?php endif; ?>
+                        </div>
+                        <div class="min-w-0 flex items-center gap-2">
+                            <code class="text-sm font-medium text-gray-900 dark:text-white font-mono truncate"><?php echo htmlspecialchars($pageName); ?></code>
+                            <?php if ($hasChildren): ?>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">(<?php echo count($page['children']); ?>)</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
-                                <?php if ($hasDraft): ?>
-                                    <!-- Show draft-specific actions -->
-                                    <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>&draft=1" target="_blank" class="text-orange-600 hover:text-orange-800 mr-3">Preview Draft</a>
+                    <!-- Status -->
+                    <div class="col-span-2">
+                        <?php if ($hasDraft): ?>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                Draft
+                            </span>
+                        <?php else: ?>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Live
+                            </span>
+                        <?php endif; ?>
+                    </div>
 
-                                    <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
-                                        <?php echo CSRF::inputField(); ?>
-                                        <input type="hidden" name="action" value="publish">
-                                        <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
-                                        <button type="submit" class="text-green-600 hover:text-green-800 mr-3">Publish</button>
-                                    </form>
+                    <!-- Actions -->
+                    <div class="col-span-5 flex items-center justify-end gap-1">
+                        <a href="/cms/admin/edit.php?page_id=<?php echo urlencode($page['id']); ?>" class="inline-flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-accent-600 hover:bg-accent-50 dark:hover:bg-accent-900/30 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit
+                        </a>
 
-                                    <form method="post" class="inline" onsubmit="return confirm('Discard this draft?');">
-                                        <?php echo CSRF::inputField(); ?>
-                                        <input type="hidden" name="action" value="discard">
-                                        <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
-                                        <button type="submit" class="text-orange-600 hover:text-orange-800 mr-3">Discard</button>
-                                    </form>
-                                <?php endif; ?>
+                        <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            View
+                        </a>
 
-                                <?php if ($page['id'] !== ''): ?>
-                                    <form method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this page?');">
-                                        <?php echo CSRF::inputField(); ?>
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
-                                        <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
-                                    </form>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                        <?php if ($hasDraft): ?>
+                            <a href="/cms/admin/preview.php?page_id=<?php echo urlencode($page['id']); ?>&draft=1" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Draft
+                            </a>
+
+                            <form method="post" class="inline" onsubmit="return confirm('Publish this draft?');">
+                                <?php echo CSRF::inputField(); ?>
+                                <input type="hidden" name="action" value="publish">
+                                <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
+                                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Publish
+                                </button>
+                            </form>
+
+                            <form method="post" class="inline" onsubmit="return confirm('Discard this draft?');">
+                                <?php echo CSRF::inputField(); ?>
+                                <input type="hidden" name="action" value="discard">
+                                <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
+                                <button type="submit" class="inline-flex items-center px-2 py-1 text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-200 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+
+                        <?php if ($page['id'] !== '' && $page['id'] !== 'index'): ?>
+                            <form method="post" class="inline" onsubmit="return confirm('Delete this page?');">
+                                <?php echo CSRF::inputField(); ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page['id']); ?>">
+                                <button type="submit" class="inline-flex items-center px-2 py-1 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if ($hasChildren): ?>
+                    <div x-show="expanded" x-collapse class="bg-surface-50/50 dark:bg-dark-500/50">
+                        <?php foreach ($page['children'] as $child): ?>
+                            <?php renderPageRow($child, $pageManager, $depth + 1); ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <?php
+        }
+        ?>
+        <div>
+            <?php foreach ($pageTree as $page): ?>
+                <?php renderPageRow($page, $pageManager, 0); ?>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-surface-50 dark:bg-dark-300 border-t border-surface-200 dark:border-dark-200">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Showing <span class="font-medium text-gray-900 dark:text-white"><?php echo count($pages); ?></span> pages
+            </p>
         </div>
     <?php endif; ?>
 </div>
