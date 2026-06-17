@@ -18,8 +18,8 @@ class UploadManager
         string $uploadsDir,
         int $imageThumbnailWidth = 300,
         int $imageThumbnailHeight = 300,
-        int $imageFullWidth = 1280,
-        int $imageFullHeight = 1280
+        int $imageFullWidth = 1920,
+        int $imageFullHeight = 1080
     ) {
         $this->rootDir = rtrim($rootDir, '/');
         $this->uploadsDir = trim($uploadsDir, '/');
